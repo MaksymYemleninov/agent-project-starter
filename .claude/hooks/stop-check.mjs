@@ -32,10 +32,16 @@ function git(cmd) {
 
 if (!git('rev-parse --is-inside-work-tree')) process.exit(0);
 
-const changed = git('status --porcelain')
+// The status field is two columns plus a space, but leading whitespace is significant and easy
+// to lose to a trim, so match rather than slice. Renames appear as `old -> new`.
+const changed = (git('status --porcelain') ?? '')
   .split('\n')
-  .filter(Boolean)
-  .map((l) => l.slice(3).trim())
+  .map((line) => {
+    const m = line.match(/^\s*\S{1,2}\s+(.*)$/);
+    if (!m) return null;
+    const path = m[1].includes(' -> ') ? m[1].split(' -> ').pop() : m[1];
+    return path.replace(/^"|"$/g, '').trim();
+  })
   .filter(Boolean);
 
 if (changed.length === 0) process.exit(0);

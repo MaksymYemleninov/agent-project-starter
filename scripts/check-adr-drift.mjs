@@ -23,6 +23,24 @@ function git(cmd, { quiet = true } = {}) {
   }
 }
 
+/**
+ * Parse `git status --porcelain` into paths.
+ * The status field is two columns followed by a space, but leading whitespace is significant and
+ * easy to lose, so match rather than slice. Renames appear as `old -> new`; the new path is the
+ * one that matters here.
+ */
+function parsePorcelain(raw) {
+  return (raw ?? '')
+    .split('\n')
+    .map((line) => {
+      const m = line.match(/^\s*\S{1,2}\s+(.*)$/);
+      if (!m) return null;
+      const path = m[1].includes(' -> ') ? m[1].split(' -> ').pop() : m[1];
+      return path.replace(/^"|"$/g, '').trim();
+    })
+    .filter(Boolean);
+}
+
 if (!git('rev-parse --is-inside-work-tree')) {
   console.log('check:adr skipped, not a git repository.');
   process.exit(0);
@@ -50,10 +68,7 @@ const mergeBase = git(`merge-base ${base} HEAD`) ?? base;
 // Committed changes against the base, plus anything still in the working tree,
 // so the check behaves the same locally and in CI.
 const committed = (git(`diff --name-only ${mergeBase}...HEAD`) ?? '').split('\n');
-const working = (git('status --porcelain') ?? '')
-  .split('\n')
-  .filter(Boolean)
-  .map((l) => l.slice(3).trim());
+const working = parsePorcelain(git('status --porcelain'));
 
 const changed = [...new Set([...committed, ...working])].filter(Boolean);
 
