@@ -46,7 +46,7 @@ Stack-specific principles are appended here by `/onboard` from the stack ADRs.
 |---|---|
 | `AGENTS.md` | This constitution. Keep under 200 lines. |
 | `CLAUDE.md` | Claude Code shim, imports `AGENTS.md`. Do not duplicate rules into it. |
-| `.claude/rules/` | Path-scoped rules, loaded only when matching files are touched. |
+| `.claude/rules/` | Path-scoped rules. Each needs a `paths` glob, or it loads every session. |
 | `.claude/skills/` | Repeatable procedures. Long instructions belong here, not in this file. |
 | `.claude/agents/` | Subagents for isolated review, research and test work. |
 | `.claude/commands/` | Slash commands: `/onboard`, `/adr`, `/spec`, `/ship`, `/lint`. |

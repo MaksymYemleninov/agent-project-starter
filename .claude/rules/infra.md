@@ -1,6 +1,12 @@
 ---
 description: Rules for CI, deployment and infrastructure files. PLACEHOLDER, /onboard adapts this to the chosen hosting.
-paths: [".github/**", "infra/**", "deploy/**", "Dockerfile", "docker-compose*.yml", "*.tf"]
+paths:
+  - ".github/**/*"
+  - "infra/**/*"
+  - "deploy/**/*"
+  - "Dockerfile"
+  - "docker-compose*.yml"
+  - "**/*.tf"
 ---
 
 # Infrastructure rules

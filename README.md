@@ -51,6 +51,28 @@ are not prose:
 Reminders are cheap and unreliable. Hooks catch forgetfulness. CI is the only thing that actually
 holds. All three are wired up here.
 
+## Path-scoped rules
+
+`.claude/rules/*.md` is what keeps the constitution under 200 lines. A rule that applies to one
+directory or one file type goes here instead of `AGENTS.md`, with a `paths` glob in its
+frontmatter:
+
+```markdown
+---
+description: one line, what this covers
+paths:
+  - "src/api/**/*.ts"
+---
+
+- All API endpoints validate input at the boundary.
+```
+
+Rules with `paths` load only when Claude touches a matching file. A rule **without** `paths` loads
+into every session and costs context every time, so `npm run lint:docs` warns about it. That is a
+mistake worth catching: it is invisible at runtime and it compounds.
+
+`/onboard` replaces the placeholder rules with real ones for the chosen stack and deletes the rest.
+
 ## Commands
 
 | Command | What it does |

@@ -1,6 +1,11 @@
 ---
 description: Rules for application source code. PLACEHOLDER, /onboard replaces this with real stack rules.
-paths: ["src/**", "app/**", "lib/**", "server/**", "packages/**"]
+paths:
+  - "src/**/*"
+  - "app/**/*"
+  - "lib/**/*"
+  - "server/**/*"
+  - "packages/**/*"
 ---
 
 # Source code rules

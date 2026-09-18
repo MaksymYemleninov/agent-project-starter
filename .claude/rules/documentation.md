@@ -1,6 +1,7 @@
 ---
-description: Rules for anything under docs/. Always relevant when documentation changes.
-paths: ["docs/**/*.md"]
+description: Rules for anything under docs/. Loads when documentation files are in play.
+paths:
+  - "docs/**/*.md"
 ---
 
 # Documentation rules

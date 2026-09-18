@@ -338,6 +338,65 @@ for (const [r, doc] of docs) {
   if (todos) warn(r, `${todos} TODO/FIXME marker(s). Move them into a spec's tasks.md or drop them.`);
 }
 
+/* ------------------------------------------- 8b. the .claude/ surface itself */
+
+// Rules, skills and commands are context. Malformed ones fail silently at runtime, which is the
+// worst way for a guardrail to fail, so check them here.
+
+for (const abs of walk(join(ROOT, '.claude/rules')).filter((f) => f.endsWith('.md'))) {
+  const r = rel(abs);
+  const fm = frontmatter(readFileSync(abs, 'utf8'));
+  if (!fm) {
+    err(r, 'rule has no frontmatter, so it loads into every session unconditionally. Add `paths`.');
+    continue;
+  }
+  if (!('paths' in fm)) {
+    warn(
+      r,
+      'no `paths` field, so this rule loads into every session and costs context every time. ' +
+        'Scope it, or move it into AGENTS.md if it really is universal.',
+    );
+  }
+  if (!fm.description) warn(r, 'no `description` field');
+}
+
+for (const abs of walk(join(ROOT, '.claude/skills')).filter((f) => f.endsWith('SKILL.md'))) {
+  const r = rel(abs);
+  const fm = frontmatter(readFileSync(abs, 'utf8'));
+  if (!fm) {
+    err(r, 'skill has no frontmatter. It needs `name` and `description` to be discoverable.');
+    continue;
+  }
+  if (!fm.name) err(r, 'skill is missing `name`');
+  if (!fm.description) err(r, 'skill is missing `description`, so it will never trigger');
+  const dir = basename(dirname(abs));
+  if (fm.name && fm.name !== dir) err(r, `skill \`name: ${fm.name}\` does not match its directory \`${dir}\``);
+}
+
+for (const abs of walk(join(ROOT, '.claude/commands')).filter((f) => f.endsWith('.md'))) {
+  const r = rel(abs);
+  const fm = frontmatter(readFileSync(abs, 'utf8'));
+  if (!fm?.description) warn(r, 'command has no `description`, so it shows unlabelled in the menu');
+}
+
+if (existsSync(join(ROOT, '.claude/settings.json'))) {
+  try {
+    const s = JSON.parse(readFileSync(join(ROOT, '.claude/settings.json'), 'utf8'));
+    for (const [event, entries] of Object.entries(s.hooks ?? {})) {
+      for (const entry of entries) {
+        for (const h of entry.hooks ?? []) {
+          const m = String(h.command ?? '').match(/(\.claude\/hooks\/[\w.-]+)/);
+          if (m && !existsSync(join(ROOT, m[1]))) {
+            err('.claude/settings.json', `${event} hook points at \`${m[1]}\`, which does not exist`);
+          }
+        }
+      }
+    }
+  } catch (e) {
+    err('.claude/settings.json', `is not valid JSON: ${e.message}`);
+  }
+}
+
 /* ---------------------------------------------------------------- 9. report */
 
 const label = (list) => list.map(({ file, msg }) => `  ${file}: ${msg}`).join('\n');
