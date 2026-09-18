@@ -2,6 +2,18 @@
 // PostToolUse hook: when a file that encodes an architectural commitment is touched,
 // say so immediately rather than hoping the agent remembers at the end of the session.
 import { readFileSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+// Hooks may run from anywhere. Anchor to the project, or every relative path below silently
+// resolves against the wrong directory and the hook goes quiet instead of failing loudly.
+const projectDir =
+  process.env.CLAUDE_PROJECT_DIR ?? join(dirname(fileURLToPath(import.meta.url)), '../..');
+try {
+  process.chdir(projectDir);
+} catch {
+  process.exit(0);
+}
 
 let payload = {};
 try {

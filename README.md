@@ -11,8 +11,8 @@ refuses the pull request if it does not.
 
 ```bash
 git clone <this repo> my-project && cd my-project
-rm -rf .git && git init
-npm install   # nothing to install yet, creates the lockfile once you add a stack
+rm -rf .git && git init && git add -A && git commit -m "chore: start from agent-project-starter"
+npm run check   # the gates work immediately, before any stack exists
 ```
 
 1. Write your idea into `docs/idea.md`. Prose is fine, bullet points are fine, half-formed is fine.
@@ -83,6 +83,23 @@ mistake worth catching: it is invisible at runtime and it compounds.
 | `/adr` | Record one architecture decision |
 | `/ship` | Pre-pull-request gate: tests, doc lint, ADR drift, log entry |
 | `/lint` | Run the documentation linters and summarize |
+
+## Known limits
+
+Worth stating plainly, because a guardrail you trust more than it deserves is worse than none.
+
+- **The permission layer is not a security boundary.** `permissions.deny` on `Read(./.env)` stops
+  the Read tool, not a shell command that prints the same file. It is there to stop an agent from
+  wandering into a secret by accident, not to contain one that is trying. Real containment is the
+  sandbox, the secret manager, and not putting production credentials on the machine.
+- **Hooks are reminders with teeth, not enforcement.** The Stop hook blocks once per session and
+  then stands aside by design, because a hook that can block forever is a hook someone deletes.
+  CI is the only gate that actually holds.
+- **The ADR gate detects triggers, not judgement.** It knows that `docs/architecture/` changed. It
+  cannot tell whether the ADR you added is any good. That part is still review.
+- **`/onboard` has no resume.** If the session dies in phase 4, the next one starts over. The
+  product documents it has already written survive, so the second pass is faster, but it is not
+  a checkpointed workflow.
 
 ## Scope of this template
 

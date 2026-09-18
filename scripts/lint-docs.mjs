@@ -25,6 +25,13 @@ const today = new Date().toISOString().slice(0, 10);
 
 /* ------------------------------------------------------------------ helpers */
 
+/**
+ * Read a file with line endings normalized.
+ * Without this, a Windows checkout with autocrlf turns every frontmatter block into `\r`-suffixed
+ * keys, the parser returns an empty object, and the linter reports every document as malformed.
+ */
+const read = (p) => readFileSync(p, 'utf8').replace(/\r\n/g, '\n');
+
 function walk(dir, out = []) {
   if (!existsSync(dir)) return out;
   for (const name of readdirSync(dir)) {
@@ -109,13 +116,13 @@ for (const f of REQUIRED) {
 /* ------------------------------------------- 2. constitution stays readable */
 
 if (existsSync(join(ROOT, 'AGENTS.md'))) {
-  const lines = readFileSync(join(ROOT, 'AGENTS.md'), 'utf8').split('\n').length;
+  const lines = read(join(ROOT, 'AGENTS.md'), 'utf8').split('\n').length;
   if (lines > 200) {
     err('AGENTS.md', `${lines} lines, limit is 200. Move procedures into .claude/skills/.`);
   } else if (lines > 170) {
     warn('AGENTS.md', `${lines} lines, approaching the 200 line limit.`);
   }
-  if (!readFileSync(join(ROOT, 'CLAUDE.md'), 'utf8').includes('@AGENTS.md')) {
+  if (!read(join(ROOT, 'CLAUDE.md'), 'utf8').includes('@AGENTS.md')) {
     err('CLAUDE.md', 'must import the constitution with `@AGENTS.md`');
   }
 }
@@ -129,7 +136,7 @@ const docs = new Map(); // relative path -> { text, fm, links }
 
 for (const abs of docFiles) {
   const r = rel(abs);
-  const text = readFileSync(abs, 'utf8');
+  const text = read(abs, 'utf8');
   const fm = frontmatter(text);
   const links = [...text.matchAll(/\[[^\]]*\]\(([^)]+)\)/g)].map((m) => m[1]);
   docs.set(r, { abs, text, fm, links });
@@ -326,7 +333,7 @@ const SECRETS = [
 
 const scan = [...docFiles, join(ROOT, 'AGENTS.md'), join(ROOT, 'README.md')].filter((f) => existsSync(f));
 for (const abs of scan) {
-  const text = readFileSync(abs, 'utf8');
+  const text = read(abs, 'utf8');
   for (const [re, label] of SECRETS) {
     if (re.test(text)) err(rel(abs), `looks like a committed ${label}. Move it to the secret manager.`);
   }
@@ -345,7 +352,7 @@ for (const [r, doc] of docs) {
 
 for (const abs of walk(join(ROOT, '.claude/rules')).filter((f) => f.endsWith('.md'))) {
   const r = rel(abs);
-  const fm = frontmatter(readFileSync(abs, 'utf8'));
+  const fm = frontmatter(read(abs, 'utf8'));
   if (!fm) {
     err(r, 'rule has no frontmatter, so it loads into every session unconditionally. Add `paths`.');
     continue;
@@ -362,7 +369,7 @@ for (const abs of walk(join(ROOT, '.claude/rules')).filter((f) => f.endsWith('.m
 
 for (const abs of walk(join(ROOT, '.claude/skills')).filter((f) => f.endsWith('SKILL.md'))) {
   const r = rel(abs);
-  const fm = frontmatter(readFileSync(abs, 'utf8'));
+  const fm = frontmatter(read(abs, 'utf8'));
   if (!fm) {
     err(r, 'skill has no frontmatter. It needs `name` and `description` to be discoverable.');
     continue;
@@ -375,13 +382,13 @@ for (const abs of walk(join(ROOT, '.claude/skills')).filter((f) => f.endsWith('S
 
 for (const abs of walk(join(ROOT, '.claude/commands')).filter((f) => f.endsWith('.md'))) {
   const r = rel(abs);
-  const fm = frontmatter(readFileSync(abs, 'utf8'));
+  const fm = frontmatter(read(abs, 'utf8'));
   if (!fm?.description) warn(r, 'command has no `description`, so it shows unlabelled in the menu');
 }
 
 if (existsSync(join(ROOT, '.claude/settings.json'))) {
   try {
-    const s = JSON.parse(readFileSync(join(ROOT, '.claude/settings.json'), 'utf8'));
+    const s = JSON.parse(read(join(ROOT, '.claude/settings.json'), 'utf8'));
     for (const [event, entries] of Object.entries(s.hooks ?? {})) {
       for (const entry of entries) {
         for (const h of entry.hooks ?? []) {

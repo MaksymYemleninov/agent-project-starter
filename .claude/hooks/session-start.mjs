@@ -3,6 +3,18 @@
 // so the agent does not have to rediscover them mid-session.
 import { readFileSync, existsSync } from 'node:fs';
 import { execSync } from 'node:child_process';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+// Hooks may run from anywhere. Anchor to the project, or every relative path below silently
+// resolves against the wrong directory and the hook goes quiet instead of failing loudly.
+const projectDir =
+  process.env.CLAUDE_PROJECT_DIR ?? join(dirname(fileURLToPath(import.meta.url)), '../..');
+try {
+  process.chdir(projectDir);
+} catch {
+  process.exit(0);
+}
 
 const lines = [];
 
