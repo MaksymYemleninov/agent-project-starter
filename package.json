@@ -7,7 +7,8 @@
   "scripts": {
     "lint:docs": "node scripts/lint-docs.mjs",
     "check:adr": "node scripts/check-adr-drift.mjs",
-    "check": "npm run lint:docs && npm run check:adr"
+    "test:gates": "node scripts/test-gates.mjs",
+    "check": "npm run lint:docs && npm run check:adr && npm run test:gates"
   },
   "engines": {
     "node": ">=20"

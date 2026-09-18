@@ -27,6 +27,9 @@ jobs:
       - name: Lint documentation
         run: npm run lint:docs
 
+      - name: Test the gates
+        run: npm run test:gates
+
       - name: Check ADR drift
         if: "!contains(github.event.pull_request.labels.*.name, 'no-adr-needed')"
         env:

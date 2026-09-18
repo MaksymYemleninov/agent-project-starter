@@ -46,7 +46,9 @@ are not prose:
 - a `Stop` hook checks for missing documentation before the session ends,
 - `npm run lint:docs` validates structure, frontmatter, links, orphans and staleness,
 - `npm run check:adr` fails a pull request that changes `docs/architecture/` or dependencies
-  without adding a decision record.
+  without adding a decision record,
+- `npm run test:gates` tests the gates themselves against a disposable copy of the repository,
+  because every bug found in them so far would otherwise have come back on the next edit.
 
 Reminders are cheap and unreliable. Hooks catch forgetfulness. CI is the only thing that actually
 holds. All three are wired up here.
