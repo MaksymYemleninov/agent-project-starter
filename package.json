@@ -1,0 +1,15 @@
+{
+  "name": "agent-project-starter",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Agent-native project starter: constitution, specs, ADRs and doc gates that CI enforces.",
+  "type": "module",
+  "scripts": {
+    "lint:docs": "node scripts/lint-docs.mjs",
+    "check:adr": "node scripts/check-adr-drift.mjs",
+    "check": "npm run lint:docs && npm run check:adr"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

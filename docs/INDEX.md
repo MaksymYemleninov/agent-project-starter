@@ -1,0 +1,48 @@
+# Documentation Index
+
+Entry point for humans and agents. Every file under `docs/` must be listed here.
+`npm run lint:docs` fails on any document that is missing from this index.
+
+## Product
+
+- [Vision](product/vision.md) - what this is and why it should exist.
+- [Scope](product/scope.md) - what the first releasable version includes.
+- [Non-goals](product/non-goals.md) - what it deliberately does not do. Binding.
+- [Personas](product/personas.md) - who it is for.
+
+## Specs
+
+One directory per feature under `specs/`, numbered. Each holds `spec.md` (what and why),
+`plan.md` (how) and `tasks.md` (ordered work).
+
+- [Spec template](specs/_template/spec.md) - copy this for a new feature.
+
+<!-- specs:list -->
+No feature specs yet. `/spec` adds them here.
+<!-- /specs:list -->
+
+## Decisions
+
+Architecture decision records. Append-only: a wrong decision is superseded, never edited away.
+
+- [ADR template](decisions/_template.md)
+- [0000 - Record architecture decisions](decisions/0000-record-architecture-decisions.md) - accepted
+
+<!-- decisions:list -->
+<!-- /decisions:list -->
+
+## Architecture
+
+- [Overview](architecture/overview.md) - components and how they fit.
+- [Data model](architecture/data-model.md) - entities and relationships.
+- [Integrations](architecture/integrations.md) - external services and contracts.
+
+## Operations
+
+- [Environments](ops/environments.md) - environments, configuration and secret handling.
+- [Runbook](ops/runbook.md) - deploy, rollback, common failures.
+
+## Journal
+
+- [Change log](log.md) - chronological record of what changed and where.
+- [Idea](idea.md) - the original raw idea. Historical, never rewritten.

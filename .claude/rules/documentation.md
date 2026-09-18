@@ -1,0 +1,17 @@
+---
+description: Rules for anything under docs/. Always relevant when documentation changes.
+paths: ["docs/**/*.md"]
+---
+
+# Documentation rules
+
+- Add the `docs/INDEX.md` entry in the same change as the document. Later means never, and the
+  linter fails the build either way.
+- Update `last_verified` on substantive edits only: facts, sections, sources. Not on typos or
+  formatting. A bumped date that reflects no verification is worse than a stale one.
+- Never delete an ADR and never edit a decision into a different decision. Supersede it.
+- When a new fact contradicts an existing document, do not overwrite it. State the conflict in
+  prose naming both sides, and escalate to the human.
+- No secrets, tokens, keys or real credentials, including in examples. Use obvious placeholders.
+- Write plain prose. No marketing language, no "leverage", no "seamless", no "robust".
+- Acceptance criteria are always in EARS form. See `.claude/skills/writing-spec/`.

@@ -1,0 +1,133 @@
+---
+description: Turn docs/idea.md into a scaffolded, documented project. Asks first, builds second.
+argument-hint: "[optional: path to the idea file, defaults to docs/idea.md]"
+---
+
+# Onboard this project
+
+You are setting up a repository that will be built mostly by agents. Everything you decide here
+becomes the context every future session inherits. Getting it slightly wrong is expensive and
+quiet, so the order below is not negotiable: **you do not write code until phase 6.**
+
+Idea file: `$1` if provided, otherwise `@docs/idea.md`.
+
+Current state of the repo:
+
+- Constitution: @AGENTS.md
+- Index: @docs/INDEX.md
+
+## Phase 1 - Read and reflect back
+
+Read the idea file. Then write, in at most 15 lines:
+
+- what you understand the product to be,
+- who you think it is for,
+- the three assumptions the idea depends on but does not state.
+
+Do not ask questions yet. Reflecting back first catches the misreadings that questions would
+otherwise bake in.
+
+## Phase 2 - Interrogate
+
+Ask **one question at a time**, waiting for each answer. This is the step that pays for the whole
+template, so do not batch questions into a wall of text and do not accept vague answers.
+
+Cover, in roughly this order, skipping anything the idea file already answers clearly:
+
+1. Who has this problem today, and what do they do instead right now.
+2. What is the smallest version a real user could use. Push for something smaller than the answer.
+3. What is explicitly **not** in it. Get at least three items. This becomes `non-goals.md` and it
+   is binding.
+4. What would make the user call it a failure in six months.
+5. Hard constraints: deadline, budget, team size, technology that must or must not be used,
+   regulatory or data-residency requirements.
+6. Where it runs and who operates it.
+7. Does it store personal data, take payments, or need authentication. Each is a decision with
+   consequences, not a checkbox.
+
+Stop asking when the remaining unknowns would not change what you build first. Then summarize the
+answers and get an explicit confirmation before moving on.
+
+## Phase 3 - Product documents
+
+Write, from the idea plus the answers:
+
+- `docs/product/vision.md`
+- `docs/product/scope.md`
+- `docs/product/non-goals.md`
+- `docs/product/personas.md`
+
+Set `status: draft` and `last_verified` to today in each. Use the user's own words where they
+were precise. Do not invent numbers, do not add market language, and where an answer was
+uncertain, write that it is uncertain rather than smoothing it over.
+
+Leave `docs/idea.md` untouched. It is the historical record.
+
+## Phase 4 - Propose the stack, as decisions
+
+Propose a stack. For each significant choice, present:
+
+| Choice | Recommendation | Main alternative | Why this one here | Cost to reverse |
+
+Cover at minimum: language and runtime, framework, persistence, hosting and deploy, auth (if
+needed), testing approach, styling or UI approach (if there is a UI).
+
+Prefer boring and reversible over interesting and sticky. Match the constraints from phase 2, not
+your preference. If the team is one person, say so and pick accordingly.
+
+**Stop here and get approval.** Present the table and wait. Do not write ADRs for choices the
+human has not agreed to.
+
+## Phase 5 - Record the decisions
+
+For each approved choice, write an ADR in `docs/decisions/`, numbered from `0001`, using
+`docs/decisions/_template.md`. Follow `.claude/skills/writing-adr/SKILL.md`.
+
+Each ADR must have a real Context section. "We chose X because it is popular" is not context; the
+constraint from phase 2 that made X the right call is. Each must have honest negative
+consequences.
+
+Then update:
+
+- `AGENTS.md`: fill the `<!-- onboard:project -->`, `<!-- onboard:principles -->`,
+  `<!-- onboard:code-map -->` and `<!-- onboard:commands -->` blocks from the decisions. Keep the
+  file under 200 lines. Long stack conventions go into `.claude/rules/`, not here.
+- `docs/architecture/overview.md`: components, request path, boundaries, links to the ADRs.
+- `docs/ops/environments.md`: environments and where secrets live.
+- `.claude/rules/`: replace the placeholder rules with real path-scoped ones for the chosen stack.
+- `.claude/skills/design-system/`, `infra-setup/`, `api-contract/`: fill the ones the stack
+  actually needs, and **delete the ones it does not**. An empty skill is worse than no skill.
+
+## Phase 6 - Scaffold
+
+Only now touch code. Create the minimum that runs and proves the toolchain:
+
+- project skeleton for the chosen stack,
+- one working health endpoint or one rendered page, nothing more,
+- test runner with one real passing test,
+- linter and formatter configured,
+- `.env.example` with every variable and a safe placeholder,
+- `.github/workflows/ci.yml` extended to run install, lint, test alongside the existing doc gates.
+
+Verify it: run install, lint, test and the dev server yourself, and show the actual output. Your
+summary is not evidence.
+
+## Phase 7 - First spec and handoff
+
+- Cut `docs/specs/0001-<slug>/` for the first capability in `scope.md`, using the template.
+  Acceptance criteria in EARS form. Leave `status: draft` with open questions listed.
+- Update `docs/INDEX.md` so every new document is listed.
+- Add the onboarding entry to `docs/log.md`: 3 to 6 bullets.
+- Run `npm run check` and fix what it reports.
+- Commit on a branch `onboard/initial-setup`, do not push without being asked.
+
+Finish with a short report: stack chosen, ADRs written, what runs now, what the human should look
+at first, and the open questions you could not resolve.
+
+## Rules for this command
+
+- Never skip phase 2 because the idea file "seems clear enough". It never is.
+- Never write an ADR for a decision the human did not approve.
+- Never install a dependency that no approved ADR covers.
+- If the human gives an answer that contradicts something already written, do not overwrite it
+  silently: say which document it contradicts and ask which one wins.
