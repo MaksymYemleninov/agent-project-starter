@@ -11,7 +11,7 @@
  *   BASE_REF=<ref> node scripts/check-adr-drift.mjs
  *   SKIP_ADR_CHECK="<reason>" node scripts/check-adr-drift.mjs   # escape, reason required
  */
-import { changedFiles, classify } from './changed-files.mjs';
+import { changedFiles, classify, loadGates } from './changed-files.mjs';
 
 const skip = process.env.SKIP_ADR_CHECK;
 if (skip) {
@@ -42,7 +42,7 @@ if (files.length === 0) {
   process.exit(0);
 }
 
-const c = classify(files);
+const c = classify(files, loadGates());
 
 const triggers = [];
 if (c.architecture.length) triggers.push(`architecture docs changed: ${c.architecture.join(', ')}`);

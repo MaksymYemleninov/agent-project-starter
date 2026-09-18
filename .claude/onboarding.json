@@ -1,0 +1,10 @@
+{
+  "$comment": "Checkpoint for /onboard. A session that dies mid-onboarding leaves this behind so the next one resumes instead of starting over. /onboard updates it after every phase.",
+  "status": "not-started",
+  "phase": null,
+  "completedPhases": [],
+  "startedAt": null,
+  "updatedAt": null,
+  "stack": null,
+  "agreedButNotWritten": []
+}

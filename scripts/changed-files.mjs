@@ -6,6 +6,7 @@
  * implement separately is a guardrail with two different behaviors.
  */
 import { execSync } from 'node:child_process';
+import { readFileSync, existsSync } from 'node:fs';
 
 export function git(cmd) {
   try {
@@ -65,21 +66,67 @@ export function changedFiles({ base: explicitBase } = {}) {
   return { base, files: [...new Set([...committed, ...working])], reason: null };
 }
 
-/** Paths whose change means a decision was made, grouped so the message can say which. */
-export function classify(files) {
-  const MANIFESTS =
-    /^(package\.json|requirements\.txt|pyproject\.toml|go\.mod|Cargo\.toml|Gemfile|composer\.json)$/;
-  const GUARDRAILS =
-    /^(scripts\/(lint-docs|check-adr-drift|changed-files)\.mjs|\.github\/workflows\/.+|\.claude\/(settings\.json|hooks\/.+))$/;
+/**
+ * Minimal glob matcher. No dependency is worth adding for this, and the gates must keep working
+ * before any stack exists. Supports `**`, `*` and `?`; everything else is literal.
+ */
+export function globToRegExp(glob) {
+  let out = '';
+  for (let i = 0; i < glob.length; i++) {
+    const ch = glob[i];
+    if (ch === '*') {
+      if (glob[i + 1] === '*') {
+        // `**/` also matches zero directories, so `**/.env` matches a bare `.env`.
+        if (glob[i + 2] === '/') {
+          out += '(?:.*/)?';
+          i += 2;
+        } else {
+          out += '.*';
+          i += 1;
+        }
+      } else {
+        out += '[^/]*';
+      }
+    } else if (ch === '?') out += '[^/]';
+    else out += ch.replace(/[.+^${}()|[\]\\]/g, '\\$&');
+  }
+  return new RegExp(`^${out}$`);
+}
 
+export function matchesAny(path, globs) {
+  return globs.some((g) => globToRegExp(g).test(path));
+}
+
+/** Gate tuning. Missing or malformed config falls back to the defaults rather than failing open. */
+export function loadGates(root = '.') {
+  const defaults = {
+    sourcePaths: ['src/**', 'app/**', 'lib/**', 'server/**', 'packages/**', 'api/**', 'components/**'],
+    manifests: ['package.json', 'requirements.txt', 'pyproject.toml', 'go.mod', 'Cargo.toml', 'Gemfile', 'composer.json'],
+    guardrails: ['scripts/*.mjs', '.github/workflows/**', '.claude/settings.json', '.claude/gates.json', '.claude/hooks/**'],
+    stopHook: { sourceFilesWithoutSpec: 3, requireLogEntry: true, requireAdrForGuardrails: true },
+    secretPaths: ['**/.env', '**/.env.*', '**/*.pem', '**/*.key', '**/id_rsa*'],
+    secretPathAllowlist: ['**/.env.example', '**/.env.sample', '**/.env.template'],
+  };
+  const file = `${root}/.claude/gates.json`;
+  if (!existsSync(file)) return defaults;
+  try {
+    const parsed = JSON.parse(readFileSync(file, 'utf8'));
+    return { ...defaults, ...parsed, stopHook: { ...defaults.stopHook, ...(parsed.stopHook ?? {}) } };
+  } catch {
+    return defaults;
+  }
+}
+
+/** Paths whose change means a decision was made, grouped so the message can say which. */
+export function classify(files, gates = loadGates()) {
   return {
     architecture: files.filter((f) => /^docs\/architecture\/.+\.md$/.test(f)),
-    manifests: files.filter((f) => MANIFESTS.test(f)),
+    manifests: files.filter((f) => matchesAny(f, gates.manifests)),
     nonGoals: files.filter((f) => f === 'docs/product/non-goals.md'),
-    guardrails: files.filter((f) => GUARDRAILS.test(f)),
+    guardrails: files.filter((f) => matchesAny(f, gates.guardrails)),
     adrs: files.filter((f) => /^docs\/decisions\/\d{4}-.+\.md$/.test(f)),
     specs: files.filter((f) => /^docs\/specs\/\d{4}-/.test(f)),
     log: files.filter((f) => f === 'docs/log.md'),
-    source: files.filter((f) => /^(src|app|lib|server|packages|api|components)\//.test(f)),
+    source: files.filter((f) => matchesAny(f, gates.sourcePaths)),
   };
 }

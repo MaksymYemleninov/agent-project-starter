@@ -68,6 +68,21 @@ function frontmatter(text) {
   return data;
 }
 
+/** Body of a heading, up to the next heading of the same or higher level. */
+function section(text, heading) {
+  const level = heading.match(/^#+/)[0].length;
+  const i = text.indexOf(`${heading}\n`);
+  if (i === -1) return null;
+  const rest = text.slice(i + heading.length);
+  const next = rest.search(new RegExp(`\\n#{1,${level}}\\s`));
+  return (next === -1 ? rest : rest.slice(0, next)).trim();
+}
+
+/** Strip markdown furniture so length means prose, not pipes and dashes. */
+const prose = (s) => (s ?? '').replace(/[|#>*`[\]()_-]/g, ' ').replace(/\s+/g, ' ').trim();
+
+const PLACEHOLDER = /\b(TBD|NNNN|YYYY-MM-DD)\b/;
+
 function isDate(v) {
   return typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(Date.parse(v));
 }
@@ -97,20 +112,33 @@ const REQUIRED = [
   'docs/log.md',
   'docs/idea.md',
   'docs/product/vision.md',
-  'docs/product/scope.md',
   'docs/product/non-goals.md',
-  'docs/product/personas.md',
   'docs/architecture/overview.md',
   'docs/ops/environments.md',
-  'docs/ops/runbook.md',
   'docs/decisions/_template.md',
   'docs/decisions/0000-record-architecture-decisions.md',
   'docs/specs/_template/spec.md',
   '.claude/settings.json',
 ];
 
+// Useful for most projects, pointless for some. An internal tool with one user does not need
+// personas, and a stateless service does not need a data model. Deleting one is fine; the index
+// link check makes sure the index stops pointing at it.
+const EXPECTED = [
+  'docs/product/scope.md',
+  'docs/product/personas.md',
+  'docs/architecture/data-model.md',
+  'docs/architecture/integrations.md',
+  'docs/ops/runbook.md',
+];
+
 for (const f of REQUIRED) {
   if (!existsSync(join(ROOT, f))) err(f, 'required file is missing');
+}
+for (const f of EXPECTED) {
+  if (!existsSync(join(ROOT, f))) {
+    warn(f, 'missing. Fine if this project genuinely does not need it, otherwise restore it.');
+  }
 }
 
 /* ------------------------------------------- 2. constitution stays readable */
@@ -187,6 +215,46 @@ for (const [r, doc] of docs) {
     warn(r, `proposed for ${Math.round(ageDays(doc.fm.date))} days. Decide it or withdraw it.`);
   }
 
+
+  // Existence is cheap to fake. These checks do not judge whether a decision is good, but they
+  // do catch the empty shell written to get past the gate.
+  if (PLACEHOLDER.test(doc.text)) {
+    err(r, 'still contains placeholder text (TBD / NNNN / YYYY-MM-DD) from the template');
+  }
+
+  const context = prose(section(doc.text, '## Context'));
+  if (context.length < 200) {
+    err(
+      r,
+      `Context is ${context.length} characters of prose, minimum is 200. It is the one section ` +
+        'that cannot be reconstructed from the code: name the constraint that forced the choice.',
+    );
+  }
+
+  const decision = prose(section(doc.text, '## Decision'));
+  if (decision.length < 40) err(r, 'Decision section is essentially empty');
+
+  const options = section(doc.text, '## Options considered');
+  if (options) {
+    const rows = options
+      .split('\n')
+      .filter((l) => /^\|/.test(l) && !/^\|[\s|:-]+\|$/.test(l))
+      .slice(1);
+    if (rows.length < 2) {
+      err(r, `Options considered lists ${rows.length} option(s). A decision with one option was not a decision.`);
+    }
+  } else {
+    warn(r, 'no `## Options considered` section');
+  }
+
+  const negative = section(doc.text, '### Negative');
+  const negBullets = (negative ?? '')
+    .split('\n')
+    .filter((l) => /^\s*[-*]\s+/.test(l) && prose(l).length > 20);
+  if (negBullets.length === 0) {
+    err(r, 'no substantive negative consequence. Every real decision costs something; name it.');
+  }
+
   adrs.set(id, { path: r, fm: doc.fm });
 }
 
@@ -252,6 +320,10 @@ for (const entry of existsSync(join(DOCS, 'specs')) ? readdirSync(join(DOCS, 'sp
         'no acceptance criterion in EARS form. Start criteria with When / While / If / Where / The system shall.',
       );
     }
+  }
+
+  if (['approved', 'in-progress', 'done'].includes(fm.status) && PLACEHOLDER.test(doc.text)) {
+    err(specPath, `status is \`${fm.status}\` but the spec still contains template placeholders`);
   }
 
   if (['in-progress', 'done'].includes(fm.status)) {
@@ -401,6 +473,46 @@ if (existsSync(join(ROOT, '.claude/settings.json'))) {
     }
   } catch (e) {
     err('.claude/settings.json', `is not valid JSON: ${e.message}`);
+  }
+}
+
+/* ------------------------------------------- 8c. onboarding state consistency */
+
+if (existsSync(join(ROOT, '.claude/onboarding.json'))) {
+  const f = '.claude/onboarding.json';
+  try {
+    const s = JSON.parse(read(join(ROOT, f)));
+    const STATES = ['not-started', 'in-progress', 'completed'];
+    if (!STATES.includes(s.status)) {
+      err(f, `\`status: ${s.status}\` is not one of ${STATES.join(' | ')}`);
+    }
+    if (s.status === 'in-progress' && !s.phase) warn(f, 'in progress but records no phase to resume from');
+
+    if (s.status === 'completed') {
+      const agents = existsSync(join(ROOT, 'AGENTS.md')) ? read(join(ROOT, 'AGENTS.md')) : '';
+      if (agents.includes('Stage: pre-onboarding')) {
+        err(f, 'says onboarding completed, but AGENTS.md still says `Stage: pre-onboarding`');
+      }
+      if (agents.includes('TBD after onboarding')) {
+        err('AGENTS.md', 'Commands table still says "TBD after onboarding" after onboarding completed');
+      }
+      if (agents.includes('<!-- onboard:')) {
+        warn('AGENTS.md', 'still has onboarding placeholder markers; remove them once filled');
+      }
+      if (s.agreedButNotWritten?.length) {
+        err(f, `onboarding is marked complete but ${s.agreedButNotWritten.length} decision(s) are still unwritten`);
+      }
+    }
+  } catch (e) {
+    err(f, `is not valid JSON: ${e.message}`);
+  }
+}
+
+if (existsSync(join(ROOT, '.claude/gates.json'))) {
+  try {
+    JSON.parse(read(join(ROOT, '.claude/gates.json')));
+  } catch (e) {
+    err('.claude/gates.json', `is not valid JSON, so the gates fell back to defaults silently: ${e.message}`);
   }
 }
 

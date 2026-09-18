@@ -1,0 +1,54 @@
+{
+  "$comment": "Tuning for the documentation gates. /onboard rewrites sourcePaths and manifests for the chosen stack; the defaults below only cover common JavaScript layouts and are wrong for most other languages.",
+  "sourcePaths": [
+    "src/**",
+    "app/**",
+    "lib/**",
+    "server/**",
+    "packages/**",
+    "api/**",
+    "components/**"
+  ],
+  "manifests": [
+    "package.json",
+    "requirements.txt",
+    "pyproject.toml",
+    "go.mod",
+    "Cargo.toml",
+    "Gemfile",
+    "composer.json"
+  ],
+  "guardrails": [
+    "scripts/lint-docs.mjs",
+    "scripts/check-adr-drift.mjs",
+    "scripts/changed-files.mjs",
+    ".github/workflows/**",
+    ".claude/settings.json",
+    ".claude/gates.json",
+    ".claude/hooks/**"
+  ],
+  "stopHook": {
+    "sourceFilesWithoutSpec": 3,
+    "requireLogEntry": true,
+    "requireAdrForGuardrails": true
+  },
+  "secretPaths": [
+    "**/.env",
+    "**/.env.*",
+    "**/*.pem",
+    "**/*.key",
+    "**/*.p12",
+    "**/*.keystore",
+    "**/id_rsa*",
+    "**/id_ed25519*",
+    "**/*credentials*.json",
+    "**/service-account*.json",
+    "**/secrets.*"
+  ],
+  "secretPathAllowlist": [
+    "**/.env.example",
+    "**/.env.sample",
+    "**/.env.template",
+    "**/.env.defaults"
+  ]
+}

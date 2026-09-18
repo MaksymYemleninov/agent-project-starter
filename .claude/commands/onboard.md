@@ -16,6 +16,27 @@ Current state of the repo:
 - Constitution: @AGENTS.md
 - Index: @docs/INDEX.md
 
+## Phase 0 - Resume check
+
+Read `@.claude/onboarding.json` first, before anything else.
+
+- `status: "completed"` - this project is already onboarded. Do not run the rest of this command.
+  Say so, and ask what the user actually wants: a new spec (`/spec`), a decision (`/adr`), or a
+  change to something onboarding produced.
+- `status: "in-progress"` - **resume**. Skip every phase listed in `completedPhases`, read what
+  those phases already wrote, and continue from the next one. Do not re-ask questions that
+  `docs/product/` already answers and do not rewrite documents the user already approved. Check
+  `agreedButNotWritten` for decisions that were agreed verbally before the previous session ended.
+- `status: "not-started"` - run from phase 1.
+
+**After finishing each phase**, update the file: set `phase`, append to `completedPhases`, set
+`updatedAt` to today, and record anything agreed but not yet written into `agreedButNotWritten`
+(clearing entries once they are written). This is the only thing that survives a session dying
+mid-onboarding, so update it as you go, not at the end.
+
+Set `status: "in-progress"` and `startedAt` when you begin phase 1, and `status: "completed"` at
+the end of phase 7.
+
 ## Phase 1 - Read and reflect back
 
 Read the idea file. Then write, in at most 15 lines:
@@ -131,3 +152,8 @@ at first, and the open questions you could not resolve.
 - Never install a dependency that no approved ADR covers.
 - If the human gives an answer that contradicts something already written, do not overwrite it
   silently: say which document it contradicts and ask which one wins.
+- Update `.claude/onboarding.json` after every phase. A resumed onboarding that starts over is
+  worse than no checkpoint, because it silently discards decisions the user already made.
+- In phase 5, rewrite `sourcePaths` and `manifests` in `.claude/gates.json` for the chosen stack.
+  The defaults there describe common JavaScript layouts and are wrong for most other languages,
+  which means the Stop hook would quietly stop noticing source changes.

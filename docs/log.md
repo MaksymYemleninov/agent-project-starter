@@ -6,6 +6,17 @@ the actual content.
 
 Newest entry on top.
 
+## 2026-09-18 - Gates made configurable and substance-checked
+
+- Gate tuning moved to `.claude/gates.json`; the hardcoded source paths only matched JavaScript
+  layouts, so the Stop hook was blind on any other stack.
+- ADR linter now enforces a substance floor: real Context, two options, a negative consequence,
+  no template placeholders. Details in [ADR 0002](decisions/0002-configure-and-substantiate-the-gates.md).
+- New `PreToolUse` hook denies shell commands touching secret-bearing paths, closing the route
+  around the `Read` deny rule.
+- `/onboard` checkpoints into `.claude/onboarding.json` and resumes instead of restarting.
+- Required documents split into a structural core and an expected set that only warns.
+
 ## 2026-09-18 - Gates reviewed and hardened
 
 - Stop hook now sees committed work, not only the working tree; it had been missing the normal

@@ -42,8 +42,28 @@ try {
   if (open.length) lines.push(`Proposed ADRs awaiting a decision: ${open.join(', ')}`);
 } catch {}
 
-// Not onboarded yet.
-if (existsSync('AGENTS.md') && readFileSync('AGENTS.md', 'utf8').includes('Stage: pre-onboarding')) {
+// Onboarding state. A half-finished onboarding is the case worth surfacing loudest: without this
+// the next session cheerfully starts over and rewrites documents someone already agreed to.
+if (existsSync('.claude/onboarding.json')) {
+  try {
+    const s = JSON.parse(readFileSync('.claude/onboarding.json', 'utf8'));
+    if (s.status === 'in-progress') {
+      lines.push(
+        `Onboarding is IN PROGRESS, stopped after phase ${s.phase ?? '?'} ` +
+          `(completed: ${(s.completedPhases ?? []).join(', ') || 'none'}). ` +
+          'Run `/onboard` to resume from the next phase. Do not restart from phase 1 and do not ' +
+          'rewrite documents that are already written.',
+      );
+      if (s.agreedButNotWritten?.length) {
+        lines.push(`Agreed but not yet written down: ${s.agreedButNotWritten.join('; ')}`);
+      }
+    } else if (s.status === 'not-started') {
+      lines.push('This project has not been onboarded yet. Run `/onboard` before writing code.');
+    }
+  } catch {
+    lines.push('`.claude/onboarding.json` is unreadable. Check it before running `/onboard`.');
+  }
+} else if (existsSync('AGENTS.md') && readFileSync('AGENTS.md', 'utf8').includes('Stage: pre-onboarding')) {
   lines.push('This project has not been onboarded yet. Run `/onboard` before writing code.');
 }
 

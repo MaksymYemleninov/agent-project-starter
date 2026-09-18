@@ -88,18 +88,33 @@ mistake worth catching: it is invisible at runtime and it compounds.
 
 Worth stating plainly, because a guardrail you trust more than it deserves is worse than none.
 
-- **The permission layer is not a security boundary.** `permissions.deny` on `Read(./.env)` stops
-  the Read tool, not a shell command that prints the same file. It is there to stop an agent from
-  wandering into a secret by accident, not to contain one that is trying. Real containment is the
-  sandbox, the secret manager, and not putting production credentials on the machine.
+- **The permission layer is not a security boundary.** `permissions.deny` on `Read(./.env)` only
+  stops the Read tool, so a `PreToolUse` hook closes the shell path that walked around it. That
+  hook is still string matching against paths: it stops accidents, not a determined attempt. Real
+  containment is the sandbox, the secret manager, and not putting production credentials on the
+  machine.
 - **Hooks are reminders with teeth, not enforcement.** The Stop hook blocks once per session and
   then stands aside by design, because a hook that can block forever is a hook someone deletes.
   CI is the only gate that actually holds.
-- **The ADR gate detects triggers, not judgement.** It knows that `docs/architecture/` changed. It
-  cannot tell whether the ADR you added is any good. That part is still review.
-- **`/onboard` has no resume.** If the session dies in phase 4, the next one starts over. The
-  product documents it has already written survive, so the second pass is faster, but it is not
-  a checkpointed workflow.
+- **The ADR gate checks substance, not judgement.** It enforces a minimum: a real Context section,
+  at least two options, a non-empty negative consequence, no leftover template placeholders. It
+  cannot tell whether the reasoning is any good, and a determined author can pad past every
+  threshold. That part is still review.
+- **`/onboard` resumes, but does not replay.** `.claude/onboarding.json` records the phase reached
+  and anything agreed but not yet written, so a session that dies mid-onboarding continues instead
+  of starting over. It does not capture the conversation, so a resumed session may re-ask a
+  question whose answer was never written down.
+- **The gate defaults assume a JavaScript layout.** `sourcePaths` in `.claude/gates.json` lists
+  `src/`, `app/`, `lib/` and friends. For a Python or Go project those match nothing and the Stop
+  hook quietly stops noticing source changes, so `/onboard` rewrites them in phase 5. If you skip
+  onboarding, edit that file first.
+
+## Tuning
+
+`.claude/gates.json` holds everything the gates argue about: which paths count as source, which
+files are dependency manifests, which are guardrails, how many source files may change before a
+spec is expected, and which paths are treated as secret-bearing. Changing it is itself a guardrail
+change, so the ADR gate asks for a record.
 
 ## Scope of this template
 

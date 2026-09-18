@@ -51,6 +51,8 @@ Stack-specific principles are appended here by `/onboard` from the stack ADRs.
 | `.claude/agents/` | Subagents for isolated review, research and test work. |
 | `.claude/commands/` | Slash commands: `/onboard`, `/adr`, `/spec`, `/ship`, `/lint`. |
 | `.claude/hooks/` | Mechanical reminders fired by Claude Code events. |
+| `.claude/gates.json` | Tuning for the gates: source paths, manifests, thresholds, secret paths. |
+| `.claude/onboarding.json` | `/onboard` checkpoint, so a dead session resumes instead of restarting. |
 | `docs/INDEX.md` | Map of every document. Entry point for humans and agents. |
 | `docs/log.md` | Chronological journal of decisions and notable changes. |
 | `docs/idea.md` | Raw project idea. The input to `/onboard`. Never rewritten. |
