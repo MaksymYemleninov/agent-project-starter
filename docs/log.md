@@ -6,6 +6,17 @@ the actual content.
 
 Newest entry on top.
 
+## 2026-09-18 - Gates reviewed and hardened
+
+- Stop hook now sees committed work, not only the working tree; it had been missing the normal
+  path, where an agent commits and then stops.
+- Hook and CI gate share one definition of "changed" in `scripts/changed-files.mjs`; they had
+  computed it separately and disagreed.
+- Hooks anchor to `CLAUDE_PROJECT_DIR`, so they no longer go silent when run from a subdirectory.
+- Guardrail files now trigger the ADR gate, recorded in
+  [ADR 0001](decisions/0001-enforce-documentation-in-ci.md).
+- Linter normalizes line endings; a Windows checkout would have reported every document malformed.
+
 ## 2026-09-18 - Repository initialized
 
 - Created the agent-native skeleton: constitution, path rules, skills, subagents, commands.

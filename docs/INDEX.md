@@ -27,6 +27,7 @@ Architecture decision records. Append-only: a wrong decision is superseded, neve
 
 - [ADR template](decisions/_template.md)
 - [0000 - Record architecture decisions](decisions/0000-record-architecture-decisions.md) - accepted
+- [0001 - Enforce documentation in CI, not in prose](decisions/0001-enforce-documentation-in-ci.md) - accepted
 
 <!-- decisions:list -->
 <!-- /decisions:list -->
