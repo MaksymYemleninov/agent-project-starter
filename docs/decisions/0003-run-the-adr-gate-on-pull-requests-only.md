@@ -72,15 +72,25 @@ which is the right one: it puts the justification in front of a reviewer who can
 - A direct push to `main` is not checked for drift at all. This depends on branch protection being
   configured on the remote, which is a setting outside this repository and therefore invisible to
   anyone reading only the code. If that protection is absent, the gate has a hole that looks closed.
+  This happened: the setting was unavailable for a day, and nothing in the repository could have
+  told you. A project created from this template starts with the hole open until someone configures
+  the remote, and `/harden` is the only place that says so.
 - Splitting the workflow into three jobs makes the CI file longer and adds a second checkout.
 - The failure that produced this record stays on `main` as a red run in history. That is accurate:
   the commit really was unrecorded, and by the project's own test it was right not to record it.
 
 ### Follow-ups
 
-- Enable branch protection on `main`: require the pull request checks, forbid direct pushes.
-- If branch protection turns out to be unavailable, revisit this: a push-event gate with a
-  commit-message escape is the fallback, and it is worse.
+- ~~Enable branch protection on `main`: require the pull request checks, forbid direct pushes.~~
+  **Done 2026-09-21.** It was briefly blocked: GitHub restricts branch protection on private
+  repositories to paid plans, so for a day the mitigation named here did not exist and the hole
+  this record calls "looking closed" was genuinely open. Resolved by making the repository public,
+  which is defensible for a template carrying no secrets and was not a decision this record
+  anticipated. Current settings: pull request required, `Documentation state` and `ADR drift`
+  required to pass, `enforce_admins` on, force pushes and deletions refused.
+- ~~If branch protection turns out to be unavailable, revisit this: a push-event gate with a
+  commit-message escape is the fallback, and it is worse.~~ Not needed; see above. If the
+  repository ever returns to private on a free plan, this fallback becomes live again.
 
 ## Revisit when
 
