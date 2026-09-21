@@ -85,8 +85,11 @@ Either:
   1. Write the ADR. Run /adr, or copy docs/decisions/_template.md.
   2. Or, if this genuinely does not meet the test in
      docs/decisions/0000-record-architecture-decisions.md (expensive to reverse, crosses a
-     component boundary, or looks arbitrary to a newcomer), say so: in CI add the label
-     \`no-adr-needed\`, locally run with SKIP_ADR_CHECK="<your reason>".
+     component boundary, or looks arbitrary to a newcomer), say so with a written reason:
+       - in CI, add the \`no-adr-needed\` label to the pull request. A fresh repository does not
+         have that label yet, so create it once:
+           gh label create no-adr-needed --color 0E8A16 --description "Reason is in the PR description"
+       - locally, run with SKIP_ADR_CHECK="<your reason>".
 
 Base ref: ${base}
 Files considered: committed on this branch plus the working tree.
