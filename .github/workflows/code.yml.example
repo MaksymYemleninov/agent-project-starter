@@ -1,0 +1,48 @@
+# Code CI, deliberately inactive.
+#
+# GitHub only runs files ending in .yml or .yaml, so this one does nothing until you rename it:
+#
+#     git mv .github/workflows/code.yml.example .github/workflows/code.yml
+#
+# Do that when there is code worth checking, which is when the first spec is implemented and a
+# real test command exists. Before that this job spends twenty seconds per push printing that it
+# has nothing to do, and a check that always passes vacuously is indistinguishable from a check
+# that is broken.
+#
+# Reasoning: docs/decisions/0005-defer-code-scaffolding.md
+#
+# If the stack is not Node, replace the steps rather than adapting them. This file is a starting
+# point, not a contract.
+
+name: Code
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  code:
+    name: Build, lint and test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint --if-present
+
+      - name: Build
+        run: npm run build --if-present
+
+      - name: Test
+        run: npm test

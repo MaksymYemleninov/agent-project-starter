@@ -31,6 +31,7 @@ Architecture decision records. Append-only: a wrong decision is superseded, neve
 - [0002 - Configure the gates, and check ADR substance](decisions/0002-configure-and-substantiate-the-gates.md) - accepted
 - [0003 - Run the ADR gate on pull requests only](decisions/0003-run-the-adr-gate-on-pull-requests-only.md) - accepted
 - [0004 - Gates are staged, advisory before they block](decisions/0004-gates-are-staged.md) - accepted
+- [0005 - Defer test setup and code CI until there is code](decisions/0005-defer-code-scaffolding.md) - accepted
 
 <!-- decisions:list -->
 <!-- /decisions:list -->

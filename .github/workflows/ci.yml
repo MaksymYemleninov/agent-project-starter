@@ -45,32 +45,3 @@ jobs:
         env:
           BASE_REF: ${{ github.event.pull_request.base.sha }}
         run: npm run check:adr
-
-  code:
-    name: Build, lint and test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      # `--if-present` means this job is correct before and after /onboard: it does nothing while
-      # the scripts do not exist, and runs them the moment they do. /onboard replaces this job
-      # outright if the stack is not Node.
-      - name: Install
-        run: |
-          if [ -f package-lock.json ]; then
-            npm ci
-          else
-            echo "No lockfile yet. /onboard sets up the toolchain."
-          fi
-
-      - name: Lint
-        run: npm run lint --if-present
-
-      - name: Build
-        run: npm run build --if-present
-
-      - name: Test
-        run: npm test --if-present
