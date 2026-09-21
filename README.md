@@ -9,17 +9,36 @@ refuses the pull request if it does not.
 
 ## Quick start
 
+This repository is a GitHub template, so a new project is one command:
+
 ```bash
-git clone <this repo> my-project && cd my-project
-rm -rf .git && git init && git add -A && git commit -m "chore: start from agent-project-starter"
-npm run check   # the gates work immediately, before any stack exists
+gh repo create my-project --template MaksymYemleninov/agent-project-starter --private --clone
 ```
 
-1. Write your idea into `docs/idea.md`. Prose is fine, bullet points are fine, half-formed is fine.
-2. Open the project in Claude Code (or any agent that reads `AGENTS.md`).
-3. Run `/onboard`.
-4. Answer the questions it asks. This is the step that pays for itself.
-5. Review the ADRs it proposes before it writes code.
+Then:
+
+1. Put everything you already have about the idea into `docs/idea.md`. A written brief, notes,
+   half a business plan, a paragraph. Do not polish it.
+2. Open the project in Claude Code, or any agent that reads `AGENTS.md`.
+3. Run `/assess` if the idea is not yet committed to, `/onboard` if it is.
+4. Answer what it asks. A rich brief leaves two questions; a paragraph leaves most of them.
+5. Review the decisions it proposes before it writes code.
+
+What you get back is a foundation, not a product: product documents, the stack recorded as
+decisions, a constitution generated from those decisions, a running skeleton with tests and CI,
+and the first spec. Development starts from there.
+
+## Gates are advisory until you say otherwise
+
+A new project starts at `stage: exploration` in `.claude/gates.json`. The gates run, report what
+they find, and block nothing. This is deliberate: a project whose shape changes weekly should not
+have pull requests blocked over a missing decision record about code that may not exist next week.
+
+When the project stops being an experiment, run `/harden`. The gates then hold: a pull request that
+moves architecture, dependencies or the guardrails themselves without recording why will fail.
+
+The one check that runs at every stage is the secret guard, because a leaked credential is not a
+process question.
 
 ## What is in here
 

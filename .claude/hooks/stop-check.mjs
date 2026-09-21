@@ -17,8 +17,11 @@ try {
   process.exit(0);
 }
 
-const { changedFiles, classify, loadGates } = await import('./../../scripts/changed-files.mjs');
+const { changedFiles, classify, loadGates, blocking } = await import('./../../scripts/changed-files.mjs');
 const gates = loadGates();
+
+// At exploration stage the hook stays out of the way entirely.
+if (!blocking(gates)) process.exit(0);
 const tuning = gates.stopHook;
 
 let payload = {};

@@ -39,7 +39,11 @@ template so the new project does not start out claiming someone else's work as i
    project inherits and is expected to follow, so deleting them would strip the reasoning behind
    the gates that are about to start failing pull requests. New ADRs continue from the next free
    number, they do not restart at `0001`.
-3. Leave `docs/idea.md` alone. It holds the idea you are onboarding.
+3. Set `"stage": "exploration"` in `.claude/gates.json`. The template ships `building`, which is
+   true of the template itself and wrong for a project that does not exist yet: gates that block
+   on day one fight the week when the shape is still moving. They report throughout onboarding and
+   start holding when the human runs `/harden`.
+4. Leave `docs/idea.md` alone. It holds the idea you are onboarding.
 
 **After finishing each phase**, do two things:
 
@@ -69,10 +73,15 @@ otherwise bake in.
 
 ## Phase 2 - Interrogate
 
-Ask **one question at a time**, waiting for each answer. This is the step that pays for the whole
-template, so do not batch questions into a wall of text and do not accept vague answers.
+First, decide how much of this phase is needed. Read what the idea file already answers, list the
+gaps out loud, and ask only about those. A document that already covers the market, the user and
+the scope may leave two questions, and asking the other five wastes the user's time and teaches
+them to skip this command. A single paragraph leaves most of them.
 
-Cover, in roughly this order, skipping anything the idea file already answers clearly:
+Then ask **one question at a time**, waiting for each answer. Do not batch questions into a wall of
+text and do not accept vague answers to the questions you do ask.
+
+Gaps worth closing, in roughly this order, skipping every one the idea file answers clearly:
 
 1. Who has this problem today, and what do they do instead right now.
 2. What is the smallest version a real user could use. Push for something smaller than the answer.
@@ -164,7 +173,9 @@ summary is not evidence.
 - Final commit for this phase on `onboard/initial-setup`. Do not push without being asked.
 
 Finish with a short report: stack chosen, ADRs written, what runs now, what the human should look
-at first, and the open questions you could not resolve.
+at first, and the open questions you could not resolve. Say explicitly that gates are advisory
+until they run `/harden`, and name the one condition that should trigger it: the project stops
+being an experiment.
 
 ## Rules for this command
 
