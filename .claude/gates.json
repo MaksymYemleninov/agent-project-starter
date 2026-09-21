@@ -1,5 +1,7 @@
 {
   "$comment": "Tuning for the documentation gates. /onboard rewrites sourcePaths and manifests for the chosen stack; the defaults below only cover common JavaScript layouts and are wrong for most other languages.",
+  "stage": "building",
+  "$stage": "exploration = gates report and never block, for a project still finding its shape. building = gates hold, the normal working state. production = building, reserved for stricter freshness later. /onboard sets exploration on a new project; /harden moves it to building. This key is required: without it the gates fall back to building silently, and a silent default is how it went missing in the first place.",
   "sourcePaths": [
     "src/**",
     "app/**",

@@ -9,7 +9,7 @@
  */
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
 import { join, relative, dirname, resolve, basename } from 'node:path';
-import { loadGates, stage, blocking } from './changed-files.mjs';
+import { loadGates, stage, blocking, STAGES } from './changed-files.mjs';
 
 const ROOT = resolve(process.argv[2] ?? '.');
 const DOCS = join(ROOT, 'docs');
@@ -510,10 +510,27 @@ if (existsSync(join(ROOT, '.claude/onboarding.json'))) {
 }
 
 if (existsSync(join(ROOT, '.claude/gates.json'))) {
+  const f = '.claude/gates.json';
   try {
-    JSON.parse(read(join(ROOT, '.claude/gates.json')));
+    const g = JSON.parse(read(join(ROOT, f)));
+
+    // `stage` must be declared, not inherited from the code's default. It went missing once and
+    // nothing noticed for a day: every check stayed green, the documentation claiming the key
+    // exists stayed wrong, and the knob was undiscoverable. A default that hides its own absence
+    // is worse than no default.
+    if (!('stage' in g)) {
+      err(f, 'does not declare `stage`. The gates would fall back to `building` silently, which is exactly how this key went missing before.');
+    } else if (!STAGES.includes(g.stage)) {
+      err(f, `\`stage: ${g.stage}\` is not one of ${STAGES.join(' | ')}`);
+    }
+
+    for (const key of ['sourcePaths', 'manifests', 'guardrails', 'secretPaths']) {
+      if (key in g && (!Array.isArray(g[key]) || g[key].length === 0)) {
+        err(f, `\`${key}\` is present but empty, so everything it gates is silently unchecked`);
+      }
+    }
   } catch (e) {
-    err('.claude/gates.json', `is not valid JSON, so the gates fell back to defaults silently: ${e.message}`);
+    err(f, `is not valid JSON, so the gates fell back to defaults silently: ${e.message}`);
   }
 }
 

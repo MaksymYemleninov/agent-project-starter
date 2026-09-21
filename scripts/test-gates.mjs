@@ -184,6 +184,20 @@ try {
 
   check('tree is green again', exitCode('node scripts/lint-docs.mjs'), 0);
 
+  // The shipped config must declare its stage rather than inherit the code's default. This key
+  // went missing once and every check stayed green.
+  const shipped = JSON.parse(readFileSync(join(sandbox, '.claude/gates.json'), 'utf8'));
+  check('shipped gates.json declares a stage', 'stage' in shipped, true);
+
+  const withoutStage = { ...shipped };
+  delete withoutStage.stage;
+  writeFileSync(join(sandbox, '.claude/gates.json'), JSON.stringify(withoutStage, null, 2));
+  check('gates.json without a stage is rejected', exitCode('node scripts/lint-docs.mjs'), 1);
+
+  writeFileSync(join(sandbox, '.claude/gates.json'), JSON.stringify({ ...shipped, sourcePaths: [] }, null, 2));
+  check('an empty sourcePaths is rejected', exitCode('node scripts/lint-docs.mjs'), 1);
+  sh('git checkout -- .claude/gates.json');
+
   // Staged gates: at exploration the checks report and block nothing, except the secret guard.
   const gatesPath = join(sandbox, '.claude/gates.json');
   const gatesJson = JSON.parse(readFileSync(gatesPath, 'utf8'));
