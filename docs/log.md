@@ -6,6 +6,21 @@ the actual content.
 
 Newest entry on top.
 
+## 2026-09-21 - Repository public, branch protection on, ADR 0003 follow-up closed
+
+- `main` protected: pull request required, `Documentation state` and `ADR drift` required to pass,
+  `enforce_admins` on, force pushes and deletions refused. Verified by reading the API back.
+- Unblocked by making the repository public. Branch protection on a private repository needs a
+  paid plan, so for a day the mitigation in
+  [ADR 0003](decisions/0003-run-the-adr-gate-on-pull-requests-only.md) did not exist at all.
+- Scanned the tree before publishing: no keys, tokens, absolute local paths or addresses in any
+  file. Commit author emails are public now, and two commits carry a work address rather than the
+  noreply one used elsewhere in the history. Local `user.email` set to the noreply address so it
+  does not recur; the existing two are in published history and rewriting them needs a force push
+  that protection now refuses.
+- ADR 0003's negative section sharpened: a project from this template starts with the direct-push
+  hole open until someone configures the remote, and `/harden` is the only place that says so.
+
 ## 2026-09-21 - `stage` had gone missing from the shipped config
 
 - `.claude/gates.json` did not declare `stage` at all. Restored, and the linter now requires the
