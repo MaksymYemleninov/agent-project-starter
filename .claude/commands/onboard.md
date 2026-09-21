@@ -27,7 +27,19 @@ Read `@.claude/onboarding.json` first, before anything else.
   those phases already wrote, and continue from the next one. Do not re-ask questions that
   `docs/product/` already answers and do not rewrite documents the user already approved. Check
   `agreedButNotWritten` for decisions that were agreed verbally before the previous session ended.
-- `status: "not-started"` - run from phase 1.
+- `status: "not-started"` - run from phase 1, after the reset below.
+
+**On a first run only**, before phase 1, clear the history this repository inherited from the
+template so the new project does not start out claiming someone else's work as its own:
+
+1. Replace `docs/log.md` with its header plus one entry: "Started from agent-project-starter",
+   naming the template and today's date. The template's own entries about building the gates are
+   not this project's history.
+2. **Keep** `docs/decisions/0000` through the last numbered ADR. Those describe the tooling this
+   project inherits and is expected to follow, so deleting them would strip the reasoning behind
+   the gates that are about to start failing pull requests. New ADRs continue from the next free
+   number, they do not restart at `0001`.
+3. Leave `docs/idea.md` alone. It holds the idea you are onboarding.
 
 **After finishing each phase**, update the file: set `phase`, append to `completedPhases`, set
 `updatedAt` to today, and record anything agreed but not yet written into `agreedButNotWritten`
@@ -101,7 +113,8 @@ human has not agreed to.
 
 ## Phase 5 - Record the decisions
 
-For each approved choice, write an ADR in `docs/decisions/`, numbered from `0001`, using
+For each approved choice, write an ADR in `docs/decisions/`, numbered from the **next free
+number**, using
 `docs/decisions/_template.md`. Follow `.claude/skills/writing-adr/SKILL.md`.
 
 Each ADR must have a real Context section. "We chose X because it is popular" is not context; the
@@ -136,6 +149,7 @@ summary is not evidence.
 ## Phase 7 - First spec and handoff
 
 - Cut `docs/specs/0001-<slug>/` for the first capability in `scope.md`, using the template.
+  Specs do start at `0001`: unlike decisions, the template ships none.
   Acceptance criteria in EARS form. Leave `status: draft` with open questions listed.
 - Update `docs/INDEX.md` so every new document is listed.
 - Add the onboarding entry to `docs/log.md`: 3 to 6 bullets.

@@ -6,6 +6,15 @@ the actual content.
 
 Newest entry on top.
 
+## 2026-09-21 - Onboarding numbering and inherited history
+
+- `/onboard` told the agent to number decisions from `0001`, which collides with the three ADRs the
+  template ships. It now takes the next free number.
+- Added a first-run reset step: `docs/log.md` is replaced with a single entry, while the gate ADRs
+  are deliberately kept, because they explain the tooling the new project inherits.
+- Specs still start at `0001`; the template ships none, so there is nothing to collide with.
+- Found by reading the command against the repository before the first real run, not by running it.
+
 ## 2026-09-18 - Gates made configurable and substance-checked
 
 - Gate tuning moved to `.claude/gates.json`; the hardcoded source paths only matched JavaScript
