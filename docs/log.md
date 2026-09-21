@@ -6,6 +6,15 @@ the actual content.
 
 Newest entry on top.
 
+## 2026-09-21 - First remote push, and the gate asked an unanswerable question
+
+- First push to a remote turned `main` red. Not a script bug: on a `push` event there is no pull
+  request, so neither escape from the drift gate reaches it, and the failure had no available fix.
+- Drift gate moved to `pull_request` only, as its own job. Doc lint and the gate test suite keep
+  running on every push. Reasoning in [ADR 0003](decisions/0003-run-the-adr-gate-on-pull-requests-only.md).
+- The residual hole, a direct push to `main`, belongs to branch protection, not to the gate.
+- Found by pushing, not by reading. Three days of local green said nothing about this.
+
 ## 2026-09-21 - Onboarding numbering and inherited history
 
 - `/onboard` told the agent to number decisions from `0001`, which collides with the three ADRs the

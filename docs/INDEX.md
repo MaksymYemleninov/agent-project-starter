@@ -29,6 +29,7 @@ Architecture decision records. Append-only: a wrong decision is superseded, neve
 - [0000 - Record architecture decisions](decisions/0000-record-architecture-decisions.md) - accepted
 - [0001 - Enforce documentation in CI, not in prose](decisions/0001-enforce-documentation-in-ci.md) - accepted
 - [0002 - Configure the gates, and check ADR substance](decisions/0002-configure-and-substantiate-the-gates.md) - accepted
+- [0003 - Run the ADR gate on pull requests only](decisions/0003-run-the-adr-gate-on-pull-requests-only.md) - accepted
 
 <!-- decisions:list -->
 <!-- /decisions:list -->
