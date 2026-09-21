@@ -30,12 +30,18 @@ and that is how the practice gets abandoned.
 4. Record the decisions already made but never written. There are always some: the ones taken
    during exploration when nothing was asking for them. Write them now, dated when they were made
    rather than today, with a note that they are recorded retroactively.
-5. Set `"stage": "building"` in `.claude/gates.json`.
-6. Run `npm run check`. Everything must pass. If something does not, fix it rather than reverting
+5. **A test command must exist, run, and fail when the code is wrong.** Verify the last part:
+   break something on purpose, watch the tests go red, put it back. Test setup was deliberately
+   deferred at onboarding (`docs/decisions/0005-defer-code-scaffolding.md`), and this is the
+   checkpoint where that deferral either gets paid off or turns into a project with no tests.
+   Also check that `.github/workflows/code.yml.example` has been renamed to `code.yml`, or the
+   suite is not running in CI at all.
+6. Set `"stage": "building"` in `.claude/gates.json`.
+7. Run `npm run check`. Everything must pass. If something does not, fix it rather than reverting
    the stage.
-7. Enable branch protection on the remote if it is not on: the drift gate runs on pull requests
+8. Enable branch protection on the remote if it is not on: the drift gate runs on pull requests
    only, so a direct push to the default branch bypasses it entirely.
-8. Add an entry to `docs/log.md` saying the project moved to `building` and why now.
+9. Add an entry to `docs/log.md` saying the project moved to `building` and why now.
 
 ## Afterwards
 

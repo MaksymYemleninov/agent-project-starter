@@ -148,24 +148,36 @@ Then update:
 - `.claude/skills/design-system/`, `infra-setup/`, `api-contract/`: fill the ones the stack
   actually needs, and **delete the ones it does not**. An empty skill is worse than no skill.
 
-## Phase 6 - Scaffold
+## Phase 6 - Prove the toolchain
 
-Only now touch code. Create the minimum that runs and proves the toolchain:
+Only now touch code, and build less than you want to. The goal of this phase is one claim:
+"the toolchain on this machine works, and here are the commands". Not a foundation for the
+product, which does not exist yet and whose shape you do not know.
 
-- project skeleton for the chosen stack,
-- one working health endpoint or one rendered page, nothing more,
-- test runner with one real passing test,
-- linter and formatter configured,
+Create:
+
+- the minimal skeleton for the chosen stack,
+- one working endpoint or one rendered page, so `dev` does something visible. Nothing more.
+- linter and formatter configured. Cheap now, and it keeps the first weeks of diffs from being
+  half formatting churn.
 - `.env.example` with every variable and a safe placeholder,
-- `.github/workflows/ci.yml` extended to run install, lint, test alongside the existing doc gates.
+- the real commands filled into the Commands table in `AGENTS.md`.
 
-Verify it: run install, lint, test and the dev server yourself, and show the actual output. Your
+Do **not** set up a test framework, and do not activate the code CI job. See
+`docs/decisions/0005-defer-code-scaffolding.md`. Both arrive with the first feature that needs
+them, in phase 7's spec and its plan, where the shape of the thing is known. A test asserting that
+a scaffolded health endpoint returns `200` tests the scaffold, and it gets deleted the same week.
+
+Verify by running install, lint and the dev server yourself, and show the actual output. Your
 summary is not evidence.
 
 ## Phase 7 - First spec and handoff
 
 - Cut `docs/specs/0001-<slug>/` for the first capability in `scope.md`, using the template.
   Specs do start at `0001`: unlike decisions, the template ships none.
+- In that spec's `plan.md`, the Test strategy section is where the testing approach gets decided,
+  now that there is a feature to test. Name the framework there and make setting it up the first
+  task in `tasks.md`, along with renaming `.github/workflows/code.yml.example` to `code.yml`.
   Acceptance criteria in EARS form. Leave `status: draft` with open questions listed.
 - Update `docs/INDEX.md` so every new document is listed.
 - Add the onboarding entry to `docs/log.md`: 3 to 6 bullets.

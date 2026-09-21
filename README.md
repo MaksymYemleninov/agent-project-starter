@@ -25,8 +25,12 @@ Then:
 5. Review the decisions it proposes before it writes code.
 
 What you get back is a foundation, not a product: product documents, the stack recorded as
-decisions, a constitution generated from those decisions, a running skeleton with tests and CI,
-and the first spec. Development starts from there.
+decisions, a constitution generated from those decisions, a skeleton that runs, and the first spec.
+Development starts from there.
+
+Test setup and code CI are deliberately **not** part of that foundation. They arrive with the first
+feature that needs them, when the shape of the thing is known rather than guessed. `/harden` is the
+checkpoint that requires them.
 
 ## Gates are advisory until you say otherwise
 

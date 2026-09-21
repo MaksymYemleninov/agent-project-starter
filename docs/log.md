@@ -6,6 +6,17 @@ the actual content.
 
 Newest entry on top.
 
+## 2026-09-21 - Test setup and code CI deferred out of onboarding
+
+- The day-one test asserted that a scaffolded health endpoint returns `200`, which tests the
+  scaffold; the code CI job spent ~20s per push printing that it had nothing to do. Measured on
+  this repository's own runs, not assumed.
+- Phase 6 now proves the toolchain only. Testing is decided in the first spec's `plan.md`, where
+  the feature's shape is known. Reasoning in [ADR 0005](decisions/0005-defer-code-scaffolding.md).
+- Code CI ships as `.github/workflows/code.yml.example`, activated by renaming as a spec task.
+- `/harden` now hard-requires a test command that fails when the code is wrong. That is where the
+  deferral gets paid off, and ADR 0005 states plainly that this trades a guarantee for a convention.
+
 ## 2026-09-21 - Gates staged, template published, onboarding given a fast path
 
 - Calibration was wrong for the purpose: gates built to keep a production project from decaying
