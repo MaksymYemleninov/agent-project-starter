@@ -6,6 +6,16 @@ the actual content.
 
 Newest entry on top.
 
+## 2026-09-21 - Gate tests assumed the host project's stage
+
+- `test-gates.mjs` inherited `stage` from the project under test, so all eight blocking assertions
+  failed on the first real project built from this template, which sits at `exploration` where the
+  gates deliberately exit 0.
+- The suite now forces `building` in its sandbox for the blocking cases; the explicit exploration
+  cases set and restore the stage themselves.
+- Found by running the suite inside a derived project, not inside this one. A template's tests
+  passing in the template says nothing about them passing where the template is used.
+
 ## 2026-09-21 - Repository public, branch protection on, ADR 0003 follow-up closed
 
 - `main` protected: pull request required, `Documentation state` and `ADR drift` required to pass,

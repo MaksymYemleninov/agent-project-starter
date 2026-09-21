@@ -76,6 +76,16 @@ function setup() {
     copyFileSync(join(ROOT, file), target);
   }
 
+  // Force `building` as the baseline. The blocking assertions below are about what the gates do
+  // when they hold. A project derived from this template sits at `exploration`, where the gates
+  // deliberately report and exit 0, so inheriting the host project's stage made all eight blocking
+  // cases fail the first time this suite ran inside a real derived project.
+  const gatesFile = join(sandbox, '.claude/gates.json');
+  if (existsSync(gatesFile)) {
+    const g = JSON.parse(readFileSync(gatesFile, 'utf8'));
+    writeFileSync(gatesFile, JSON.stringify({ ...g, stage: 'building' }, null, 2));
+  }
+
   sh('git init -q -b main');
   sh('git add -A');
   sh('git -c user.name=t -c user.email=t@t commit -q -m base');
