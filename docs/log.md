@@ -14,6 +14,8 @@ Newest entry on top.
   are deliberately kept, because they explain the tooling the new project inherits.
 - Specs still start at `0001`; the template ships none, so there is nothing to collide with.
 - Found by reading the command against the repository before the first real run, not by running it.
+- `/onboard` now commits once per phase instead of once at the end, so a wrong stack choice in
+  phase 4 can be undone without losing the product documents from phase 3.
 
 ## 2026-09-18 - Gates made configurable and substance-checked
 

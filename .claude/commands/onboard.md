@@ -41,10 +41,17 @@ template so the new project does not start out claiming someone else's work as i
    number, they do not restart at `0001`.
 3. Leave `docs/idea.md` alone. It holds the idea you are onboarding.
 
-**After finishing each phase**, update the file: set `phase`, append to `completedPhases`, set
-`updatedAt` to today, and record anything agreed but not yet written into `agreedButNotWritten`
-(clearing entries once they are written). This is the only thing that survives a session dying
-mid-onboarding, so update it as you go, not at the end.
+**After finishing each phase**, do two things:
+
+1. Update this file: set `phase`, append to `completedPhases`, set `updatedAt` to today, and record
+   anything agreed but not yet written into `agreedButNotWritten` (clearing entries once they are
+   written). This is the only thing that survives a session dying mid-onboarding, so update it as
+   you go, not at the end.
+2. Commit, on a branch `onboard/initial-setup`, with the subject `onboard: phase N - <name>`.
+   One commit per phase, not one at the end. Onboarding is the part most likely to need undoing:
+   a stack choice in phase 4 that turns out wrong should not cost the product documents written in
+   phase 3. To undo one phase, branch from the commit before it or revert that commit; do not
+   reach for `git reset --hard`, which discards uncommitted work alongside it.
 
 Set `status: "in-progress"` and `startedAt` when you begin phase 1, and `status: "completed"` at
 the end of phase 7.
@@ -154,7 +161,7 @@ summary is not evidence.
 - Update `docs/INDEX.md` so every new document is listed.
 - Add the onboarding entry to `docs/log.md`: 3 to 6 bullets.
 - Run `npm run check` and fix what it reports.
-- Commit on a branch `onboard/initial-setup`, do not push without being asked.
+- Final commit for this phase on `onboard/initial-setup`. Do not push without being asked.
 
 Finish with a short report: stack chosen, ADRs written, what runs now, what the human should look
 at first, and the open questions you could not resolve.
