@@ -6,6 +6,20 @@ the actual content.
 
 Newest entry on top.
 
+## 2026-09-21 - `stage` had gone missing from the shipped config
+
+- `.claude/gates.json` did not declare `stage` at all. Restored, and the linter now requires the
+  key explicitly, plus rejects an empty `sourcePaths`/`manifests`/`guardrails`/`secretPaths`.
+- Nothing noticed for a day: the code's `building` default covered for it, every check stayed
+  green, [ADR 0004](decisions/0004-gates-are-staged.md) claiming the key exists stayed wrong, and
+  the knob was undiscoverable. A default that hides its own absence is worse than no default.
+- Cause: `git checkout -- .claude/gates.json` during debugging, to drop a temporary value, also
+  dropped the still-uncommitted addition of the key. Second time a destructive git command in a
+  debugging step ate uncommitted work.
+- Branch protection on `main` turns out to be unavailable: GitHub requires Pro or a public
+  repository. The mitigation named in [ADR 0003](decisions/0003-run-the-adr-gate-on-pull-requests-only.md)
+  cannot be applied as written, and that ADR says to revisit rather than leave the hole implied.
+
 ## 2026-09-21 - Test setup and code CI deferred out of onboarding
 
 - The day-one test asserted that a scaffolded health endpoint returns `200`, which tests the
