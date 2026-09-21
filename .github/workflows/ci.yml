@@ -10,14 +10,10 @@ permissions:
 
 jobs:
   docs:
-    name: Documentation gates
+    name: Documentation state
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          # The ADR gate diffs against the base commit, so shallow history is not enough.
-          fetch-depth: 0
-
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -30,10 +26,24 @@ jobs:
       - name: Test the gates
         run: npm run test:gates
 
+  adr:
+    name: ADR drift
+    # Pull requests only, deliberately. See docs/decisions/0003-run-the-adr-gate-on-pull-requests-only.md
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The gate diffs against the base commit, so shallow history is not enough.
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
       - name: Check ADR drift
         if: "!contains(github.event.pull_request.labels.*.name, 'no-adr-needed')"
         env:
-          BASE_REF: ${{ github.event.pull_request.base.sha || 'HEAD~1' }}
+          BASE_REF: ${{ github.event.pull_request.base.sha }}
         run: npm run check:adr
 
   code:
@@ -41,7 +51,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: 20
