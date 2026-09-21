@@ -9,6 +9,7 @@
  */
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
 import { join, relative, dirname, resolve, basename } from 'node:path';
+import { loadGates, stage, blocking } from './changed-files.mjs';
 
 const ROOT = resolve(process.argv[2] ?? '.');
 const DOCS = join(ROOT, 'docs');
@@ -524,10 +525,22 @@ if (warnings.length) {
   console.log(`\nWarnings (${warnings.length}):`);
   console.log(label(warnings));
 }
+const gates = loadGates(ROOT);
+
 if (errors.length) {
   console.log(`\nErrors (${errors.length}):`);
   console.log(label(errors));
+  if (!blocking(gates)) {
+    console.log(
+      `\nlint-docs is advisory at stage \`${stage(gates)}\`: the errors above are real and are not ` +
+        'blocking anything. Run /harden once the project should start holding itself to them.\n',
+    );
+    process.exit(0);
+  }
   console.log(`\nlint-docs failed. ${errors.length} error(s), ${warnings.length} warning(s).\n`);
   process.exit(1);
 }
-console.log(`\nlint-docs passed. ${docs.size} documents, ${adrs.size} ADR(s), ${warnings.length} warning(s). (${today})\n`);
+console.log(
+  `\nlint-docs passed. ${docs.size} documents, ${adrs.size} ADR(s), ${warnings.length} warning(s). ` +
+    `stage=${stage(gates)} (${today})\n`,
+);

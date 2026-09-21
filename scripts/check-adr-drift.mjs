@@ -11,7 +11,7 @@
  *   BASE_REF=<ref> node scripts/check-adr-drift.mjs
  *   SKIP_ADR_CHECK="<reason>" node scripts/check-adr-drift.mjs   # escape, reason required
  */
-import { changedFiles, classify, loadGates } from './changed-files.mjs';
+import { changedFiles, classify, loadGates, stage, blocking } from './changed-files.mjs';
 
 const skip = process.env.SKIP_ADR_CHECK;
 if (skip) {
@@ -24,6 +24,16 @@ if (skip) {
   }
   console.log(`check:adr skipped by request: ${skip}`);
   console.log('Repeat this reason in the pull request description so a reviewer can disagree.');
+  process.exit(0);
+}
+
+const gates = loadGates();
+
+if (!blocking(gates)) {
+  console.log(
+    `check:adr is advisory at stage \`${stage(gates)}\`. Run /harden, or set \`stage\` in ` +
+      '`.claude/gates.json`, once the project should start holding itself to its decisions.',
+  );
   process.exit(0);
 }
 
@@ -42,7 +52,7 @@ if (files.length === 0) {
   process.exit(0);
 }
 
-const c = classify(files, loadGates());
+const c = classify(files, gates);
 
 const triggers = [];
 if (c.architecture.length) triggers.push(`architecture docs changed: ${c.architecture.join(', ')}`);

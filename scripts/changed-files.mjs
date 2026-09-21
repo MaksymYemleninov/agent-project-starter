@@ -100,6 +100,7 @@ export function matchesAny(path, globs) {
 /** Gate tuning. Missing or malformed config falls back to the defaults rather than failing open. */
 export function loadGates(root = '.') {
   const defaults = {
+    stage: 'building',
     sourcePaths: ['src/**', 'app/**', 'lib/**', 'server/**', 'packages/**', 'api/**', 'components/**'],
     manifests: ['package.json', 'requirements.txt', 'pyproject.toml', 'go.mod', 'Cargo.toml', 'Gemfile', 'composer.json'],
     guardrails: ['scripts/*.mjs', '.github/workflows/**', '.claude/settings.json', '.claude/gates.json', '.claude/hooks/**'],
@@ -129,4 +130,22 @@ export function classify(files, gates = loadGates()) {
     log: files.filter((f) => f === 'docs/log.md'),
     source: files.filter((f) => matchesAny(f, gates.sourcePaths)),
   };
+}
+
+/**
+ * Gate stages. A fresh project that is still finding its shape should not have pull requests
+ * blocked for a missing decision record about code that may not exist next week; a project past
+ * that point should. One flag, three gates read it.
+ *
+ * `exploration` reports everything and blocks nothing. Safety checks are not part of this: the
+ * secret guard runs at every stage, because leaking a credential is not a process question.
+ */
+export const STAGES = ['exploration', 'building', 'production'];
+
+export function stage(gates = loadGates()) {
+  return STAGES.includes(gates.stage) ? gates.stage : 'building';
+}
+
+export function blocking(gates = loadGates()) {
+  return stage(gates) !== 'exploration';
 }

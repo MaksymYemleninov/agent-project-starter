@@ -6,6 +6,17 @@ the actual content.
 
 Newest entry on top.
 
+## 2026-09-21 - Gates staged, template published, onboarding given a fast path
+
+- Calibration was wrong for the purpose: gates built to keep a production project from decaying
+  were fighting the week a new project is still finding its shape. Now staged, reasoning in
+  [ADR 0004](decisions/0004-gates-are-staged.md).
+- `/onboard` sets `exploration` on a new project; new `/harden` moves it to `building` with a
+  checklist. The secret guard runs at every stage.
+- Repository published as a GitHub template, so a new project is one `gh repo create --template`.
+- `/onboard` phase 2 now sizes itself to the brief: a rich idea document leaves two questions
+  instead of running the full list.
+
 ## 2026-09-21 - First remote push, and the gate asked an unanswerable question
 
 - First push to a remote turned `main` red. Not a script bug: on a `push` event there is no pull
