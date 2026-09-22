@@ -39,14 +39,24 @@ and that is how the practice gets abandoned.
 6. Set `"stage": "building"` in `.claude/gates.json`.
 7. Run `npm run check`. Everything must pass. If something does not, fix it rather than reverting
    the stage.
-8. Enable branch protection on the remote if it is not on: the drift gate runs on pull requests
-   only, so a direct push to the default branch bypasses it entirely. On a private repository this
-   needs a paid plan; if it is unavailable, say so out loud rather than assuming the hole is closed.
-   Also create the escape label once, or the only documented way past the gate does not exist:
+8. Settle branch protection, one way or the other. The drift gate runs on pull requests only, so a
+   direct push to the default branch bypasses it entirely.
+   - If protection is available, enable it: require the pull request checks, forbid direct pushes.
+   - If it is not, which is the case on a private repository without a paid plan, **record the
+     acceptance as an ADR** rather than leaving it implicit. This item is then satisfied by the
+     record, not by the setting. An item that cannot pass trains people to skip checklist items,
+     which is the failure this checklist exists to prevent.
+
+   Either way, create the escape label once, or the only documented way past the gate does not
+   exist:
 
    ```bash
    gh label create no-adr-needed --color 0E8A16 --description "Reason is in the PR description"
    ```
+
+9. Rename `docs/ops/_runbook.md` into place and fill it. By this point there has been a deploy, so
+   there is something to write: the exact commands, the rollback, and what to check when it breaks.
+   An untested rollback is a hope.
 9. Add an entry to `docs/log.md` saying the project moved to `building` and why now.
 
 ## Afterwards

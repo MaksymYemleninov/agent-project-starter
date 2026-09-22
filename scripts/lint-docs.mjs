@@ -9,7 +9,7 @@
  */
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
 import { join, relative, dirname, resolve, basename } from 'node:path';
-import { loadGates, stage, blocking, STAGES } from './changed-files.mjs';
+import { loadGates, stage, blocking, STAGES, globToRegExp } from './changed-files.mjs';
 
 const ROOT = resolve(process.argv[2] ?? '.');
 const DOCS = join(ROOT, 'docs');
@@ -129,8 +129,6 @@ const EXPECTED = [
   'docs/product/scope.md',
   'docs/product/personas.md',
   'docs/architecture/data-model.md',
-  'docs/architecture/integrations.md',
-  'docs/ops/runbook.md',
 ];
 
 for (const f of REQUIRED) {
@@ -158,7 +156,14 @@ if (existsSync(join(ROOT, 'AGENTS.md'))) {
 
 /* ------------------------------------------------------- 3. collect the docs */
 
-const docFiles = walk(DOCS).filter((f) => f.endsWith('.md'));
+// A leading underscore marks a template stub: shipped as a starting shape, renamed into place by
+// /onboard or /harden when the project actually needs it. Stubs are not project documents, so they
+// are not required to be reachable, do not carry a status, and are not validated as ADRs or specs.
+const isStub = (p) => basename(p).startsWith('_');
+
+const docFiles = walk(DOCS)
+  .filter((f) => f.endsWith('.md'))
+  .filter((f) => !isStub(f));
 const NO_FRONTMATTER = new Set(['docs/INDEX.md', 'docs/log.md', 'docs/idea.md']);
 
 const docs = new Map(); // relative path -> { text, fm, links }
@@ -191,7 +196,7 @@ const adrs = new Map(); // id -> { path, fm }
 for (const [r, doc] of docs) {
   if (!r.startsWith('docs/decisions/') || !doc.fm) continue;
   const name = basename(r);
-  if (name === '_template.md') continue;
+  if (name.startsWith('_')) continue;
 
   const m = name.match(/^(\d{4})-[a-z0-9-]+\.md$/);
   if (!m) {
@@ -529,6 +534,30 @@ if (existsSync(join(ROOT, '.claude/gates.json'))) {
         err(f, `\`${key}\` is present but empty, so everything it gates is silently unchecked`);
       }
     }
+
+    // Source paths that match nothing gate nothing, and report success while doing it. This is the
+    // follow-up ADR 0002 named for the failure it created: defaults describing a JavaScript layout
+    // silently stop noticing source changes on a project that is not JavaScript.
+    //
+    // One warning, not one per glob, and only for `sourcePaths`. `manifests` deliberately lists
+    // several ecosystems and most will never match; warning per entry would bury the signal under
+    // its own noise, which is the failure this check exists to prevent.
+    const sourceGlobs = Array.isArray(g.sourcePaths) ? g.sourcePaths : [];
+    if (sourceGlobs.length) {
+      const repoFiles = walk(ROOT).map((p) => rel(p));
+      const matched = sourceGlobs.filter((glob) => {
+        const re = globToRegExp(glob);
+        return repoFiles.some((file) => re.test(file));
+      });
+      if (matched.length === 0) {
+        warn(
+          f,
+          '`sourcePaths` matches no file in this repository, so the Stop hook notices no source ' +
+            'change at all. Expected before there is code; a silent hole once there is.',
+        );
+      }
+    }
+
   } catch (e) {
     err(f, `is not valid JSON, so the gates fell back to defaults silently: ${e.message}`);
   }

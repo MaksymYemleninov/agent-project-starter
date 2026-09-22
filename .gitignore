@@ -1,3 +1,6 @@
+# Generic only. /onboard phase 6 adds the chosen stack's entries; without them an untracked
+# virtual environment or build directory is copied into the gate test sandbox on every run.
+
 node_modules/
 dist/
 build/

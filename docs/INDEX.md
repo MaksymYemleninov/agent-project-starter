@@ -26,12 +26,15 @@ No feature specs yet. `/spec` adds them here.
 Architecture decision records. Append-only: a wrong decision is superseded, never edited away.
 
 - [ADR template](decisions/_template.md)
+- [Inherited tooling stub](decisions/_inherited-tooling.md) - `/onboard` renames this into place on a
+  new project, replacing records `0001`-`0005` below, which are this template's own history
 - [0000 - Record architecture decisions](decisions/0000-record-architecture-decisions.md) - accepted
 - [0001 - Enforce documentation in CI, not in prose](decisions/0001-enforce-documentation-in-ci.md) - accepted
 - [0002 - Configure the gates, and check ADR substance](decisions/0002-configure-and-substantiate-the-gates.md) - accepted
 - [0003 - Run the ADR gate on pull requests only](decisions/0003-run-the-adr-gate-on-pull-requests-only.md) - accepted
 - [0004 - Gates are staged, advisory before they block](decisions/0004-gates-are-staged.md) - accepted
 - [0005 - Defer test setup and code CI until there is code](decisions/0005-defer-code-scaffolding.md) - accepted
+- [0006 - Decide deliberately what a derived project inherits](decisions/0006-what-a-project-inherits.md) - accepted
 
 <!-- decisions:list -->
 <!-- /decisions:list -->
@@ -40,12 +43,10 @@ Architecture decision records. Append-only: a wrong decision is superseded, neve
 
 - [Overview](architecture/overview.md) - components and how they fit.
 - [Data model](architecture/data-model.md) - entities and relationships.
-- [Integrations](architecture/integrations.md) - external services and contracts.
 
 ## Operations
 
 - [Environments](ops/environments.md) - environments, configuration and secret handling.
-- [Runbook](ops/runbook.md) - deploy, rollback, common failures.
 
 ## Journal
 

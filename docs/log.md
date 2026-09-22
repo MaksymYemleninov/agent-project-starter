@@ -6,6 +6,20 @@ the actual content.
 
 Newest entry on top.
 
+## 2026-09-22 - What a derived project inherits, decided rather than defaulted
+
+- Measured on the first real use: six of fourteen decision records in the derived project were the
+  template's own construction history, and two shipped documents warned on every lint run for the
+  life of the project. Reasoning in [ADR 0006](decisions/0006-what-a-project-inherits.md).
+- Leading underscore now marks a template stub, ignored by the linter until renamed into place.
+  `_integrations.md` and `_runbook.md` join `_template.md`.
+- A project inherits one decision record instead of six: `0000` plus `_inherited-tooling.md`, which
+  summarises what the gates do rather than how they were built. Project records start at `0002`.
+- The linter warns when `sourcePaths` matches nothing, closing the follow-up ADR 0002 named after
+  the failure it created. One warning, not one per glob.
+- `/harden` no longer carries an item that cannot pass: where branch protection is unavailable, the
+  item is satisfied by recording the acceptance as an ADR.
+
 ## 2026-09-21 - Gate tests assumed the host project's stage
 
 - `test-gates.mjs` inherited `stage` from the project under test, so all eight blocking assertions

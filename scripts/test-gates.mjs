@@ -194,6 +194,35 @@ try {
 
   check('tree is green again', exitCode('node scripts/lint-docs.mjs'), 0);
 
+  // Template stubs are ignored entirely: a leading underscore means a starting shape, not a
+  // document this project has. Without this the stubs would fail every check a document must pass.
+  writeFileSync(join(sandbox, 'docs/_scratch.md'), 'no frontmatter, not in the index, on purpose\n');
+  check('a stub is ignored by the linter', exitCode('node scripts/lint-docs.mjs'), 0);
+  rmSync(join(sandbox, 'docs/_scratch.md'));
+
+  writeFileSync(join(sandbox, 'docs/not-a-stub.md'), 'no frontmatter, not in the index\n');
+  check('a non-stub with the same content is not', exitCode('node scripts/lint-docs.mjs'), 1);
+  rmSync(join(sandbox, 'docs/not-a-stub.md'));
+
+  // A sourcePaths list that matches nothing gates nothing. It warns rather than fails, because it
+  // is the expected state of a project that has no code yet.
+  {
+    const g = JSON.parse(readFileSync(join(sandbox, '.claude/gates.json'), 'utf8'));
+    writeFileSync(
+      join(sandbox, '.claude/gates.json'),
+      JSON.stringify({ ...g, sourcePaths: ['nowhere/**'] }, null, 2),
+    );
+    let out = '';
+    try {
+      out = sh('node scripts/lint-docs.mjs');
+    } catch (e) {
+      out = e.stdout ?? '';
+    }
+    check('dead sourcePaths warns', out.includes('matches no file in this repository'), true);
+    check('dead sourcePaths does not fail', exitCode('node scripts/lint-docs.mjs'), 0);
+    sh('git checkout -- .claude/gates.json');
+  }
+
   // The shipped config must declare its stage rather than inherit the code's default. This key
   // went missing once and every check stayed green.
   const shipped = JSON.parse(readFileSync(join(sandbox, '.claude/gates.json'), 'utf8'));
