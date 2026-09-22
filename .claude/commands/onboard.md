@@ -35,15 +35,26 @@ template so the new project does not start out claiming someone else's work as i
 1. Replace `docs/log.md` with its header plus one entry: "Started from agent-project-starter",
    naming the template and today's date. The template's own entries about building the gates are
    not this project's history.
-2. **Keep** `docs/decisions/0000` through the last numbered ADR. Those describe the tooling this
-   project inherits and is expected to follow, so deleting them would strip the reasoning behind
-   the gates that are about to start failing pull requests. New ADRs continue from the next free
-   number, they do not restart at `0001`.
+2. Replace the template's own decision records with the single inherited one:
+   - **Keep** `docs/decisions/0000-record-architecture-decisions.md`. The practice applies to every
+     project.
+   - **Delete** `0001` through `0005`. Those describe how the template's gates were built. They are
+     the template's history, not this project's, and carrying them means half the decision record
+     is someone else's before the project writes a line.
+   - **Rename** `_inherited-tooling.md` to `0001-inherited-tooling.md` and set its `date` to today.
+     It summarises what the gates do and why, which is what a reader here actually needs. An
+     unexplained gate is a gate that gets disabled the first time it is inconvenient.
+   - Rewrite the Decisions section of `docs/INDEX.md` to list only those two.
+   - **This project's own records start at `0002`.**
 3. Set `"stage": "exploration"` in `.claude/gates.json`. The template ships `building`, which is
    true of the template itself and wrong for a project that does not exist yet: gates that block
    on day one fight the week when the shape is still moving. They report throughout onboarding and
    start holding when the human runs `/harden`.
 4. Leave `docs/idea.md` alone. It holds the idea you are onboarding.
+
+Files whose name starts with `_` are template stubs: a starting shape, not a document this project
+has. They are renamed into place when the project actually needs them, by the phase or command that
+knows it does, and the documentation linter ignores them until then.
 
 **After finishing each phase**, do two things:
 
@@ -147,6 +158,8 @@ Then update:
 - `.claude/rules/`: replace the placeholder rules with real path-scoped ones for the chosen stack.
 - `.claude/skills/design-system/`, `infra-setup/`, `api-contract/`: fill the ones the stack
   actually needs, and **delete the ones it does not**. An empty skill is worse than no skill.
+- If the project reads from external services, rename `docs/architecture/_integrations.md` into
+  place and record what was actually verified. If it does not, delete the stub.
 
 ## Phase 6 - Prove the toolchain
 
@@ -160,6 +173,11 @@ Create:
 - one working endpoint or one rendered page, so `dev` does something visible. Nothing more.
 - linter and formatter configured. Cheap now, and it keeps the first weeks of diffs from being
   half formatting churn.
+- the stack's entries added to `.gitignore`. The template ships only generic ones, so a Python
+  `.venv/` or a Rust `target/` is untracked and not ignored, which means the gate test suite copies
+  the whole thing into its sandbox on every run.
+- `sourcePaths` in `.claude/gates.json` pointed at where the code actually is. The linter warns
+  when it matches nothing; that warning is expected before this phase and a real hole after it.
 - `.env.example` with every variable and a safe placeholder,
 - the real commands filled into the Commands table in `AGENTS.md`.
 
