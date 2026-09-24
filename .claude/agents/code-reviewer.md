@@ -40,6 +40,14 @@ criterion? Name any that is not met. Does it break an existing API contract?
 it cross a non-goal in `docs/product/non-goals.md`? Both are more serious than a bug, because both
 are invisible in six months.
 
+**Engineering rulebook.** Read `.claude/skills/engineering-rulebook/SKILL.md` and this project's
+stack pack next to it. Check what the tools do not: an abstraction without a second use or a test
+seam, I/O inside the domain, validation missing at the boundary or repeated inside it, errors
+swallowed or logged at every layer, configuration read outside the config module, a refactor mixed
+into a behaviour change, and every pack rule marked *reviewed*. Cite the rule. Do not repeat what
+the linter, type checker or boundary checker already reported; if one of them is not running in
+CI, that is itself a finding.
+
 **Undocumented decisions.** Does the diff contain a choice that meets the ADR test in
 `docs/decisions/0000-record-architecture-decisions.md` with no ADR written? Name it precisely.
 

@@ -6,6 +6,16 @@ the actual content.
 
 Newest entry on top.
 
+## 2026-09-24 - Engineering rulebook with stack packs
+
+- New `engineering-rulebook` skill: stack-agnostic principles plus packs for TypeScript, Next.js,
+  Python and Go, each rule marked as tool-enforced or reviewed. See [ADR 0013](decisions/0013-engineering-rulebook-with-stack-packs.md).
+- Onboarding applies the pack: review rules into `.claude/rules/`, tool rules into strict type
+  checking, lint, formatter and a boundary checker built from `overview.md`; unused packs deleted.
+- `code-reviewer` checks the reviewed rules; `code.yml.example` runs the mechanical floor, with
+  Python and Go variants; `/harden` requires it green.
+- Lint warns when a placeholder rule or skill survives onboarding.
+
 ## 2026-09-24 - Security track
 
 - Onboarding asks the security questions, writes `docs/security/threat-model.md`, records an ASVS

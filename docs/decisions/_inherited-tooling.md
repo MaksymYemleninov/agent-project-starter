@@ -71,6 +71,9 @@ repository; what they establish is:
   ADR, every approved spec states its security impact, `security-reviewer` and `/security-review`
   check changes, the `security-guidance` plugin reviews every turn, and CI scans for secrets from
   the first push.
+- **Code follows a rulebook, tools first.** `engineering-rulebook` and this project's stack pack
+  define the standard; whatever a tool can check (types, lint, format, module boundaries) is
+  configured and runs in CI, and `code-reviewer` checks the rest.
 - **Gate behaviour is configuration, not code.** `.claude/gates.json` holds source paths,
   manifests, guardrail paths, thresholds and secret paths. Editing `scripts/` to change gate
   behaviour means the configuration is missing a knob.

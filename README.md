@@ -77,6 +77,19 @@ are not prose:
 Reminders are cheap and unreliable. Hooks catch forgetfulness. CI is the only thing that actually
 holds. All three are wired up here.
 
+## Code to a standard, enforced by tools
+
+`.claude/skills/engineering-rulebook/` holds the standard: a short set of principles (simple first,
+structure by feature, dependencies pointing inward, parse at the edge, errors handled once,
+configuration validated at startup) and one pack per stack, for TypeScript, Next.js, Python and Go.
+Each rule says whether a tool enforces it or review checks it.
+
+Onboarding applies the pack. Tool rules become configuration: the strictest type checking, a
+linter with complexity limits, a formatter, and a boundary checker (dependency-cruiser,
+import-linter, or Go's `internal/` plus depguard) that carries the boundaries from
+`docs/architecture/overview.md`, so crossing one fails the build. Review rules go into
+`.claude/rules/`, and `code-reviewer` checks them. Unused packs are deleted.
+
 ## Security from the first question
 
 Security starts at onboarding rather than at the first review:

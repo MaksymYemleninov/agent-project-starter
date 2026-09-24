@@ -38,11 +38,39 @@ jobs:
       - name: Install
         run: npm ci
 
+      # The mechanical floor from .claude/skills/engineering-rulebook/SKILL.md section 2.
+      - name: Format
+        run: npm run format:check --if-present
+
       - name: Lint
         run: npm run lint --if-present
+
+      - name: Type check
+        run: npm run typecheck --if-present
+
+      - name: Boundaries
+        run: npm run check:boundaries --if-present
 
       - name: Build
         run: npm run build --if-present
 
       - name: Test
         run: npm test
+
+# Python, replacing the job's steps (see engineering-rulebook/python.md):
+#   - uses: astral-sh/setup-uv@RESOLVE-ME
+#   - run: uv sync --locked
+#   - run: uv run ruff format --check .
+#   - run: uv run ruff check .
+#   - run: uv run mypy src
+#   - run: uv run lint-imports
+#   - run: uv run pytest
+#
+# Go, replacing the job's steps (see engineering-rulebook/go.md):
+#   - uses: actions/setup-go@RESOLVE-ME
+#     with: { go-version-file: go.mod }
+#   - run: test -z "$(gofmt -l .)"
+#   - uses: golangci/golangci-lint-action@RESOLVE-ME
+#   - run: go vet ./...
+#   - run: go run golang.org/x/vuln/cmd/govulncheck@latest ./...   # pin instead of @latest
+#   - run: go test -race ./...

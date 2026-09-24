@@ -35,7 +35,10 @@ and that is how the practice gets abandoned.
    deferred at onboarding (`docs/decisions/0005-defer-code-scaffolding.md`), and this is the
    checkpoint where that deferral either gets paid off or turns into a project with no tests.
    Also check that `.github/workflows/code.yml.example` has been renamed to `code.yml`, or the
-   suite is not running in CI at all.
+   suite is not running in CI at all. The rest of the mechanical floor from
+   `.claude/skills/engineering-rulebook/SKILL.md` section 2 runs there too: format check, lint with
+   warnings as errors, strict type check, and the boundary checker. Break a boundary on purpose and
+   watch CI go red, the same way as the tests.
 6. Set `"stage": "building"` in `.claude/gates.json`.
 7. Run `npm run check`. Everything must pass. If something does not, fix it rather than reverting
    the stage.

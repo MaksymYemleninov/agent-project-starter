@@ -38,7 +38,7 @@ template so the new project does not start out claiming someone else's work as i
 2. Replace the template's own decision records with the single inherited one:
    - **Keep** `docs/decisions/0000-record-architecture-decisions.md`. The practice applies to every
      project.
-   - **Delete** every other numbered record the template shipped (`0001` through `0012` at the
+   - **Delete** every other numbered record the template shipped (`0001` through `0013` at the
      time of writing; check `docs/INDEX.md`). Those describe how the template's gates were built.
      They are the template's history, not this project's, and carrying them means half the
      decision record is someone else's before the project writes a line.
@@ -185,6 +185,11 @@ Then update:
 - `agentScopes.security-reviewer.bash` in `.claude/gates.json`: keep the audits for this stack's
   ecosystem and drop the others.
 - `.claude/rules/`: replace the placeholder rules with real path-scoped ones for the chosen stack.
+  Take them from the stack's pack in `.claude/skills/engineering-rulebook/` (`typescript.md`,
+  `nextjs.md`, `python.md`, `go.md`): the rules marked *reviewed* go into a rule file scoped to the
+  stack's source paths, the ones marked with a tool become tool configuration in phase 6. Delete the
+  packs this project does not use, keeping `SKILL.md`. Record the few pack choices that are
+  genuinely open (npm or pnpm, mypy or pyright, result types or error classes) in the stack ADRs.
 - `.claude/skills/design-system/`, `infra-setup/`, `api-contract/`: fill the ones the stack
   actually needs, and **delete the ones it does not**. An empty skill is worse than no skill.
 - The infra track. On a managed platform with no infrastructure code, delete it whole:
@@ -211,8 +216,12 @@ Create:
 
 - the minimal skeleton for the chosen stack,
 - one working endpoint or one rendered page, so `dev` does something visible. Nothing more.
-- linter and formatter configured. Cheap now, and it keeps the first weeks of diffs from being
-  half formatting churn.
+- the mechanical floor from `.claude/skills/engineering-rulebook/SKILL.md` section 2, configured
+  as the pack says: formatter, linter with the pack's rules and complexity limits, the strictest
+  type checking, and the boundary checker with the boundaries from `docs/architecture/overview.md`
+  written into its configuration. Cheap now, and it keeps the first weeks of diffs from being half
+  formatting churn and the first months from eroding the architecture. Each gets a line in the
+  Commands table. Show that the boundary check fails on a deliberate bad import, then remove it.
 - the stack's entries added to `.gitignore`. The template ships only generic ones, so a Python
   `.venv/` or a Rust `target/` is untracked and not ignored, which means the gate test suite copies
   the whole thing into its sandbox on every run.
