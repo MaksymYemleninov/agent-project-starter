@@ -6,6 +6,26 @@ the actual content.
 
 Newest entry on top.
 
+## 2026-09-24 - Infrastructure track, agent scopes, working patterns
+
+- Optional infrastructure track: `infra-architect`, `infra-engineer`, `infra-reviewer`, skills
+  `infra-bootstrap` and `infra-change`, the generic `infra-rulebook`, `/infra`, and an inactive
+  `infra.yml.example`. Mapped onto specs, tasks and ADRs, see [ADR 0007](decisions/0007-optional-infrastructure-track.md).
+  It scales: architect Mode 0 advises on hosting at onboarding, `/infra` can lay the foundation
+  only, and small trees run light (`infra.lightBootstrapMaxComponents`).
+- New `agent-scope.mjs` holds every writing or executing subagent to its files and commands, from
+  `agentScopes` in `.claude/gates.json`; `pre-bash.mjs` refuses `apply`, `destroy`, `import` and
+  state moves at every stage. Reasoning in [ADR 0008](decisions/0008-scope-agents-and-refuse-infrastructure-mutation.md).
+- `infra.foundations` joins the ADR gate; infrastructure files count toward the Stop hook's spec
+  and log nudges. State and plan files are ignored and treated as secret-bearing.
+- `AGENTS.md` gains change tiers, failure classification, `[OVERRIDE]`/`[PROPOSED]` tags,
+  "resolve, do not recall" and rule gaps; `/ship` runs a two-cycle review, see
+  [ADR 0009](decisions/0009-working-patterns-in-the-constitution.md).
+- Fixed in passing: `git status` collapsed a new untracked directory to its name, so file globs
+  such as `**/backend.tf` never saw files inside it. Now `--untracked-files=all`.
+- Not verified: no agent or skill in the track has run in a live session yet. The gate tests cover
+  the hooks, not the prompts.
+
 ## 2026-09-22 - What a derived project inherits, decided rather than defaulted
 
 - Measured on the first real use: six of fourteen decision records in the derived project were the

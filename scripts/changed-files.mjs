@@ -54,7 +54,9 @@ export function changedFiles({ base: explicitBase } = {}) {
   if (!inRepo()) return { base: null, files: [], reason: 'not a git repository' };
 
   const base = resolveBase(explicitBase);
-  const working = parsePorcelain(git('status --porcelain'));
+  // `--untracked-files=all`, or a brand-new directory is reported as `infra/` rather than the files
+  // inside it, and any glob that names a file (`**/backend.tf`) never sees them.
+  const working = parsePorcelain(git('status --porcelain --untracked-files=all'));
 
   if (!base) {
     return { base: null, files: working, reason: 'no base commit to compare against yet' };
@@ -107,12 +109,19 @@ export function loadGates(root = '.') {
     stopHook: { sourceFilesWithoutSpec: 3, requireLogEntry: true, requireAdrForGuardrails: true },
     secretPaths: ['**/.env', '**/.env.*', '**/*.pem', '**/*.key', '**/id_rsa*'],
     secretPathAllowlist: ['**/.env.example', '**/.env.sample', '**/.env.template'],
+    infra: { paths: ['infra/**', '**/*.tf', '**/*.tfvars', '**/*.hcl'], foundations: [], lightBootstrapMaxComponents: 5 },
+    agentScopes: {},
   };
   const file = `${root}/.claude/gates.json`;
   if (!existsSync(file)) return defaults;
   try {
     const parsed = JSON.parse(readFileSync(file, 'utf8'));
-    return { ...defaults, ...parsed, stopHook: { ...defaults.stopHook, ...(parsed.stopHook ?? {}) } };
+    return {
+      ...defaults,
+      ...parsed,
+      stopHook: { ...defaults.stopHook, ...(parsed.stopHook ?? {}) },
+      infra: { ...defaults.infra, ...(parsed.infra ?? {}) },
+    };
   } catch {
     return defaults;
   }
@@ -129,6 +138,11 @@ export function classify(files, gates = loadGates()) {
     specs: files.filter((f) => /^docs\/specs\/\d{4}-/.test(f)),
     log: files.filter((f) => f === 'docs/log.md'),
     source: files.filter((f) => matchesAny(f, gates.sourcePaths)),
+    infra: files.filter((f) => matchesAny(f, gates.infra.paths)),
+    // Files that fix the shape of the infrastructure rather than its contents: state backend, root
+    // configuration, one environment or account. Editing a module is a change; moving one of these
+    // is a decision.
+    infraFoundations: files.filter((f) => matchesAny(f, gates.infra.foundations)),
   };
 }
 

@@ -30,12 +30,27 @@ Run each and fix what it reports. Do not proceed past a failure.
 - Did anything you learned contradict an existing document? Say which, and do not overwrite it
   silently.
 
-## 4. Task status
+## 4. Review
+
+For anything past Tier 1, run the `code-reviewer` subagent on the diff. Infrastructure code is
+reviewed by `infra-reviewer` when `infra-change` calls for it (three or more components), not
+twice here. Any verdict other than `READY - no findings` means fix and run it a second
+time, handing it its first report. After the second cycle, stop iterating: whatever remains goes
+into the PR description for the human, with the reviewer's words.
+
+## 5. Rule gaps
+
+List anything this change ran into that no rule in `.claude/rules/`, no skill and no ADR would have
+prevented, plus the reviewer's Rule gaps section. One line each, naming the file the rule would go
+in. Ask the human which to add. Add only those, in this change or a follow-up. None is a fine
+answer; an invented one is not.
+
+## 6. Task status
 
 Update `tasks.md` in the relevant spec. Move blocked items to the Blocked section with a reason.
 If the spec is complete, set its `status: done`.
 
-## 5. Pull request
+## 7. Pull request
 
 - Branch, if not already on one: `git switch -c <type>/<slug>`
 - Conventional commit subject, body explaining **why**, not what.

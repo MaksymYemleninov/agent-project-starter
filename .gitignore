@@ -12,3 +12,13 @@ coverage/
 .DS_Store
 .claude/.state/
 .claude/settings.local.json
+
+# Infrastructure state and plans hold secrets in plain text. Ignored from day zero rather than at
+# onboarding: the cost of forgetting is a leaked credential, not a noisy diff.
+.terraform/
+.terragrunt-cache/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+crash.*.log

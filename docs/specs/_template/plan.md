@@ -11,6 +11,10 @@ date: YYYY-MM-DD
 How this gets built, in two or three paragraphs. Name the modules that change and the ones that
 deliberately do not.
 
+Tag departures from the project's defaults where they are made: `[OVERRIDE: requirement]` if the
+spec forces one, `[PROPOSED: reason]` if it is the author's own idea. For infrastructure, use the
+plan format in `.claude/skills/infra-rulebook/plan-format.md` instead of this template.
+
 ## Files touched
 
 | Path | Change | Risk |

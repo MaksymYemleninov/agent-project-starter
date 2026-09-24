@@ -34,9 +34,9 @@ function exitCode(cmd) {
 }
 
 /** Feed JSON to a hook on stdin, return whatever it wrote. */
-function hook(name, payload, cwd = sandbox) {
+function hook(name, payload, cwd = sandbox, args = []) {
   try {
-    return execFileSync('node', [join(sandbox, '.claude/hooks', name)], {
+    return execFileSync('node', [join(sandbox, '.claude/hooks', name), ...args], {
       cwd,
       input: JSON.stringify(payload),
       encoding: 'utf8',
@@ -155,6 +155,62 @@ try {
   check('secret guard allows ordinary work', denied('npm test'), 'allow');
   check('secret guard ignores non-Bash tools', hook('pre-bash.mjs', { tool_name: 'Read' }) ? 'deny' : 'allow', 'allow');
 
+  // Prefix-matching permission rules miss `cd infra && terraform apply`. The hook reads inside.
+  check('infra guard denies apply', denied('terraform apply'), 'deny');
+  check('infra guard denies apply behind cd', denied('cd infra/envs/prod && terraform apply -auto-approve'), 'deny');
+  check('infra guard denies destroy through a runner', denied('mise exec -- tofu destroy'), 'deny');
+  check('infra guard denies terragrunt run --all apply', denied('terragrunt run --all -- apply'), 'deny');
+  check('infra guard denies moving state', denied('terraform state rm aws_s3_bucket.logs'), 'deny');
+  check('infra guard allows plan, even plan -destroy', denied('cd infra && terraform plan -destroy'), 'allow');
+  check('infra guard ignores prose in a commit message', denied('git commit -m "never run terraform apply"'), 'allow');
+  check('infra guard reads through a subshell', denied('(cd infra && terraform apply)'), 'deny');
+  check('infra guard reads through env and timeout', denied('env TF_LOG=debug timeout 600 terraform apply'), 'deny');
+  check('infra guard reads through aws-vault', denied('aws-vault exec dev terraform apply'), 'deny');
+  check('infra guard reads inside sh -c', denied('sh -c "tofu destroy"'), 'deny');
+  check('infra guard knows the old terragrunt names', denied('terragrunt apply-all'), 'deny');
+  check('infra guard ignores operators inside quotes', denied('git commit -m "notes; terraform import is manual"'), 'allow');
+  check('secret guard denies reading state', denied('cat infra/terraform.tfstate'), 'deny');
+
+  // Each agent stays in its lane. The profile lives in gates.json; a missing one refuses all.
+  const scoped = (profile, tool, input) =>
+    hook('agent-scope.mjs', { tool_name: tool, tool_input: input }, sandbox, [profile]) ? 'deny' : 'allow';
+  check('engineer may write infrastructure code', scoped('infra-engineer', 'Write', { file_path: 'infra/envs/prod/main.tf' }), 'allow');
+  check('engineer may not write product docs', scoped('infra-engineer', 'Write', { file_path: 'docs/product/vision.md' }), 'deny');
+  check('engineer may not write outside the project', scoped('infra-engineer', 'Write', { file_path: '/tmp/x.tf' }), 'deny');
+  check('engineer may plan behind cd', scoped('infra-engineer', 'Bash', { command: 'cd infra/envs/prod && terraform plan' }), 'allow');
+  check('engineer may not chain', scoped('infra-engineer', 'Bash', { command: 'terraform plan && terraform fmt' }), 'deny');
+  check('reviewer may write only its review', scoped('infra-reviewer', 'Write', { file_path: 'docs/specs/0002-net/review.md' }), 'allow');
+  check('reviewer may not edit the code it reviews', scoped('infra-reviewer', 'Edit', { file_path: 'infra/envs/prod/main.tf' }), 'deny');
+  check('reviewer may not reformat, only check', scoped('infra-reviewer', 'Bash', { command: 'terraform fmt -recursive' }), 'deny');
+  check('code-reviewer may pipe read-only commands', scoped('code-reviewer', 'Bash', { command: 'git diff | head -50' }), 'allow');
+  check('code-reviewer may not redirect into a file', scoped('code-reviewer', 'Bash', { command: 'git diff > notes.txt' }), 'deny');
+  check('code-reviewer may not sed -i', scoped('code-reviewer', 'Bash', { command: "sed -i 's/a/b/' src/x.js" }), 'deny');
+  check('quoted pipes are not pipes', scoped('code-reviewer', 'Bash', { command: 'rg -n "foo|bar" scripts 2>/dev/null' }), 'allow');
+  check('read-only profiles cannot find -delete', scoped('code-reviewer', 'Bash', { command: 'find . -name x -delete' }), 'deny');
+  check('architect may propose a new ADR', scoped('infra-architect', 'Write', { file_path: 'docs/decisions/0099-state-backend.md' }), 'allow');
+  check('architect may not rewrite an accepted ADR', scoped('infra-architect', 'Write', { file_path: 'docs/decisions/0000-record-architecture-decisions.md' }), 'deny');
+  check('an unknown profile refuses everything', scoped('nobody', 'Bash', { command: 'ls' }), 'deny');
+  check('scope hook ignores read-only tools', scoped('code-reviewer', 'Read', { file_path: 'src/x.js' }), 'allow');
+
+  // An agent pointing at a profile gates.json does not define is refused everything at runtime,
+  // silently. The linter is where that becomes visible.
+  {
+    const agent = join(sandbox, '.claude/agents/code-reviewer.md');
+    const original = readFileSync(agent, 'utf8');
+    writeFileSync(agent, original.replace('agent-scope.mjs\\" code-reviewer', 'agent-scope.mjs\\" code-reveiwer'));
+    check('agent with an undefined scope profile fails lint', exitCode('node scripts/lint-docs.mjs'), 1);
+    writeFileSync(agent, original);
+  }
+
+  // Editing a module is a change; moving a foundation is a decision.
+  mkdirSync(join(sandbox, 'infra/modules/net'), { recursive: true });
+  writeFileSync(join(sandbox, 'infra/modules/net/main.tf'), 'resource "null_resource" "x" {}\n');
+  check('infra module change alone passes the ADR gate', exitCode('node scripts/check-adr-drift.mjs'), 0);
+  mkdirSync(join(sandbox, 'infra/envs/prod'), { recursive: true });
+  writeFileSync(join(sandbox, 'infra/envs/prod/backend.tf'), 'terraform {\n  backend "s3" {}\n}\n');
+  check('infra foundation change without an ADR fails', exitCode('node scripts/check-adr-drift.mjs'), 1);
+  rmSync(join(sandbox, 'infra'), { recursive: true, force: true });
+
   // An ADR that exists but records nothing.
   writeFileSync(
     join(sandbox, 'docs/decisions/0097-lazy.md'),
@@ -233,6 +289,12 @@ try {
   writeFileSync(join(sandbox, '.claude/gates.json'), JSON.stringify(withoutStage, null, 2));
   check('gates.json without a stage is rejected', exitCode('node scripts/lint-docs.mjs'), 1);
 
+  writeFileSync(
+    join(sandbox, '.claude/gates.json'),
+    JSON.stringify({ ...shipped, infra: { ...shipped.infra, lightBootstrapMaxComponents: 'few' } }, null, 2),
+  );
+  check('a non-numeric light threshold is rejected', exitCode('node scripts/lint-docs.mjs'), 1);
+
   writeFileSync(join(sandbox, '.claude/gates.json'), JSON.stringify({ ...shipped, sourcePaths: [] }, null, 2));
   check('an empty sourcePaths is rejected', exitCode('node scripts/lint-docs.mjs'), 1);
   sh('git checkout -- .claude/gates.json');
@@ -257,6 +319,11 @@ try {
      '### Negative', '- No.', ''].join('\n'),
   );
   check('exploration: lint reports but does not fail', exitCode('node scripts/lint-docs.mjs'), 0);
+  check(
+    'exploration: infra guard still denies apply',
+    hook('pre-bash.mjs', { tool_name: 'Bash', tool_input: { command: 'terraform apply' } }) ? 'deny' : 'allow',
+    'deny',
+  );
   check(
     'exploration: secret guard still denies',
     hook('pre-bash.mjs', { tool_name: 'Bash', tool_input: { command: 'cat .env' } }) ? 'deny' : 'allow',

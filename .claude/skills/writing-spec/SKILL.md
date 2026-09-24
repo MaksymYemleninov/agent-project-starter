@@ -60,6 +60,14 @@ implementation, test strategy, rollout and how to turn it off.
 If the plan reveals a decision meeting the ADR test, stop and write the ADR first. Deciding
 inside an implementation is how undocumented architecture happens.
 
+### Tag what nobody asked for
+
+While writing the plan, tag every departure from the project's defaults at the moment you make it:
+`[OVERRIDE: <requirement>]` when a criterion in the spec forces it, `[PROPOSED: <reason>]` when it
+is your own judgment. The reviewer treats tagged items as intentional and untagged deviations as
+findings, and the human gets a list of every `[PROPOSED]` item to accept or cut. A tag first added
+after review means the deviation was not noticed when it was designed.
+
 ## Tasks
 
 Dependency-ordered. Each task small enough to finish and verify in one sitting, each with its own
