@@ -50,7 +50,8 @@
     ".claude/settings.json",
     ".claude/gates.json",
     ".claude/hooks/**",
-    ".claude/agents/**"
+    ".claude/agents/**",
+    ".claude/claude-security-guidance.md"
   ],
   "stopHook": {
     "sourceFilesWithoutSpec": 3,
@@ -274,6 +275,35 @@
         "ls",
         "rg",
         "grep"
+      ]
+    },
+    "security-reviewer": {
+      "write": [],
+      "pipes": true,
+      "bash": [
+        "git diff",
+        "git log",
+        "git show",
+        "git status",
+        "git blame",
+        "ls",
+        "rg",
+        "grep",
+        "head",
+        "tail",
+        "wc",
+        "cat",
+        "gitleaks git",
+        "gitleaks dir",
+        "osv-scanner scan",
+        "semgrep scan",
+        "npm audit",
+        "pnpm audit",
+        "pip-audit",
+        "govulncheck",
+        "trivy fs",
+        "trivy config",
+        "checkov -d"
       ]
     }
   },

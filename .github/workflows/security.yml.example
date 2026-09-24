@@ -1,0 +1,63 @@
+# Security CI, deliberately inactive.
+#
+# GitHub only runs files ending in .yml or .yaml, so this one does nothing until you rename it:
+#
+#     git mv .github/workflows/security.yml.example .github/workflows/security.yml
+#
+# Do that together with code.yml, when the first spec is implemented and there are dependencies and
+# code worth scanning. /harden requires it. Secret scanning is not here: it runs in ci.yml from day
+# one, because a leaked credential is not a process question.
+#
+# Versions are placeholders on purpose. Resolve the current releases and pin them, per AGENTS.md
+# principle 8. Remove the jobs for ecosystems this project does not use.
+# What each tool checks, and how to run it locally: .claude/skills/security-rulebook/scanners.md
+
+name: Security
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    # New vulnerabilities are published against code that has not changed. Weekly catches them.
+    - cron: "17 5 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  dependencies:
+    name: Vulnerable dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install osv-scanner
+        run: |
+          set -euo pipefail
+          curl -fsSL -o osv-scanner "https://github.com/google/osv-scanner/releases/download/vRESOLVE-ME/osv-scanner_linux_amd64"
+          chmod +x osv-scanner
+      - name: Scan lock files
+        run: ./osv-scanner scan source -r .
+
+  sast:
+    name: Static analysis
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep:RESOLVE-ME
+    steps:
+      - uses: actions/checkout@v4
+      - name: Semgrep
+        run: semgrep scan --config p/default --metrics=off --error
+
+  # Only when the project ships a container image.
+  # image:
+  #   name: Container image
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - run: docker build -t app:ci .
+  #     - uses: aquasecurity/trivy-action@RESOLVE-ME
+  #       with:
+  #         image-ref: app:ci
+  #         severity: HIGH,CRITICAL
+  #         exit-code: "1"

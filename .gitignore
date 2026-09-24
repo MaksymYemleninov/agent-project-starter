@@ -22,3 +22,6 @@ coverage/
 *.tfplan
 crash.log
 crash.*.log
+
+# Personal overrides for the security-guidance plugin's project rules.
+.claude/claude-security-guidance.local.md

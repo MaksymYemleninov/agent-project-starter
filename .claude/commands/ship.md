@@ -43,6 +43,17 @@ twice here. Any verdict other than `READY - no findings` means fix and run it a 
 time, handing it its first report. After the second cycle, stop iterating: whatever remains goes
 into the PR description for the human, with the reviewer's words.
 
+Security review runs separately, with a clean context, for Tier 2 and up and for any change that
+touches authentication, authorization, input handling, personal data, secrets, dependencies or
+infrastructure exposure, whatever its tier:
+
+- the `security-reviewer` subagent in diff mode, same two-cycle rule. Any HIGH blocks the pull
+  request; a MEDIUM is fixed or accepted in an ADR;
+- the built-in `/security-review` on the branch, as a second opinion from a different prompt.
+
+If the change adds an entry point, data store, role or integration, `docs/security/threat-model.md`
+changes in the same pull request.
+
 ## 5. Rule gaps
 
 List anything this change ran into that no rule in `.claude/rules/`, no skill and no ADR would have

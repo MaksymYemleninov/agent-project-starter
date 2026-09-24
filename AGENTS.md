@@ -28,8 +28,11 @@ a principle here, stop and say so instead of working around it.
    ADR first.
 4. **Docs ship with code.** A pull request that changes behavior and leaves `docs/` untouched
    is incomplete. CI enforces this; do not try to route around it.
-5. **No secrets in the repository.** Tokens, keys, passwords and connection strings live in the
-   secret manager named in `docs/ops/environments.md`, never in files or examples.
+5. **Security is designed in, and no secrets in the repository.** The threat model in
+   `docs/security/` is kept current, every spec states its security impact, and a change touching
+   identity, input, data or dependencies gets a security review before merge
+   (`.claude/skills/security-rulebook/`). Tokens, keys, passwords and connection strings live in
+   the secret manager named in `docs/ops/environments.md`, never in files or examples.
 6. **Irreversible actions need a human.** Deploy, delete, migrate, drop, force-push, and any
    production write require explicit confirmation in the conversation. Never chain them into a
    script to avoid the prompt. Infrastructure `apply`, `destroy`, `import` and state moves are
@@ -55,7 +58,7 @@ Stack-specific principles are appended here by `/onboard` from the stack ADRs.
 | `.claude/rules/` | Path-scoped rules. Each needs a `paths` glob, or it loads every session. |
 | `.claude/skills/` | Repeatable procedures. Long instructions belong here, not in this file. |
 | `.claude/agents/` | Subagents: review, research, tests, and the infra architect, engineer, reviewer. Each is held to its lane by `agent-scope.mjs`. |
-| `.claude/commands/` | Slash commands: `/onboard`, `/adr`, `/spec`, `/ship`, `/lint`, `/harden`, `/infra`, `/repair`. |
+| `.claude/commands/` | Slash commands: `/onboard`, `/adr`, `/spec`, `/ship`, `/lint`, `/harden`, `/infra`, `/repair`, `/security`. |
 | `.claude/hooks/` | Mechanical reminders fired by Claude Code events, plus the secret and apply guard. |
 | `.claude/gates.json` | Tuning for the gates: source, manifest, infra and secret paths, thresholds, agent scopes. |
 | `.claude/onboarding.json` | `/onboard` checkpoint, so a dead session resumes instead of restarting. |
@@ -67,6 +70,7 @@ Stack-specific principles are appended here by `/onboard` from the stack ADRs.
 | `docs/decisions/` | ADRs, numbered, append-only. Superseded, never deleted. |
 | `docs/architecture/` | overview, data model, integrations. |
 | `docs/ops/` | runbook, environments. |
+| `docs/security/` | threat model and dated audit reports. |
 | `infra/` | Infrastructure code, when the project has any. Built and changed through `/infra`. |
 | `scripts/` | Repo tooling. `lint-docs.mjs` and `check-adr-drift.mjs` run in CI. |
 

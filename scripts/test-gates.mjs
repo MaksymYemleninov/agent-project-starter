@@ -384,6 +384,49 @@ try {
     sh('git checkout -q -- .');
   }
 
+  // Security is part of every approved spec.
+  {
+    const dir = join(sandbox, 'docs/specs/0003-login');
+    mkdirSync(dir, { recursive: true });
+    const spec = (security) =>
+      ['---', 'type: spec', 'id: "0003"', 'status: approved', 'date: 2026-09-24', 'owner: x', 'adrs: []', '---',
+       '# 0003 - Login', '', 'Companion documents: [plan](plan.md), [tasks](tasks.md).', '', '## Acceptance criteria', '',
+       '1. When a user submits valid credentials, the system shall start a session.', '',
+       ...(security === null ? [] : ['## Security', '', security, '']), '## Open questions', '', '- [x] none', ''].join('\n');
+    writeFileSync(join(dir, 'plan.md'), '---\ntype: plan\n---\n# plan\n');
+    writeFileSync(join(dir, 'tasks.md'), '---\ntype: tasks\n---\n# tasks\n');
+    appendFileSync(join(sandbox, 'docs/INDEX.md'), '\n- [Login](specs/0003-login/spec.md)\n');
+    const lintOut = () => {
+      try {
+        return sh('node scripts/lint-docs.mjs');
+      } catch (e) {
+        return e.stdout ?? '';
+      }
+    };
+    writeFileSync(join(dir, 'spec.md'), spec(null));
+    check('an approved spec without a Security section fails', lintOut().includes('no `## Security` section'), true);
+    writeFileSync(join(dir, 'spec.md'), spec(''));
+    check('an approved spec with an empty Security section fails', lintOut().includes('`## Security` is empty'), true);
+    writeFileSync(join(dir, 'spec.md'), spec('New public entry point POST /login; abuse case: brute force, see criterion 2.'));
+    check('an approved spec with its Security stated passes', lintOut().includes('0003-login/spec.md'), false);
+    rmSync(dir, { recursive: true, force: true });
+    sh('git checkout -- docs/INDEX.md');
+  }
+
+  // The security reviewer reads and scans, and cannot change anything.
+  check('security-reviewer may run a scanner', scoped('security-reviewer', 'Bash', { command: 'semgrep scan --config p/default --metrics=off' }), 'allow');
+  check('security-reviewer may not write', scoped('security-reviewer', 'Write', { file_path: 'src/auth.ts' }), 'deny');
+  check('security-reviewer may not run the build', scoped('security-reviewer', 'Bash', { command: 'npm run build' }), 'deny');
+
+  // The plugin cuts its project rules at 8 KB without saying so.
+  {
+    const guidance = join(sandbox, '.claude/claude-security-guidance.md');
+    const original = readFileSync(guidance, 'utf8');
+    writeFileSync(guidance, original + '- rule\n'.repeat(1500));
+    check('oversized security guidance warns', sh('node scripts/lint-docs.mjs || true').includes('truncates past 8192'), true);
+    writeFileSync(guidance, original);
+  }
+
   // Template stubs are ignored entirely: a leading underscore means a starting shape, not a
   // document this project has. Without this the stubs would fail every check a document must pass.
   writeFileSync(join(sandbox, 'docs/_scratch.md'), 'no frontmatter, not in the index, on purpose\n');

@@ -54,24 +54,34 @@ and that is how the practice gets abandoned.
    gh label create no-adr-needed --color 0E8A16 --description "Reason is in the PR description"
    ```
 
-9. If the project has infrastructure code, it holds too:
+9. Security holds before anything else does. Blocking, each one:
+   - `docs/security/threat-model.md` exists, was verified since the last entry point was added,
+     and every high threat has a control in place (with evidence) or an accepting ADR;
+   - the ASVS level is an accepted ADR;
+   - `/security` has run in the last month and its report has no open HIGH;
+   - `.github/workflows/security.yml.example` renamed to `security.yml` and green, the secret scan
+     in `ci.yml` green, and `.github/dependabot.yml.example` activated (or Renovate) for the
+     ecosystems in use;
+   - `.claude/claude-security-guidance.md` holds this project's rules, not the stub;
+   - the `security-guidance` plugin is enabled in `.claude/settings.json`.
+10. If the project has infrastructure code, it holds too:
    - `.github/workflows/infra.yml.example` renamed to `infra.yml` and green;
    - the state backend, its locking and who may apply are in `docs/ops/environments.md`;
    - `infra.paths` and `infra.foundations` in `.claude/gates.json` match the real tree (list what
      they match, do not assume);
    - the rulebook's naming and Project decisions sections reflect the accepted ADRs;
    - an `infra-reviewer` code review of the current tree has reached `READY`.
-10. Rename `docs/ops/_runbook.md` into place and fill it. By this point there has been a deploy, so
+11. Rename `docs/ops/_runbook.md` into place and fill it. By this point there has been a deploy, so
    there is something to write: the exact commands, the rollback, and what to check when it breaks.
    An untested rollback is a hope.
-11. Name the rule gaps the exploration period exposed: mistakes that repeated, reviewer findings
+12. Name the rule gaps the exploration period exposed: mistakes that repeated, reviewer findings
     that no rule would have prevented. Propose the rules; the human picks which are written.
-12. Lock in the warning count: `npm run lint:docs -- --update-baseline` creates
+13. Lock in the warning count: `npm run lint:docs -- --update-baseline` creates
     `.claude/lint-baseline.json`, and from then on warnings may fall but not rise. Before it, read
     every warning: the baseline freezes whatever is there as acceptable.
-13. Look through `docs/log.md` for bugs fixed during exploration that could silently return, and
+14. Look through `docs/log.md` for bugs fixed during exploration that could silently return, and
     add a marker for each to `markers` in `.claude/gates.json`.
-14. Add an entry to `docs/log.md` saying the project moved to `building` and why now.
+15. Add an entry to `docs/log.md` saying the project moved to `building` and why now.
 
 ## Afterwards
 

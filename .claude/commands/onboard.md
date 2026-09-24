@@ -38,7 +38,7 @@ template so the new project does not start out claiming someone else's work as i
 2. Replace the template's own decision records with the single inherited one:
    - **Keep** `docs/decisions/0000-record-architecture-decisions.md`. The practice applies to every
      project.
-   - **Delete** every other numbered record the template shipped (`0001` through `0011` at the
+   - **Delete** every other numbered record the template shipped (`0001` through `0012` at the
      time of writing; check `docs/INDEX.md`). Those describe how the template's gates were built.
      They are the template's history, not this project's, and carrying them means half the
      decision record is someone else's before the project writes a line.
@@ -106,7 +106,11 @@ Gaps worth closing, in roughly this order, skipping every one the idea file answ
    project owns? The second one brings in the infra track (`/infra`), and with it the IaC
    choices in phase 4.
 7. Does it store personal data, take payments, or need authentication. Each is a decision with
-   consequences, not a checkbox.
+   consequences, not a checkbox. Then, briefly, the security picture: which data is sensitive and
+   whose it is, who the users and roles are (and who administers), what reaches it from outside
+   (public web, webhooks, uploads, third-party logins), and any legal or contractual requirement
+   (GDPR, data residency, a customer's security questionnaire). These feed the threat model in
+   phase 3 and the verification level in phase 4.
 
 Stop asking when the remaining unknowns would not change what you build first. Then summarize the
 answers and get an explicit confirmation before moving on.
@@ -119,6 +123,9 @@ Write, from the idea plus the answers:
 - `docs/product/scope.md`
 - `docs/product/non-goals.md`
 - `docs/product/personas.md`
+- `docs/security/threat-model.md`: rename the stub `docs/security/_threat-model.md` and fill it
+  per `.claude/skills/security-rulebook/threat-model.md`. The entry points will be provisional
+  before there is code; that is fine and the model says so. Update its link in `docs/INDEX.md`.
 
 Set `status: draft` and `last_verified` to today in each. Use the user's own words where they
 were precise. Do not invent numbers, do not add market language, and where an answer was
@@ -133,7 +140,9 @@ Propose a stack. For each significant choice, present:
 | Choice | Recommendation | Main alternative | Why this one here | Cost to reverse |
 
 Cover at minimum: language and runtime, framework, persistence, hosting and deploy, auth (if
-needed), testing approach, styling or UI approach (if there is a UI). If the project owns its
+needed), testing approach, styling or UI approach (if there is a UI), and the OWASP ASVS level
+(L1, L2 or L3, per `.claude/skills/security-rulebook/SKILL.md` section 2; L2 for anything public
+with personal data or payments). If the project owns its
 infrastructure, also: IaC tool (Terraform or OpenTofu, with or without Terragrunt), where state
 lives, and how environments are separated (accounts, directories). Only the choices; the
 infrastructure itself is planned later, by `/infra`, against an approved spec.
@@ -169,6 +178,12 @@ Then update:
   file under 200 lines. Long stack conventions go into `.claude/rules/`, not here.
 - `docs/architecture/overview.md`: components, request path, boundaries, links to the ADRs.
 - `docs/ops/environments.md`: environments and where secrets live.
+- `.claude/claude-security-guidance.md`: replace the stub with this project's rules, drawn from the
+  threat model's controls and the ASVS level ADR, the ones a reviewer could not infer from the code
+  (how authorization is enforced, where tenant id comes from, which wrapper outbound calls use).
+  Under 8 KB. The `security-guidance` plugin reviews every diff against it.
+- `agentScopes.security-reviewer.bash` in `.claude/gates.json`: keep the audits for this stack's
+  ecosystem and drop the others.
 - `.claude/rules/`: replace the placeholder rules with real path-scoped ones for the chosen stack.
 - `.claude/skills/design-system/`, `infra-setup/`, `api-contract/`: fill the ones the stack
   actually needs, and **delete the ones it does not**. An empty skill is worse than no skill.
@@ -221,7 +236,9 @@ summary is not evidence.
 - In that spec's `plan.md`, the Test strategy section is where the testing approach gets decided,
   now that there is a feature to test. Name the framework there and make setting it up the first
   task in `tasks.md`, along with renaming `.github/workflows/code.yml.example` to `code.yml`.
-  Acceptance criteria in EARS form. Leave `status: draft` with open questions listed.
+  Acceptance criteria in EARS form, with the threat model's abuse cases for this capability as
+  `If ...` criteria and its `## Security` section filled. Leave `status: draft` with open
+  questions listed.
 - Update `docs/INDEX.md` so every new document is listed.
 - Add the onboarding entry to `docs/log.md`: 3 to 6 bullets.
 - Run `npm run check` and fix what it reports.

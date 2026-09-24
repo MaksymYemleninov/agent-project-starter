@@ -27,7 +27,7 @@ Architecture decision records. Append-only: a wrong decision is superseded, neve
 
 - [ADR template](decisions/_template.md)
 - [Inherited tooling stub](decisions/_inherited-tooling.md) - `/onboard` renames this into place on a
-  new project, replacing records `0001`-`0011` below, which are this template's own history
+  new project, replacing records `0001`-`0012` below, which are this template's own history
 - [0000 - Record architecture decisions](decisions/0000-record-architecture-decisions.md) - accepted
 - [0001 - Enforce documentation in CI, not in prose](decisions/0001-enforce-documentation-in-ci.md) - accepted
 - [0002 - Configure the gates, and check ADR substance](decisions/0002-configure-and-substantiate-the-gates.md) - accepted
@@ -40,6 +40,7 @@ Architecture decision records. Append-only: a wrong decision is superseded, neve
 - [0009 - Move five working patterns from the infrastructure pipeline into the constitution](decisions/0009-working-patterns-in-the-constitution.md) - accepted
 - [0010 - Guard fixes, decisions and context against quiet regression](decisions/0010-guard-fixes-decisions-and-context-against-regression.md) - accepted
 - [0011 - Repair failing tests in a loop whose limits live outside the agent](decisions/0011-bounded-repair-loop.md) - accepted
+- [0012 - Design security in from onboarding, and review it separately from code](decisions/0012-security-designed-in.md) - accepted
 
 <!-- decisions:list -->
 <!-- /decisions:list -->
@@ -52,6 +53,13 @@ Architecture decision records. Append-only: a wrong decision is superseded, neve
 ## Operations
 
 - [Environments](ops/environments.md) - environments, configuration and secret handling.
+
+## Security
+
+- [Threat model](security/_threat-model.md) - stub; `/onboard` phase 3 renames it to
+  `threat-model.md` and fills it. Assets, entry points, threats, controls, abuse cases.
+
+`/security` adds dated audit reports here.
 
 ## Journal
 

@@ -49,6 +49,14 @@ Criteria:
 Replace the three examples above. `npm run lint:docs` checks that at least one criterion starts
 with `When`, `While`, `If`, `Where` or `The system shall`.
 
+## Security
+
+What this changes for the threat model (`docs/security/threat-model.md`): new entry points, data
+stored or exposed, roles, integrations. Then the abuse cases as `If ...` criteria in the list
+above, so they get tested. If it changes nothing, say why in one sentence: "Read-only view of
+data the user already owns, behind the existing session check." `npm run lint:docs` rejects an
+approved spec with this section empty.
+
 ## Out of band
 
 What has to be true outside the code for this to work: a DNS record, a vendor account, a
