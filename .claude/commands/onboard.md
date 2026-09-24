@@ -38,7 +38,7 @@ template so the new project does not start out claiming someone else's work as i
 2. Replace the template's own decision records with the single inherited one:
    - **Keep** `docs/decisions/0000-record-architecture-decisions.md`. The practice applies to every
      project.
-   - **Delete** every other numbered record the template shipped (`0001` through `0013` at the
+   - **Delete** every other numbered record the template shipped (`0001` through `0014` at the
      time of writing; check `docs/INDEX.md`). Those describe how the template's gates were built.
      They are the template's history, not this project's, and carrying them means half the
      decision record is someone else's before the project writes a line.
@@ -192,6 +192,11 @@ Then update:
   genuinely open (npm or pnpm, mypy or pyright, result types or error classes) in the stack ADRs.
 - `.claude/skills/design-system/`, `infra-setup/`, `api-contract/`: fill the ones the stack
   actually needs, and **delete the ones it does not**. An empty skill is worse than no skill.
+- The design track, when the project has no user interface (a CLI, a library, a pure API):
+  delete `.claude/commands/design.md`, `.claude/agents/design-reviewer.md`,
+  `.claude/skills/design-system/`, the `design-reviewer` profile in `agentScopes`, and
+  `frontend-design@claude-plugins-official` from `enabledPlugins`. With a UI, keep it: the design is
+  made by `/design` after onboarding, before the first UI spec is approved.
 - The infra track. On a managed platform with no infrastructure code, delete it whole:
   `.claude/agents/infra-*.md`, `.claude/skills/infra-bootstrap/`, `infra-change/`,
   `infra-rulebook/`, `.claude/commands/infra.md`, `.github/workflows/infra.yml.example`, and the
@@ -255,7 +260,9 @@ summary is not evidence.
 
 Finish with a short report: stack chosen, ADRs written, what runs now, what the human should look
 at first, and the open questions you could not resolve. If the infra track was kept, say that
-infrastructure is the next step and starts with `/infra`, which cuts its own spec. Say explicitly that gates are advisory
+infrastructure is the next step and starts with `/infra`, which cuts its own spec. If the project has
+a UI, say that `/design` comes before any frontend work, and that the first spec, if it is a UI
+spec, cannot be approved until the design is. Say explicitly that gates are advisory
 until they run `/harden`, and name the one condition that should trigger it: the project stops
 being an experiment.
 

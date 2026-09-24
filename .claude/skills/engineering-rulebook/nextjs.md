@@ -59,8 +59,9 @@ in a `page.tsx` or `route.ts` are a finding.
 
 ## UI
 
-- Components use the design tokens and primitives in `components/ui/`, never hardcoded colours,
-  sizes or fonts (see the design track once it exists). *Lint + design-reviewer.*
+- Components use the design tokens from `design/tokens.css` (via the Tailwind theme or CSS
+  variables) and the primitives in `components/ui/`, never hardcoded colours, sizes or fonts. With
+  Tailwind, no arbitrary values. See `.claude/skills/design-system/`. *Lint + design-reviewer.*
 - Every data-driven view has loading, empty and error states (`loading.tsx`, `error.tsx`, explicit
   empty UI). *Reviewed.*
 - Images through `next/image`, fonts through `next/font`, links through `next/link`. *Lint
@@ -71,7 +72,8 @@ in a `page.tsx` or `route.ts` are a finding.
 ## Tests
 
 Unit and integration as in typescript.md; Playwright for the critical user paths end to end,
-including one test per abuse case that crosses the UI (a user opening another user's page).
+including one test per abuse case that crosses the UI (a user opening another user's page), and an
+axe accessibility check (`@axe-core/playwright`) on each key page.
 
 ## Commands to put in AGENTS.md
 

@@ -413,6 +413,40 @@ try {
     sh('git checkout -- docs/INDEX.md');
   }
 
+  // A UI spec cannot be approved before the design system is.
+  {
+    const dir = join(sandbox, 'docs/specs/0004-dashboard');
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(join(dir, 'plan.md'), '---\ntype: plan\n---\n# plan\n');
+    writeFileSync(join(dir, 'tasks.md'), '---\ntype: tasks\n---\n# tasks\n');
+    writeFileSync(
+      join(dir, 'spec.md'),
+      ['---', 'type: spec', 'id: "0004"', 'status: approved', 'date: 2026-09-24', 'owner: x', 'adrs: []', 'ui: true',
+       'design: design/prototypes/dashboard.html', '---', '# 0004 - Dashboard', '',
+       'Companion documents: [plan](plan.md), [tasks](tasks.md).', '', '## Acceptance criteria', '',
+       '1. When a user opens the dashboard, the system shall show their open invoices.', '', '## Security', '',
+       'Read-only view of the caller\'s own invoices behind the existing session check.', '',
+       '## Open questions', '', '- [x] none', ''].join('\n'),
+    );
+    appendFileSync(join(sandbox, 'docs/INDEX.md'), '\n- [Dashboard](specs/0004-dashboard/spec.md)\n');
+    const out = () => sh('node scripts/lint-docs.mjs || true');
+    check('a UI spec without a design system cannot be approved', out().includes('there is no `docs/design/system.md`'), true);
+    mkdirSync(join(sandbox, 'docs/design'), { recursive: true });
+    const system = (status) =>
+      writeFileSync(join(sandbox, 'docs/design/system.md'), `---\ntype: design\nstatus: ${status}\nlast_verified: 2026-09-24\n---\n# Design system\n`);
+    appendFileSync(join(sandbox, 'docs/INDEX.md'), '\n- [Design system](design/system.md)\n');
+    system('draft');
+    check('a UI spec waits for the design to be approved', out().includes('design system is `draft`'), true);
+    system('stable');
+    check('a UI spec passes once the design is approved', out().includes('0004-dashboard'), false);
+    rmSync(dir, { recursive: true, force: true });
+    rmSync(join(sandbox, 'docs/design'), { recursive: true, force: true });
+    sh('git checkout -- docs/INDEX.md');
+  }
+
+  check('design-reviewer may capture a screenshot', scoped('design-reviewer', 'Bash', { command: 'npx playwright screenshot --viewport-size=375,812 http://localhost:3000 /tmp/a.png' }), 'allow');
+  check('design-reviewer may not edit components', scoped('design-reviewer', 'Edit', { file_path: 'src/components/ui/button.tsx' }), 'deny');
+
   // The security reviewer reads and scans, and cannot change anything.
   check('security-reviewer may run a scanner', scoped('security-reviewer', 'Bash', { command: 'semgrep scan --config p/default --metrics=off' }), 'allow');
   check('security-reviewer may not write', scoped('security-reviewer', 'Write', { file_path: 'src/auth.ts' }), 'deny');

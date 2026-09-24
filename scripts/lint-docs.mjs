@@ -361,6 +361,18 @@ for (const entry of existsSync(join(DOCS, 'specs')) ? readdirSync(join(DOCS, 'sp
     }
   }
 
+  // UI is built to an approved design, not improvised. A UI spec cannot be approved before the
+  // design system is, which is what puts /design in front of the first frontend work.
+  if (String(fm.ui) === 'true' && ['approved', 'in-progress', 'done'].includes(fm.status)) {
+    const designPath = join(DOCS, 'design/system.md');
+    const design = existsSync(designPath) ? frontmatter(read(designPath)) : null;
+    if (!design) {
+      err(specPath, 'is a UI spec (`ui: true`) but there is no `docs/design/system.md`. Run /design before approving it.');
+    } else if (design.status !== 'stable') {
+      err(specPath, `is a UI spec but the design system is \`${design.status}\`, not approved. Finish /design first.`);
+    }
+  }
+
   if (['in-progress', 'done'].includes(fm.status)) {
     if (!existsSync(join(dir, 'plan.md'))) err(specPath, `status is \`${fm.status}\` but there is no plan.md`);
     if (!existsSync(join(dir, 'tasks.md'))) err(specPath, `status is \`${fm.status}\` but there is no tasks.md`);
@@ -376,8 +388,8 @@ const OTHER_STATUS = ['template', 'draft', 'stable', 'deprecated'];
 
 for (const [r, doc] of docs) {
   if (!doc.fm || r.startsWith('docs/decisions/') || r.startsWith('docs/specs/')) continue;
-  if (!['product', 'architecture', 'ops', 'security'].includes(doc.fm.type)) {
-    err(r, `frontmatter \`type: ${doc.fm.type}\` must be product | architecture | ops | security`);
+  if (!['product', 'architecture', 'ops', 'security', 'design'].includes(doc.fm.type)) {
+    err(r, `frontmatter \`type: ${doc.fm.type}\` must be product | architecture | ops | security | design`);
   }
   oneOf(r, doc.fm, 'status', OTHER_STATUS);
   if (!isDate(doc.fm.last_verified)) err(r, 'frontmatter `last_verified` must be YYYY-MM-DD');

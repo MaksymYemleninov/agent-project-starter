@@ -77,6 +77,23 @@ are not prose:
 Reminders are cheap and unreliable. Hooks catch forgetfulness. CI is the only thing that actually
 holds. All three are wired up here.
 
+## Design before frontend
+
+Projects with a UI make their design before building it. `/design` uses Anthropic's
+[`frontend-design`](https://github.com/anthropics/claude-plugins-official/tree/main/plugins/frontend-design)
+skill (enabled as a project plugin) for the aesthetic direction, and the template's
+`design-system` skill for the contract:
+
+- `docs/design/system.md`: brief, direction, principles, token rationale with contrast ratios,
+  component inventory, decisions;
+- `design/tokens.css`: primitive, semantic and component tokens, light and dark;
+- `design/prototypes/*.html`: two or three key screens with real content and every state, reviewed
+  in a browser at mobile and desktop width, approved by the human.
+
+A spec with `ui: true` cannot be approved until the design system is. Components use semantic
+tokens only; `design-reviewer` checks tokens, states, the accessibility floor and fidelity to the
+prototype in `/ship`. Projects without a UI delete the track at onboarding.
+
 ## Code to a standard, enforced by tools
 
 `.claude/skills/engineering-rulebook/` holds the standard: a short set of principles (simple first,
@@ -215,6 +232,7 @@ mistake worth catching: it is invisible at runtime and it compounds.
 | `/infra` | Infrastructure: bootstrap it if there is none, otherwise size and run the change |
 | `/repair` | Make one failing test pass in a budget-capped headless loop that cannot touch the test |
 | `/security` | Whole-project security audit: threat model against the code, scanners, reviewer, dated report |
+| `/design` | Design system before frontend work: direction, tokens, HTML prototypes approved in a browser |
 
 ## Known limits
 

@@ -58,7 +58,7 @@ Stack-specific principles are appended here by `/onboard` from the stack ADRs.
 | `.claude/rules/` | Path-scoped rules. Each needs a `paths` glob, or it loads every session. |
 | `.claude/skills/` | Repeatable procedures. Long instructions belong here, not in this file. |
 | `.claude/agents/` | Subagents: review, research, tests, and the infra architect, engineer, reviewer. Each is held to its lane by `agent-scope.mjs`. |
-| `.claude/commands/` | Slash commands: `/onboard`, `/adr`, `/spec`, `/ship`, `/lint`, `/harden`, `/infra`, `/repair`, `/security`. |
+| `.claude/commands/` | Slash commands: `/onboard`, `/adr`, `/spec`, `/ship`, `/lint`, `/harden`, `/infra`, `/repair`, `/security`, `/design`. |
 | `.claude/hooks/` | Mechanical reminders fired by Claude Code events, plus the secret and apply guard. |
 | `.claude/gates.json` | Tuning for the gates: source, manifest, infra and secret paths, thresholds, agent scopes. |
 | `.claude/onboarding.json` | `/onboard` checkpoint, so a dead session resumes instead of restarting. |
@@ -71,6 +71,7 @@ Stack-specific principles are appended here by `/onboard` from the stack ADRs.
 | `docs/architecture/` | overview, data model, integrations. |
 | `docs/ops/` | runbook, environments. |
 | `docs/security/` | threat model and dated audit reports. |
+| `docs/design/`, `design/` | the approved design system; tokens and HTML prototypes. UI is built to it. |
 | `infra/` | Infrastructure code, when the project has any. Built and changed through `/infra`. |
 | `scripts/` | Repo tooling. `lint-docs.mjs` and `check-adr-drift.mjs` run in CI. |
 

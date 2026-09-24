@@ -27,7 +27,7 @@ Architecture decision records. Append-only: a wrong decision is superseded, neve
 
 - [ADR template](decisions/_template.md)
 - [Inherited tooling stub](decisions/_inherited-tooling.md) - `/onboard` renames this into place on a
-  new project, replacing records `0001`-`0013` below, which are this template's own history
+  new project, replacing records `0001`-`0014` below, which are this template's own history
 - [0000 - Record architecture decisions](decisions/0000-record-architecture-decisions.md) - accepted
 - [0001 - Enforce documentation in CI, not in prose](decisions/0001-enforce-documentation-in-ci.md) - accepted
 - [0002 - Configure the gates, and check ADR substance](decisions/0002-configure-and-substantiate-the-gates.md) - accepted
@@ -42,6 +42,7 @@ Architecture decision records. Append-only: a wrong decision is superseded, neve
 - [0011 - Repair failing tests in a loop whose limits live outside the agent](decisions/0011-bounded-repair-loop.md) - accepted
 - [0012 - Design security in from onboarding, and review it separately from code](decisions/0012-security-designed-in.md) - accepted
 - [0013 - Write code to a rulebook with stack packs, enforced by tools first](decisions/0013-engineering-rulebook-with-stack-packs.md) - accepted
+- [0014 - Approve a design system before frontend work, and hold code to its tokens](decisions/0014-design-before-frontend.md) - accepted
 
 <!-- decisions:list -->
 <!-- /decisions:list -->
@@ -61,6 +62,12 @@ Architecture decision records. Append-only: a wrong decision is superseded, neve
   `threat-model.md` and fills it. Assets, entry points, threats, controls, abuse cases.
 
 `/security` adds dated audit reports here.
+
+## Design
+
+`/design` writes `design/system.md` here once there is a UI to design: direction, principles, token
+rationale, component inventory and the prototypes' index. Tokens and prototypes live in `design/`
+at the repository root.
 
 ## Journal
 

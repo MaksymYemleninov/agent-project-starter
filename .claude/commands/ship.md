@@ -54,6 +54,10 @@ infrastructure exposure, whatever its tier:
 If the change adds an entry point, data store, role or integration, `docs/security/threat-model.md`
 changes in the same pull request.
 
+A change to the interface (a spec with `ui: true`, or any component or style file) also gets the
+`design-reviewer` subagent, same two-cycle rule: tokens instead of hardcoded values, every state
+designed, the accessibility floor, and fidelity to the prototype.
+
 ## 5. Rule gaps
 
 List anything this change ran into that no rule in `.claude/rules/`, no skill and no ADR would have
