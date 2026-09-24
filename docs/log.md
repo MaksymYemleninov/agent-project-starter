@@ -14,7 +14,8 @@ Newest entry on top.
 - `typescript.md` gains a "Boundary rules" section: five dependency-cruiser rules mapped to the
   pack's layout, an ESLint name check for adapters imported through a barrel, the wrapper behind
   `check:boundaries`, and what the check does not see. Adapted from CleanSlice's boundary check.
-- `python.md` and `go.md` gain the same section in import-linter and depguard terms.
+- `nextjs.md` supplies its own layout parameters for those rules. `python.md` (acyclic_siblings,
+  forbidden, layers) and `go.md` (depguard, with the limit stated) gain the same section.
 - `code.yml.example`: the floor steps no longer use `--if-present`, so a missing script fails CI
   instead of skipping. A pack fix under ADR 0013's "Revisit when".
 

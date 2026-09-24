@@ -71,6 +71,9 @@ The limit to say out loud: when `handler.go`, `service.go` and `store.go` share 
 layers inside a feature are files, and no import checker sees them. That layer split is review,
 unless the project splits features into subpackages.
 
+Pack changes: 2026-09-24, boundary rules added. A project onboarded earlier can compare its
+`depguard` rules with this section.
+
 ## Commands to put in AGENTS.md
 
 `gofmt -l .` (empty output means formatted), `golangci-lint run`, `go vet ./...`, `govulncheck

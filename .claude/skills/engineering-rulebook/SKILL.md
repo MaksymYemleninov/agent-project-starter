@@ -88,7 +88,8 @@ Configured in phase 6, run in `code.yml` once it is active, and required by `/ha
 4. A boundary checker encoding `docs/architecture/overview.md`, with at least three kinds of rule:
    no cycles anywhere, features importing each other only through their public entry point and
    only in the direction the overview allows, and layers inside a feature (the edge and the domain
-   never import an adapter). Every path a rule names must exist: the check exits non-zero, not
+   never import an adapter), unless the pack says why its stack cannot express one of them and
+   hands it to review. Every path a rule names must exist: the check exits non-zero, not
    green, when its configuration names a folder that is not there, because a rule that matches
    nothing checks nothing. Each pack lists what its checker does *not* see; that part stays review.
 5. The test command, failing when the code is wrong (`/harden` step 5 verifies that part).

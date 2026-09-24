@@ -58,18 +58,30 @@ Ruff rule selection to start from: `E, F, W, I, B, UP, S, BLE, T20, SIM, RET, PT
 
 ## Boundary rules
 
-The contracts phase 6 writes for import-linter, following section 2 of `SKILL.md`: a `layers`
-contract per feature (`api` above `service` above `repo`, with `api` not importing `repo`
-directly), a contract between features that allows only their package-level names, and the
-feature order from the overview when it has one. Resolve the contract types and their options
-against the import-linter version you pin.
+The contracts phase 6 writes for import-linter, following section 2 of `SKILL.md`. A `layers`
+contract is not enough on its own: a higher layer may import any lower one, so `api > service >
+repo` still allows `api` and `service` to import `repo`. Use these instead:
 
-The check fails, not passes, when a module a contract names does not exist: wrap `lint-imports`
-in a step that asserts every named module imports, and prove each contract red once.
+| Contract | Type | Holds |
+|---|---|---|
+| no cycles | `acyclic_siblings` on the root package | no cycle between features, or between modules inside one |
+| adapter stays behind the domain | `forbidden`, sources `<pkg>.*.api` and `<pkg>.*.service`, forbidden `<pkg>.*.repo` | the edge and the domain never import an adapter; the feature's `__init__.py` wires it |
+| features meet at their package | one `forbidden` per feature, generated from the feature list: other features may not import `<pkg>.<feature>.*` submodules | cross-feature imports go through `__init__.py` names |
+| feature order | `layers` over the feature packages, when the overview orders them | lower features do not import higher ones |
+
+The generator reads the feature list and never names a feature itself. Resolve the contract
+options against the import-linter version you pin.
+
+A `layers` contract already fails when a listed layer is missing. For the other contracts, the
+step that runs `lint-imports` first asserts that every module a contract names imports, and fails
+if one does not. Prove each contract red once.
 
 It does not see what the import graph cannot: an adapter passed in at runtime, imports inside
 functions (`importlib`, local `import` under a condition), or I/O written straight into
 `service.py`. Those stay review.
+
+Pack changes: 2026-09-24, boundary rules added. A project onboarded earlier can compare its
+import-linter contracts with this section.
 
 ## Commands to put in AGENTS.md
 
