@@ -26,6 +26,12 @@ jobs:
       - name: Test the gates
         run: npm run test:gates
 
+      - name: Test regressions
+        run: npm run test:regressions
+
+      - name: Test a derived project
+        run: npm run test:derived
+
   secrets:
     name: Secret scan
     # Every stage, like the secret guard: a leaked credential is not a process question.
@@ -63,7 +69,8 @@ jobs:
           node-version: 20
 
       - name: Check ADR drift
-        if: "!contains(github.event.pull_request.labels.*.name, 'no-adr-needed')"
         env:
           BASE_REF: ${{ github.event.pull_request.base.sha }}
+          # The existing label skips coverage, never forbidden ADR deletions. PR 2 changes reason policy.
+          SKIP_ADR_CHECK: ${{ contains(github.event.pull_request.labels.*.name, 'no-adr-needed') && 'no-adr-needed label; reason is in the PR description' || '' }}
         run: npm run check:adr

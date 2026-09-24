@@ -32,26 +32,21 @@ Read `@.claude/onboarding.json` first, before anything else.
 **On a first run only**, before phase 1, clear the history this repository inherited from the
 template so the new project does not start out claiming someone else's work as its own:
 
-1. Replace `docs/log.md` with its header plus one entry: "Started from agent-project-starter",
-   naming the template and today's date. The template's own entries about building the gates are
-   not this project's history.
-2. Replace the template's own decision records with the single inherited one:
-   - **Keep** `docs/decisions/0000-record-architecture-decisions.md`. The practice applies to every
-     project.
-   - **Delete** every other numbered record the template shipped (`0001` through `0014` at the
-     time of writing; check `docs/INDEX.md`). Those describe how the template's gates were built.
-     They are the template's history, not this project's, and carrying them means half the
-     decision record is someone else's before the project writes a line.
-   - **Rename** `_inherited-tooling.md` to `0001-inherited-tooling.md` and set its `date` to today.
-     It summarises what the gates do and why, which is what a reader here actually needs. An
-     unexplained gate is a gate that gets disabled the first time it is inconvenient.
-   - Rewrite the Decisions section of `docs/INDEX.md` to list only those two.
-   - **This project's own records start at `0002`.**
-3. Set `"stage": "exploration"` in `.claude/gates.json`. The template ships `building`, which is
-   true of the template itself and wrong for a project that does not exist yet: gates that block
-   on day one fight the week when the shape is still moving. They report throughout onboarding and
-   start holding when the human runs `/harden`.
-4. Leave `docs/idea.md` alone. It holds the idea you are onboarding.
+1. Read `.claude/tracks.json`. Its `templateRecords` are the exact template history to
+   remove, including template implementation specs; do not infer ownership from numeric IDs.
+2. Preview `node scripts/adapt-template.mjs --reset-records`. Review the listed paths, then run
+   it with `--confirm` under the human's authorization for onboarding cleanup. The shared adapter
+   clears the template log, keeps ADR 0000, replaces registered template ADRs with the inherited
+   record, removes registered template specs and their index entries, and sets `exploration`.
+   Do not replay this after the inherited stub has been consumed. Project ADRs start at `0002`;
+   project specs start at `0001` after the template specs are removed.
+3. Leave `docs/idea.md` alone. It holds the idea you are onboarding.
+
+The manifest is complete: every agent, skill file, command, rule, scope profile, plugin and
+workflow has one owner. New project tooling must be registered in `core` or a project track;
+removing or activating a tracked item must keep that ownership accurate. Example workflows can
+be renamed into their active name without changing ownership. Do not remove manifest entries
+for disabled tracks: the validator checks that their files, profiles and plugins are absent.
 
 Files whose name starts with `_` are template stubs: a starting shape, not a document this project
 has. They are renamed into place when the project actually needs them, by the phase or command that
@@ -59,7 +54,7 @@ knows it does, and the documentation linter ignores them until then.
 
 **After finishing each phase**, do two things:
 
-1. Update this file: set `phase`, append to `completedPhases`, set `updatedAt` to today, and record
+1. Update `.claude/onboarding.json`: set `phase`, append to `completedPhases`, set `updatedAt` to today, and record
    anything agreed but not yet written into `agreedButNotWritten` (clearing entries once they are
    written). This is the only thing that survives a session dying mid-onboarding, so update it as
    you go, not at the end.
@@ -187,24 +182,19 @@ Then update:
 - `.claude/rules/`: replace the placeholder rules with real path-scoped ones for the chosen stack.
   Take them from the stack's pack in `.claude/skills/engineering-rulebook/` (`typescript.md`,
   `nextjs.md`, `python.md`, `go.md`): the rules marked *reviewed* go into a rule file scoped to the
-  stack's source paths, the ones marked with a tool become tool configuration in phase 6. Delete the
-  packs this project does not use, keeping `SKILL.md`. Record the few pack choices that are
+  stack's source paths, the ones marked with a tool become tool configuration in phase 6. Disable
+  unused stack-pack tracks through the adapter, keeping the core `SKILL.md`. Record pack choices that are
   genuinely open (npm or pnpm, mypy or pyright, result types or error classes) in the stack ADRs.
-- `.claude/skills/design-system/`, `infra-setup/`, `api-contract/`: fill the ones the stack
-  actually needs, and **delete the ones it does not**. An empty skill is worse than no skill.
-- The design track, when the project has no user interface (a CLI, a library, a pure API):
-  delete `.claude/commands/design.md`, `.claude/agents/design-reviewer.md`,
-  `.claude/skills/design-system/`, the `design-reviewer` profile in `agentScopes`, and
-  `frontend-design@claude-plugins-official` from `enabledPlugins`. With a UI, keep it: the design is
-  made by `/design` after onboarding, before the first UI spec is approved.
-- The infra track. On a managed platform with no infrastructure code, delete it whole:
-  `.claude/agents/infra-*.md`, `.claude/skills/infra-bootstrap/`, `infra-change/`,
-  `infra-rulebook/`, `.claude/commands/infra.md`, `.github/workflows/infra.yml.example`, and the
-  `infra-*` profiles in `agentScopes`. If the project owns its infrastructure, keep it and write
-  the IaC ADRs into section 6 and Project decisions of `.claude/skills/infra-rulebook/SKILL.md`.
-  Write no infrastructure code here. After deleting it, find what still mentions it and cut those
-  lines, since the linter only checks links, not backtick paths:
-  `rg -n "/infra|infra-rulebook|infra-bootstrap|infra-change|infra-reviewer|infra-architect|infra-engineer|infra\.paths" --glob '!docs/log.md'`.
+- Disable optional tracks by their names in `.claude/tracks.json`, using
+  `node scripts/adapt-template.mjs --disable <comma-separated-track-names>` to preview, then
+  `--confirm` for the approved cleanup. Do not maintain a second removal list here.
+  Disable `design` when there is no UI and `infra` when the project owns no infrastructure code.
+  Disable `api` when there is no API contract and `operations` when no operating procedure is
+  needed. Keep only the selected stack packs (`typescript`, `nextjs`, `python`, `go`).
+  Fill retained placeholder skills from approved decisions. The adapter removes owned files,
+  profiles and plugins and Markdown links to removed packs; review remaining prose references
+  in README, AGENTS and commands and adapt them to the selected tracks.
+  When infra is kept, write the IaC ADRs into the rulebook's Project decisions; write no IaC yet.
 - `agentScopes` in `.claude/gates.json`: point `test-writer`'s `write` globs at this stack's test
   layout, and the `bash` lists of `code-reviewer` and `test-writer` at its real test and lint
   commands. A scope that allows the wrong commands refuses every useful call.
@@ -236,7 +226,8 @@ Create:
 - the real commands filled into the Commands table in `AGENTS.md`.
 
 Do **not** set up a test framework, and do not activate the code CI job. See
-`docs/decisions/0005-defer-code-scaffolding.md`. Both arrive with the first feature that needs
+the inherited tooling ADR (`docs/decisions/0001-inherited-tooling.md`). Both arrive with the first
+feature that needs
 them, in phase 7's spec and its plan, where the shape of the thing is known. A test asserting that
 a scaffolded health endpoint returns `200` tests the scaffold, and it gets deleted the same week.
 
@@ -255,7 +246,8 @@ summary is not evidence.
   questions listed.
 - Update `docs/INDEX.md` so every new document is listed.
 - Add the onboarding entry to `docs/log.md`: 3 to 6 bullets.
-- Run `npm run check` and fix what it reports.
+- Run `npm run check` and `npm run test:derived` and fix what they report.
+  The lifecycle test verifies mechanical adaptation; it does not perform human /harden approval.
 - Final commit for this phase on `onboard/initial-setup`. Do not push without being asked.
 
 Finish with a short report: stack chosen, ADRs written, what runs now, what the human should look

@@ -51,7 +51,14 @@
     ".claude/gates.json",
     ".claude/hooks/**",
     ".claude/agents/**",
-    ".claude/claude-security-guidance.md"
+    ".claude/claude-security-guidance.md",
+    "scripts/tracks.mjs",
+    "scripts/adapt-template.mjs",
+    "scripts/repair-test.mjs",
+    "scripts/test-derived.mjs",
+    "scripts/test-regressions.mjs",
+    "scripts/gate-fixture.mjs",
+    ".claude/tracks.json"
   ],
   "stopHook": {
     "sourceFilesWithoutSpec": 3,
@@ -339,7 +346,7 @@
     {
       "id": "stop-hook-sees-commits",
       "file": "scripts/changed-files.mjs",
-      "marker": "git(`diff --name-only ${mergeBase} HEAD`)",
+      "marker": "gitArgs(['diff', '--name-status', '-z', '--no-renames', mergeBase])",
       "why": "The Stop hook and the ADR gate once looked only at the working tree, so an agent that committed and then stopped walked straight past both."
     },
     {
@@ -368,7 +375,7 @@
     },
     {
       "id": "gate-tests-force-building",
-      "file": "scripts/test-gates.mjs",
+      "file": "scripts/gate-fixture.mjs",
       "marker": "stage: 'building'",
       "why": "The suite once inherited the host project stage; at exploration every blocking assertion failed in the first real derived project."
     },

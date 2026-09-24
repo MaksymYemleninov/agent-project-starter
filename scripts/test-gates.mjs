@@ -16,6 +16,7 @@ import {
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
+import { configureGateFixture } from './gate-fixture.mjs';
 
 const ROOT = process.cwd();
 const results = [];
@@ -42,8 +43,8 @@ function hook(name, payload, cwd = sandbox, args = []) {
       encoding: 'utf8',
       env: { ...process.env, CLAUDE_PROJECT_DIR: sandbox },
     }).trim();
-  } catch {
-    return '';
+  } catch (e) {
+    throw new Error(`Hook ${name} failed instead of returning a decision: ${e.stderr ?? e.message}`);
   }
 }
 
@@ -58,11 +59,11 @@ function setup() {
   // Tracked files plus new ones that are not ignored: everything git would consider part of the
   // repository. `git ls-files` alone omits a file you have just created, which is exactly the file
   // a change under development consists of.
-  const tracked = execSync('git ls-files --cached --others --exclude-standard', {
+  const tracked = execSync('git ls-files -z --cached --others --exclude-standard', {
     cwd: ROOT,
     encoding: 'utf8',
   })
-    .split('\n')
+    .split('\0')
     .filter(Boolean);
   if (tracked.length === 0) throw new Error('no files found, run this inside the repository');
 
@@ -70,21 +71,14 @@ function setup() {
   // change under development is tested only after it is committed, and worse, a broken edit in the
   // working tree passes against the old good code still in HEAD. A false green is the one result a
   // test suite must never produce.
-  for (const file of tracked) {
+  for (const file of new Set(tracked)) {
+    if (!existsSync(join(ROOT, file))) continue;
     const target = join(sandbox, file);
     mkdirSync(dirname(target), { recursive: true });
     copyFileSync(join(ROOT, file), target);
   }
 
-  // Force `building` as the baseline. The blocking assertions below are about what the gates do
-  // when they hold. A project derived from this template sits at `exploration`, where the gates
-  // deliberately report and exit 0, so inheriting the host project's stage made all eight blocking
-  // cases fail the first time this suite ran inside a real derived project.
-  const gatesFile = join(sandbox, '.claude/gates.json');
-  if (existsSync(gatesFile)) {
-    const g = JSON.parse(readFileSync(gatesFile, 'utf8'));
-    writeFileSync(gatesFile, JSON.stringify({ ...g, stage: 'building' }, null, 2));
-  }
+  configureGateFixture(sandbox); // stage: 'building', independent of host profiles and warning baseline
 
   sh('git init -q -b main');
   sh('git add -A');
@@ -174,23 +168,23 @@ try {
   // Each agent stays in its lane. The profile lives in gates.json; a missing one refuses all.
   const scoped = (profile, tool, input) =>
     hook('agent-scope.mjs', { tool_name: tool, tool_input: input }, sandbox, [profile]) ? 'deny' : 'allow';
-  check('engineer may write infrastructure code', scoped('infra-engineer', 'Write', { file_path: 'infra/envs/prod/main.tf' }), 'allow');
-  check('engineer may not write product docs', scoped('infra-engineer', 'Write', { file_path: 'docs/product/vision.md' }), 'deny');
-  check('engineer may not write outside the project', scoped('infra-engineer', 'Write', { file_path: '/tmp/x.tf' }), 'deny');
-  check('engineer may plan behind cd', scoped('infra-engineer', 'Bash', { command: 'cd infra/envs/prod && terraform plan' }), 'allow');
-  check('engineer may not chain', scoped('infra-engineer', 'Bash', { command: 'terraform plan && terraform fmt' }), 'deny');
-  check('reviewer may write only its review', scoped('infra-reviewer', 'Write', { file_path: 'docs/specs/0002-net/review.md' }), 'allow');
-  check('reviewer may not edit the code it reviews', scoped('infra-reviewer', 'Edit', { file_path: 'infra/envs/prod/main.tf' }), 'deny');
-  check('reviewer may not reformat, only check', scoped('infra-reviewer', 'Bash', { command: 'terraform fmt -recursive' }), 'deny');
-  check('code-reviewer may pipe read-only commands', scoped('code-reviewer', 'Bash', { command: 'git diff | head -50' }), 'allow');
-  check('code-reviewer may not redirect into a file', scoped('code-reviewer', 'Bash', { command: 'git diff > notes.txt' }), 'deny');
-  check('code-reviewer may not sed -i', scoped('code-reviewer', 'Bash', { command: "sed -i 's/a/b/' src/x.js" }), 'deny');
-  check('quoted pipes are not pipes', scoped('code-reviewer', 'Bash', { command: 'rg -n "foo|bar" scripts 2>/dev/null' }), 'allow');
-  check('read-only profiles cannot find -delete', scoped('code-reviewer', 'Bash', { command: 'find . -name x -delete' }), 'deny');
-  check('architect may propose a new ADR', scoped('infra-architect', 'Write', { file_path: 'docs/decisions/0099-state-backend.md' }), 'allow');
-  check('architect may not rewrite an accepted ADR', scoped('infra-architect', 'Write', { file_path: 'docs/decisions/0000-record-architecture-decisions.md' }), 'deny');
+  check('engineer may write infrastructure code', scoped('fixture-writer', 'Write', { file_path: 'infra/envs/prod/main.tf' }), 'allow');
+  check('engineer may not write product docs', scoped('fixture-writer', 'Write', { file_path: 'docs/product/vision.md' }), 'deny');
+  check('engineer may not write outside the project', scoped('fixture-writer', 'Write', { file_path: '/tmp/x.tf' }), 'deny');
+  check('engineer may plan behind cd', scoped('fixture-writer', 'Bash', { command: 'cd infra/envs/prod && terraform plan' }), 'allow');
+  check('engineer may not chain', scoped('fixture-writer', 'Bash', { command: 'terraform plan && terraform fmt' }), 'deny');
+  check('reviewer may write only its review', scoped('fixture-reviewer', 'Write', { file_path: 'docs/specs/0002-net/review.md' }), 'allow');
+  check('reviewer may not edit the code it reviews', scoped('fixture-reviewer', 'Edit', { file_path: 'infra/envs/prod/main.tf' }), 'deny');
+  check('reviewer may not reformat, only check', scoped('fixture-reviewer', 'Bash', { command: 'terraform fmt -recursive' }), 'deny');
+  check('code-reviewer may pipe read-only commands', scoped('fixture-reader', 'Bash', { command: 'git diff | head -50' }), 'allow');
+  check('code-reviewer may not redirect into a file', scoped('fixture-reader', 'Bash', { command: 'git diff > notes.txt' }), 'deny');
+  check('code-reviewer may not sed -i', scoped('fixture-reader', 'Bash', { command: "sed -i 's/a/b/' src/x.js" }), 'deny');
+  check('quoted pipes are not pipes', scoped('fixture-reader', 'Bash', { command: 'rg -n "foo|bar" scripts 2>/dev/null' }), 'allow');
+  check('read-only profiles cannot find -delete', scoped('fixture-reader', 'Bash', { command: 'find . -name x -delete' }), 'deny');
+  check('architect may propose a new ADR', scoped('fixture-creator', 'Write', { file_path: 'docs/decisions/0099-state-backend.md' }), 'allow');
+  check('architect may not rewrite an accepted ADR', scoped('fixture-creator', 'Write', { file_path: 'docs/decisions/0000-record-architecture-decisions.md' }), 'deny');
   check('an unknown profile refuses everything', scoped('nobody', 'Bash', { command: 'ls' }), 'deny');
-  check('scope hook ignores read-only tools', scoped('code-reviewer', 'Read', { file_path: 'src/x.js' }), 'allow');
+  check('scope hook ignores read-only tools', scoped('fixture-reader', 'Read', { file_path: 'src/x.js' }), 'allow');
 
   // An agent pointing at a profile gates.json does not define is refused everything at runtime,
   // silently. The linter is where that becomes visible.
@@ -288,6 +282,9 @@ try {
 
   // Warnings may fall below the baseline, never rise above it, and the update never raises it.
   {
+    const rule = join(sandbox, '.claude/rules/source.md');
+    const originalRule = readFileSync(rule, 'utf8');
+    writeFileSync(rule, originalRule.replace(/^description:.*$/m, ''));
     const base = join(sandbox, '.claude/lint-baseline.json');
     sh('node scripts/lint-docs.mjs --update-baseline');
     const created = JSON.parse(readFileSync(base, 'utf8')).warnings;
@@ -301,6 +298,7 @@ try {
     sh('node scripts/lint-docs.mjs --update-baseline');
     check('update-baseline lowers it after a cleanup', JSON.parse(readFileSync(base, 'utf8')).warnings, created);
     rmSync(base);
+    writeFileSync(rule, originalRule);
   }
 
   // After compaction the agent gets back the branch and the tasks in flight.
@@ -444,13 +442,13 @@ try {
     sh('git checkout -- docs/INDEX.md');
   }
 
-  check('design-reviewer may capture a screenshot', scoped('design-reviewer', 'Bash', { command: 'npx playwright screenshot --viewport-size=375,812 http://localhost:3000 /tmp/a.png' }), 'allow');
-  check('design-reviewer may not edit components', scoped('design-reviewer', 'Edit', { file_path: 'src/components/ui/button.tsx' }), 'deny');
+  check('design-reviewer may capture a screenshot', scoped('fixture-browser', 'Bash', { command: 'npx playwright screenshot --viewport-size=375,812 http://localhost:3000 /tmp/a.png' }), 'allow');
+  check('design-reviewer may not edit components', scoped('fixture-browser', 'Edit', { file_path: 'src/components/ui/button.tsx' }), 'deny');
 
   // The security reviewer reads and scans, and cannot change anything.
-  check('security-reviewer may run a scanner', scoped('security-reviewer', 'Bash', { command: 'semgrep scan --config p/default --metrics=off' }), 'allow');
-  check('security-reviewer may not write', scoped('security-reviewer', 'Write', { file_path: 'src/auth.ts' }), 'deny');
-  check('security-reviewer may not run the build', scoped('security-reviewer', 'Bash', { command: 'npm run build' }), 'deny');
+  check('security-reviewer may run a scanner', scoped('fixture-scanner', 'Bash', { command: 'semgrep scan --config p/default --metrics=off' }), 'allow');
+  check('security-reviewer may not write', scoped('fixture-scanner', 'Write', { file_path: 'src/auth.ts' }), 'deny');
+  check('security-reviewer may not run the build', scoped('fixture-scanner', 'Bash', { command: 'npm run build' }), 'deny');
 
   // The plugin cuts its project rules at 8 KB without saying so.
   {
@@ -463,12 +461,16 @@ try {
 
   // After onboarding, a placeholder rule is a standard nobody wrote.
   {
+    const rule = join(sandbox, '.claude/rules/source.md');
+    const originalRule = readFileSync(rule, 'utf8');
+    writeFileSync(rule, '---\ndescription: PLACEHOLDER fixture\npaths: [src/**]\n---\n# Fixture\n');
     const ob = join(sandbox, '.claude/onboarding.json');
     const original = readFileSync(ob, 'utf8');
     writeFileSync(ob, JSON.stringify({ ...JSON.parse(original), status: 'completed', phase: 7 }));
     check('placeholder rules warn once onboarding is complete', sh('node scripts/lint-docs.mjs || true').includes('rules/source.md: still a placeholder after onboarding'), true);
     writeFileSync(ob, original);
     check('placeholder rules are expected before onboarding', sh('node scripts/lint-docs.mjs || true').includes('still a placeholder after onboarding'), false);
+    writeFileSync(rule, originalRule);
   }
 
   // Template stubs are ignored entirely: a leading underscore means a starting shape, not a

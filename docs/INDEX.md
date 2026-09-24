@@ -18,7 +18,9 @@ One directory per feature under `specs/`, numbered. Each holds `spec.md` (what a
 - [Spec template](specs/_template/spec.md) - copy this for a new feature.
 
 <!-- specs:list -->
-No feature specs yet. `/spec` adds them here.
+- [0001 - Template lifecycle](specs/0001-template-lifecycle/spec.md) - done
+- [0001 plan](specs/0001-template-lifecycle/plan.md)
+- [0001 tasks](specs/0001-template-lifecycle/tasks.md)
 <!-- /specs:list -->
 
 ## Decisions
@@ -27,7 +29,7 @@ Architecture decision records. Append-only: a wrong decision is superseded, neve
 
 - [ADR template](decisions/_template.md)
 - [Inherited tooling stub](decisions/_inherited-tooling.md) - `/onboard` renames this into place on a
-  new project, replacing records `0001`-`0014` below, which are this template's own history
+  new project, replacing records registered template records below, which are this template's own history
 - [0000 - Record architecture decisions](decisions/0000-record-architecture-decisions.md) - accepted
 - [0001 - Enforce documentation in CI, not in prose](decisions/0001-enforce-documentation-in-ci.md) - accepted
 - [0002 - Configure the gates, and check ADR substance](decisions/0002-configure-and-substantiate-the-gates.md) - accepted
@@ -45,6 +47,7 @@ Architecture decision records. Append-only: a wrong decision is superseded, neve
 - [0014 - Approve a design system before frontend work, and hold code to its tokens](decisions/0014-design-before-frontend.md) - accepted
 
 <!-- decisions:list -->
+- [0015 - Share template track ownership](decisions/0015-share-template-track-ownership.md) - accepted
 <!-- /decisions:list -->
 
 ## Architecture

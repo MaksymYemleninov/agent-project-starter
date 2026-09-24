@@ -23,7 +23,7 @@
  *   0  repaired, or dry run
  *   1  still failing after every attempt, or the budget ran out; changes left in place for review
  *   2  bad arguments
- *   3  `claude` could not be run
+ *   3  test environment failed, or `claude` could not be run
  *   4  refused before starting: the test already passes, or the working tree is not clean
  *   5  safety stop: a test file changed, or a file outside the edit scope changed
  *
@@ -31,6 +31,7 @@
  * without spending anything.
  */
 import { spawnSync } from 'node:child_process';
+import { runTest } from './repair-test.mjs';
 import { readFileSync, existsSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { loadGates, matchesAny, git, parsePorcelain } from './changed-files.mjs';
@@ -76,11 +77,6 @@ function usage(msg) {
 const hash = (file) => createHash('sha256').update(readFileSync(file)).digest('hex');
 const tail = (text, n) => String(text ?? '').split('\n').slice(-n).join('\n');
 
-function runTest(command) {
-  const r = spawnSync(command, { shell: true, encoding: 'utf8', timeout: 10 * 60 * 1000 });
-  return { code: r.status ?? 1, output: `${r.stdout ?? ''}${r.stderr ?? ''}` };
-}
-
 function changedSinceStart() {
   return parsePorcelain(git('status --porcelain --untracked-files=all'));
 }
@@ -118,6 +114,9 @@ if (dirty.length) {
 // A repair of a test that already passes is a typo in the command, and would spend money fixing
 // nothing. Check before spawning anything.
 const before = runTest(args.test);
+if (before.environmentError) {
+  report({ repaired: false, reason: 'test-environment-failure', error: before.environmentError, output: before.output }, 3);
+}
 if (before.code === 0) {
   report(
     {
@@ -229,6 +228,9 @@ for (let attempt = 1; attempt <= args.attempts; attempt++) {
   }
 
   last = runTest(args.test);
+  if (last.environmentError) {
+    report({ repaired: false, reason: 'test-environment-failure', error: last.environmentError, output: last.output, attempts: log }, 3);
+  }
   const said = String(parsed.result ?? '').trim();
   log.push({
     attempt,

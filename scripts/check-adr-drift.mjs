@@ -11,40 +11,35 @@
  *   BASE_REF=<ref> node scripts/check-adr-drift.mjs
  *   SKIP_ADR_CHECK="<reason>" node scripts/check-adr-drift.mjs   # escape, reason required
  */
-import { changedFiles, classify, loadGates, stage, blocking } from './changed-files.mjs';
+import { changedFiles, classify, loadGates, stage, blocking, adrDeletions } from './changed-files.mjs';
 
+const gates = loadGates();
+const argBase = process.argv.includes('--base')
+  ? process.argv[process.argv.indexOf('--base') + 1]
+  : null;
+const change = changedFiles({ base: argBase ?? process.env.BASE_REF });
+const { base, files, reason } = change;
+if (reason) {
+  console.log(`check:adr skipped, ${reason}.`);
+  process.exit(0);
+}
+const forbidden = adrDeletions(change);
+if (forbidden.length) {
+  console.error(`check:adr: ADR deletion is forbidden: ${forbidden.join(', ')}. Supersede records instead.`);
+  if (blocking(gates)) process.exit(1);
+}
 const skip = process.env.SKIP_ADR_CHECK;
 if (skip) {
   if (skip.trim().length < 10) {
-    console.error(
-      'SKIP_ADR_CHECK needs an actual reason, not a truthy value.\n' +
-        'Example: SKIP_ADR_CHECK="renamed a heading, no behavior change" npm run check:adr',
-    );
+    console.error('SKIP_ADR_CHECK needs an actual reason, not a truthy value.');
     process.exit(1);
   }
   console.log(`check:adr skipped by request: ${skip}`);
   console.log('Repeat this reason in the pull request description so a reviewer can disagree.');
   process.exit(0);
 }
-
-const gates = loadGates();
-
 if (!blocking(gates)) {
-  console.log(
-    `check:adr is advisory at stage \`${stage(gates)}\`. Run /harden, or set \`stage\` in ` +
-      '`.claude/gates.json`, once the project should start holding itself to its decisions.',
-  );
-  process.exit(0);
-}
-
-const argBase = process.argv.includes('--base')
-  ? process.argv[process.argv.indexOf('--base') + 1]
-  : null;
-
-const { base, files, reason } = changedFiles({ base: argBase ?? process.env.BASE_REF });
-
-if (reason) {
-  console.log(`check:adr skipped, ${reason}.`);
+  console.log(`check:adr is advisory at stage \`${stage(gates)}\`. Run /harden when the gates should block.`);
   process.exit(0);
 }
 if (files.length === 0) {
@@ -53,6 +48,7 @@ if (files.length === 0) {
 }
 
 const c = classify(files, gates);
+c.adrs = classify(change.changes.filter((c) => ['A', 'M'].includes(c.status)).map((c) => c.path), gates).adrs;
 
 const triggers = [];
 if (c.architecture.length) triggers.push(`architecture docs changed: ${c.architecture.join(', ')}`);
