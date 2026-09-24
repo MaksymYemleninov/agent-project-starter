@@ -1,7 +1,8 @@
 # Pack: Next.js
 
-Read with [typescript.md](typescript.md): everything there applies. This file adds what is
-specific to Next.js with the App Router. Next.js changes quickly between major versions; check
+Read with [typescript.md](typescript.md): everything there applies, except that the boundary
+rules take the parameters below instead of that pack's layout. This file adds what is specific to
+Next.js with the App Router. Next.js changes quickly between major versions; check
 the current documentation for caching and rendering defaults instead of trusting memory, which is
 exactly where agents are most confidently wrong.
 
@@ -23,6 +24,21 @@ src/
 
 `app/` stays thin: a page composes feature components and calls feature functions. Business rules
 in a `page.tsx` or `route.ts` are a finding.
+
+## Boundary rules
+
+The rules from typescript.md, with this layout's parameters:
+
+| Parameter | This layout |
+|---|---|
+| feature root | `src/features/` |
+| edge files | `actions.ts`, `src/app/**/route.ts`, `src/app/**/page.tsx`, `src/app/**/layout.tsx` |
+| domain files | `service.ts`, `schema.ts` |
+| adapter files | `repo.ts` |
+
+`src/app/`, `src/components/` and `src/lib/` are not features: `app/` may import a feature only
+through its `index.ts`, and `components/ui/` and `lib/` import no feature. Whether a client
+component reaches server code is not a path question; `server-only` catches it at build time.
 
 ## Server and client
 
