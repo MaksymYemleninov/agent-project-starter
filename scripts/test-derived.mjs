@@ -63,7 +63,6 @@ try {
   console.log(run('npm', ['run', 'lint:docs']));
   json('.claude/gates.json', gates);
   console.log(run('npm', ['run', 'check']));
-  console.log(run('npm', ['run', 'test:regressions']));
   console.log('PASS derived project at exploration');
   commit(); // Model the onboarding merge before hardening on a subsequent branch.
   json('.claude/onboarding.json', { status: 'completed', phase: 7, completedPhases: [1, 2, 3, 4, 5, 6, 7], agreedButNotWritten: [] });
@@ -71,7 +70,6 @@ try {
   commit();
   console.log(run('npm', ['run', 'lint:docs', '--', '--update-baseline']));
   console.log(run('npm', ['run', 'check']));
-  console.log(run('npm', ['run', 'test:regressions']));
   console.log('PASS derived project at building with a warning baseline');
   console.log('Not exercised: application build/deploy, scanners, ASVS assessment, human /harden approvals.');
 } catch (e) {

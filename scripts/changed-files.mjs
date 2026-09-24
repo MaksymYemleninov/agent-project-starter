@@ -91,14 +91,16 @@ export function adrDeletions(change) {
   if (!deleted.length) return [];
   let records = [];
   let before;
-  let current;
   try {
     records = JSON.parse(gitArgs(['show', `${change.mergeBase}:.claude/tracks.json`])).templateRecords;
     before = JSON.parse(gitArgs(['show', `${change.mergeBase}:.claude/onboarding.json`])).status;
-    current = JSON.parse(readFileSync('.claude/onboarding.json', 'utf8')).status;
   } catch { /* Missing evidence grants no cleanup exception. */ }
+  // Only the comparison base decides. Onboarding runs on one branch and marks itself completed in
+  // its last phase, so reading the working tree reported the canonical cleanup as forbidden. Once
+  // that branch merges, the base says completed and the same deletion is rejected. The working
+  // tree cannot grant the exception either, since editing it is exactly what the diff does.
   const onboarding = ['not-started', 'in-progress'];
-  return deleted.filter(({ path }) => !(onboarding.includes(before) && onboarding.includes(current) &&
+  return deleted.filter(({ path }) => !(onboarding.includes(before) &&
     Array.isArray(records) && records.some((r) => r.kind === 'adr' && r.path === path &&
       r.id === path.match(/\/(\d{4})-/)?.[1]))).map((c) => c.path);
 }
