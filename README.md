@@ -51,14 +51,15 @@ process question.
 | Constitution | `AGENTS.md` | Principles no spec or prompt may override |
 | Path rules | `.claude/rules/` | Rules that load only for matching files |
 | Procedures | `.claude/skills/` | Repeatable how-to knowledge, loaded on demand |
-| Delegation | `.claude/agents/` | Reviewer, researcher, test-writer subagents |
-| Entry points | `.claude/commands/` | `/onboard` `/adr` `/spec` `/ship` `/lint` |
+| Delegation | `.claude/agents/` | Reviewer, researcher, test-writer, and the three infra agents, each scoped by hook |
+| Entry points | `.claude/commands/` | `/onboard` `/assess` `/adr` `/spec` `/ship` `/lint` `/harden` `/infra` |
 | Enforcement | `.claude/settings.json`, `.github/workflows/ci.yml` | Permissions, hooks, CI gates |
 | Product | `docs/product/` | vision, scope, non-goals, personas |
 | Specs | `docs/specs/` | One directory per feature, EARS acceptance criteria |
 | Decisions | `docs/decisions/` | ADRs, append-only, superseded never deleted |
 | Architecture | `docs/architecture/` | overview, data model, integrations |
 | Operations | `docs/ops/` | runbook, environments |
+| Infrastructure | `infra/`, `.claude/skills/infra-*` | Optional. IaC built through `/infra`, deleted at onboarding if unused |
 
 ## The idea behind the gates
 
@@ -75,6 +76,42 @@ are not prose:
 
 Reminders are cheap and unreliable. Hooks catch forgetfulness. CI is the only thing that actually
 holds. All three are wired up here.
+
+## Infrastructure, when the project owns some
+
+A project on a managed platform deletes this track at onboarding. A project with its own cloud
+account keeps it, and `/infra` becomes the entry point for everything under `infra/`:
+
+- **`infra-bootstrap`** turns requirements into an infrastructure spec, has `infra-architect` write
+  the plan with every version resolved from its source and the foundation choices proposed as
+  ADRs, runs `infra-reviewer` on it (two cycles at most), waits for the human's approval, has
+  `infra-engineer` build it in dependency-ordered batches with a `plan` after every component, then
+  reviews the code the same way.
+- **`infra-change`** sizes a change first. A version bump goes to the engineer alone; a new
+  component gets a spec, a change analysis and approval; a new environment or a moved foundation is
+  sent back to an ADR and a bootstrap, not handled on the side.
+- **`infra-rulebook`** is the standard all three agents plan, write and review against: Terraform
+  or OpenTofu, optionally Terragrunt, remote state, one state per environment, versions resolved
+  and pinned, tags for anything that deviates. It ships generic with a worked AWS baseline;
+  replace the naming section and link your ADRs once they exist.
+
+It uses the template's own documents: the plan is the spec's `plan.md`, the engineer's journal
+and resume point is its `tasks.md`, review cycles go into a `review.md` beside them. There is no
+second decision system.
+
+**Agents never apply.** `apply`, `destroy`, `import`, `refresh`, taint and state moves are refused
+for every agent at every stage by the `pre-bash` hook, the same way secret reads are, including
+behind `cd ... &&` or `mise exec --`. The engineer ends with a punch list for the human: what to
+fill in, what to apply in which order, and every destroy or replace any plan showed.
+
+## Agents stay in their lane
+
+`tools:` says which tools an agent may call, not what it may do with them. Every agent that can
+write or run commands carries a hook in its frontmatter that checks each call against its profile
+in `agentScopes` in `.claude/gates.json`: which paths it may write, which commands it may run. The
+reviewers cannot edit what they review; the architect writes plans and proposed ADRs, not code.
+A missing profile refuses everything, and the linter fails if an agent names one that does not
+exist.
 
 ## Path-scoped rules
 
@@ -108,6 +145,8 @@ mistake worth catching: it is invisible at runtime and it compounds.
 | `/adr` | Record one architecture decision |
 | `/ship` | Pre-pull-request gate: tests, doc lint, ADR drift, log entry |
 | `/lint` | Run the documentation linters and summarize |
+| `/harden` | Move the project from exploration to building: gates start blocking |
+| `/infra` | Infrastructure: bootstrap it if there is none, otherwise size and run the change |
 
 ## Known limits
 
@@ -129,6 +168,12 @@ Worth stating plainly, because a guardrail you trust more than it deserves is wo
   and anything agreed but not yet written, so a session that dies mid-onboarding continues instead
   of starting over. It does not capture the conversation, so a resumed session may re-ask a
   question whose answer was never written down.
+- **Agent scopes and the apply guard are a tokenizer, not a shell.** They read through quotes,
+  subshells, `env`, `timeout`, `aws-vault` and `sh -c`, but a command built to evade them (an
+  alias, a script file) will. Frontmatter hooks are a Claude Code feature; another runtime reading
+  these agents gets the prompts without the enforcement.
+- **The infra track is unproven end to end.** The hooks are tested; the agents and skills are
+  prompts that have not yet run a real bootstrap. Treat the first one as the test.
 - **The gate defaults assume a JavaScript layout.** `sourcePaths` in `.claude/gates.json` lists
   `src/`, `app/`, `lib/` and friends. For a Python or Go project those match nothing and the Stop
   hook quietly stops noticing source changes, so `/onboard` rewrites them in phase 5. If you skip

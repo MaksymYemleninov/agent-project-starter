@@ -58,6 +58,9 @@ const triggers = [];
 if (c.architecture.length) triggers.push(`architecture docs changed: ${c.architecture.join(', ')}`);
 if (c.manifests.length) triggers.push(`dependency manifest changed: ${c.manifests.join(', ')}`);
 if (c.nonGoals.length) triggers.push('docs/product/non-goals.md changed, which is binding');
+if (c.infraFoundations.length) {
+  triggers.push(`infrastructure foundation changed: ${c.infraFoundations.join(', ')}`);
+}
 if (c.guardrails.length) triggers.push(`a guardrail itself changed: ${c.guardrails.join(', ')}`);
 
 if (triggers.length === 0) {

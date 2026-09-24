@@ -1,12 +1,16 @@
 ---
 name: infra-setup
-description: How this project is deployed, configured and operated. Use when touching CI, deployment, environments or infrastructure. PLACEHOLDER until /onboard fills it from the chosen hosting.
+description: How this project is deployed, configured and operated day to day - deploy, rollback, configuration, secrets, cost. Use when touching CI, deployment or environments. PLACEHOLDER until /onboard fills it from the chosen hosting. Infrastructure code itself (Terraform, OpenTofu, Terragrunt) is the infra track - /infra and infra-rulebook.
 ---
 
 # Infrastructure
 
 > **Placeholder.** `/onboard` fills this from the hosting and deployment ADRs, or deletes this
 > skill if deployment is a single managed command that needs no procedure.
+>
+> This skill is about operating what exists. Building infrastructure with code is the infra track:
+> `/infra`, `infra-bootstrap`, `infra-change` and the rules in `infra-rulebook`. A project on a
+> managed platform keeps this skill and deletes the track.
 
 ## Environments
 

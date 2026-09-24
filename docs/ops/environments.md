@@ -12,6 +12,16 @@ last_verified: 2026-09-18
 | local | development | http://localhost:PORT | working tree | anyone |
 | TBD | TBD | TBD | TBD | TBD |
 
+## Infrastructure
+
+Only when the project owns infrastructure code; delete this section otherwise. Filled by
+`infra-bootstrap` from the accepted ADRs.
+
+- IaC tool and version pin: TBD.
+- State backend, encryption and locking: TBD.
+- Who runs `apply`, and from where: TBD. Never an agent.
+- Cloud accounts or projects per environment: TBD.
+
 ## Configuration
 
 Configuration is read from environment variables. `.env.example` lists every variable with a

@@ -46,24 +46,28 @@ const c = classify(files, gates);
 const gaps = [];
 
 const guardrailTrigger = tuning.requireAdrForGuardrails && c.guardrails.length > 0;
-if ((c.architecture.length || c.manifests.length || guardrailTrigger) && c.adrs.length === 0) {
+if ((c.architecture.length || c.manifests.length || c.infraFoundations.length || guardrailTrigger) && c.adrs.length === 0) {
   gaps.push(
-    'Architecture, dependencies or a guardrail changed with no ADR added or updated. Either write ' +
+    'Architecture, dependencies, an infrastructure foundation or a guardrail changed with no ADR added or updated. Either write ' +
       'one in `docs/decisions/` (use `/adr`), or state plainly why this does not meet the ADR test ' +
       'in `docs/decisions/0000-record-architecture-decisions.md`.',
   );
 }
 
-if (c.source.length >= tuning.sourceFilesWithoutSpec && c.specs.length === 0 && c.adrs.length === 0) {
+// Infrastructure code is code. A pile of new modules with no spec is the same gap as a pile of
+// new source files with no spec.
+const built = [...new Set([...c.source, ...c.infra])];
+
+if (built.length >= tuning.sourceFilesWithoutSpec && c.specs.length === 0 && c.adrs.length === 0) {
   gaps.push(
-    `${c.source.length} source files changed (threshold ${tuning.sourceFilesWithoutSpec}, tunable in ` +
+    `${built.length} source or infrastructure files changed (threshold ${tuning.sourceFilesWithoutSpec}, tunable in ` +
       '`.claude/gates.json`) with no spec and no ADR touched. If this was a ' +
       'multi-step feature it should have had a spec under `docs/specs/`. Name the spec that covers ' +
       'it, or write one.',
   );
 }
 
-if (tuning.requireLogEntry && (c.source.length || c.architecture.length) && c.log.length === 0) {
+if (tuning.requireLogEntry && (built.length || c.architecture.length) && c.log.length === 0) {
   gaps.push('`docs/log.md` has no entry for this work. Add 3 to 6 bullets: what changed and where.');
 }
 

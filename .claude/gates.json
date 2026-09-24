@@ -20,15 +20,35 @@
     "Gemfile",
     "composer.json"
   ],
+  "infra": {
+    "$comment": "Infrastructure as code. `paths` is what counts as infrastructure: it feeds the Stop hook's spec and log nudges, and is the write scope of the infra-engineer agent. `foundations` is the subset that fixes the shape of the infrastructure (state backend, root configuration, one environment or account); changing one of those is a decision and the ADR gate asks for a record. Editing a module is not. /onboard deletes nothing here when there is no infrastructure: globs that match nothing gate nothing.",
+    "paths": [
+      "infra/**",
+      "**/*.tf",
+      "**/*.tfvars",
+      "**/*.hcl"
+    ],
+    "foundations": [
+      "**/backend.tf",
+      "**/backend.hcl",
+      "**/root.hcl",
+      "**/root.terragrunt.hcl",
+      "**/env.hcl",
+      "**/account.hcl",
+      "**/region.hcl"
+    ]
+  },
   "guardrails": [
     "scripts/lint-docs.mjs",
     "scripts/check-adr-drift.mjs",
     "scripts/changed-files.mjs",
+    "scripts/commands.mjs",
     "scripts/test-gates.mjs",
     ".github/workflows/**",
     ".claude/settings.json",
     ".claude/gates.json",
-    ".claude/hooks/**"
+    ".claude/hooks/**",
+    ".claude/agents/**"
   ],
   "stopHook": {
     "sourceFilesWithoutSpec": 3,
@@ -46,12 +66,213 @@
     "**/id_ed25519*",
     "**/*credentials*.json",
     "**/service-account*.json",
-    "**/secrets.*"
+    "**/secrets.*",
+    "**/*.tfstate",
+    "**/*.tfstate.*",
+    "**/*.tfplan"
   ],
   "secretPathAllowlist": [
     "**/.env.example",
     "**/.env.sample",
     "**/.env.template",
     "**/.env.defaults"
-  ]
+  ],
+  "agentScopes": {
+    "$comment": "What each subagent may write and run, enforced by .claude/hooks/agent-scope.mjs from the agent's own frontmatter. `write` is globs, `@infra` expands to infra.paths; `create` globs admit a new file only, never an edit. `bash` is command prefixes; a leading `cd <dir> &&` and VAR=value assignments are allowed, anything else chained is refused. `pipes: true` lets read-only agents pipe, as long as every segment is itself allowed. Quoting is understood; redirection other than to /dev/null is refused. A profile missing here means the agent is refused everything, on purpose.",
+    "code-reviewer": {
+      "write": [],
+      "pipes": true,
+      "bash": [
+        "git diff",
+        "git log",
+        "git show",
+        "git status",
+        "git blame",
+        "npm test",
+        "npm run test",
+        "npm run lint:docs",
+        "npm run check:adr",
+        "npm run test:gates",
+        "ls",
+        "rg",
+        "grep",
+        "head",
+        "tail",
+        "wc",
+        "cat"
+      ]
+    },
+    "researcher": {
+      "write": [],
+      "pipes": true,
+      "bash": [
+        "git log",
+        "git show",
+        "git diff",
+        "ls",
+        "rg",
+        "grep",
+        "head",
+        "tail",
+        "wc",
+        "cat"
+      ]
+    },
+    "test-writer": {
+      "write": [
+        "**/test/**",
+        "**/tests/**",
+        "**/__tests__/**",
+        "**/*.test.*",
+        "**/*.spec.*",
+        "**/*_test.*",
+        "**/test_*.py",
+        "**/conftest.py"
+      ],
+      "pipes": true,
+      "bash": [
+        "npm test",
+        "npm run test",
+        "node --test",
+        "npx vitest",
+        "npx jest",
+        "pytest",
+        "python -m pytest",
+        "go test",
+        "cargo test",
+        "git diff",
+        "git status",
+        "ls",
+        "rg",
+        "grep",
+        "head",
+        "tail"
+      ]
+    },
+    "infra-architect": {
+      "write": [
+        "docs/specs/*/plan.md"
+      ],
+      "create": [
+        "docs/decisions/0*-*.md"
+      ],
+      "pipes": true,
+      "bash": [
+        "gh api",
+        "gh release view",
+        "curl -s https://registry.terraform.io/",
+        "curl -s https://registry.opentofu.org/",
+        "curl -fsSL https://registry.terraform.io/",
+        "curl -s https://api.github.com/",
+        "helm show chart",
+        "helm show values",
+        "jq",
+        "ls",
+        "rg",
+        "grep",
+        "head",
+        "tail",
+        "cat"
+      ]
+    },
+    "infra-engineer": {
+      "write": [
+        "@infra",
+        "docs/specs/*/tasks.md",
+        ".mise.toml",
+        ".tool-versions",
+        ".terraform-version"
+      ],
+      "pipes": false,
+      "bash": [
+        "terraform init",
+        "terraform validate",
+        "terraform plan",
+        "terraform fmt",
+        "terraform output",
+        "terraform show",
+        "terraform providers",
+        "terraform version",
+        "terraform -version",
+        "terraform state list",
+        "terraform state show",
+        "terraform graph",
+        "tofu init",
+        "tofu validate",
+        "tofu plan",
+        "tofu fmt",
+        "tofu output",
+        "tofu show",
+        "tofu providers",
+        "tofu version",
+        "tofu -version",
+        "tofu state list",
+        "tofu state show",
+        "tofu graph",
+        "terragrunt init",
+        "terragrunt validate",
+        "terragrunt plan",
+        "terragrunt output",
+        "terragrunt hcl fmt",
+        "terragrunt hclfmt",
+        "terragrunt hcl validate",
+        "terragrunt render",
+        "terragrunt run --all validate",
+        "terragrunt run --all plan",
+        "terragrunt run-all validate",
+        "terragrunt run-all plan",
+        "terragrunt state list",
+        "terragrunt state show",
+        "terragrunt --version",
+        "tflint",
+        "mise install",
+        "mise trust",
+        "mise current",
+        "mise ls",
+        "aws sts get-caller-identity",
+        "mkdir -p",
+        "ls",
+        "git status",
+        "git diff"
+      ]
+    },
+    "infra-reviewer": {
+      "write": [
+        "docs/specs/*/review.md"
+      ],
+      "pipes": false,
+      "bash": [
+        "terraform fmt -check",
+        "terraform fmt -recursive -check",
+        "terraform init",
+        "terraform validate",
+        "terraform plan",
+        "terraform version",
+        "tofu fmt -check",
+        "tofu fmt -recursive -check",
+        "tofu init",
+        "tofu validate",
+        "tofu plan",
+        "tofu version",
+        "terragrunt hcl fmt --check",
+        "terragrunt hclfmt --check",
+        "terragrunt validate",
+        "terragrunt plan",
+        "terragrunt run --all validate",
+        "terragrunt run --all plan",
+        "terragrunt run-all validate",
+        "terragrunt run-all plan",
+        "terragrunt --version",
+        "tflint",
+        "checkov -d",
+        "trivy config",
+        "aws sts get-caller-identity",
+        "git diff",
+        "git status",
+        "ls",
+        "rg",
+        "grep"
+      ]
+    }
+  }
 }

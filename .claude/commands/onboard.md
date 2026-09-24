@@ -38,9 +38,10 @@ template so the new project does not start out claiming someone else's work as i
 2. Replace the template's own decision records with the single inherited one:
    - **Keep** `docs/decisions/0000-record-architecture-decisions.md`. The practice applies to every
      project.
-   - **Delete** `0001` through `0005`. Those describe how the template's gates were built. They are
-     the template's history, not this project's, and carrying them means half the decision record
-     is someone else's before the project writes a line.
+   - **Delete** every other numbered record the template shipped (`0001` through `0009` at the
+     time of writing; check `docs/INDEX.md`). Those describe how the template's gates were built.
+     They are the template's history, not this project's, and carrying them means half the
+     decision record is someone else's before the project writes a line.
    - **Rename** `_inherited-tooling.md` to `0001-inherited-tooling.md` and set its `date` to today.
      It summarises what the gates do and why, which is what a reader here actually needs. An
      unexplained gate is a gate that gets disabled the first time it is inconvenient.
@@ -101,7 +102,9 @@ Gaps worth closing, in roughly this order, skipping every one the idea file answ
 4. What would make the user call it a failure in six months.
 5. Hard constraints: deadline, budget, team size, technology that must or must not be used,
    regulatory or data-residency requirements.
-6. Where it runs and who operates it.
+6. Where it runs and who operates it. A managed platform, or infrastructure in a cloud account the
+   project owns? The second one brings in the infra track (`/infra`), and with it the IaC
+   choices in phase 4.
 7. Does it store personal data, take payments, or need authentication. Each is a decision with
    consequences, not a checkbox.
 
@@ -130,7 +133,10 @@ Propose a stack. For each significant choice, present:
 | Choice | Recommendation | Main alternative | Why this one here | Cost to reverse |
 
 Cover at minimum: language and runtime, framework, persistence, hosting and deploy, auth (if
-needed), testing approach, styling or UI approach (if there is a UI).
+needed), testing approach, styling or UI approach (if there is a UI). If the project owns its
+infrastructure, also: IaC tool (Terraform or OpenTofu, with or without Terragrunt), where state
+lives, and how environments are separated (accounts, directories). Only the choices; the
+infrastructure itself is planned later, by `/infra`, against an approved spec.
 
 Prefer boring and reversible over interesting and sticky. Match the constraints from phase 2, not
 your preference. If the team is one person, say so and pick accordingly.
@@ -158,6 +164,17 @@ Then update:
 - `.claude/rules/`: replace the placeholder rules with real path-scoped ones for the chosen stack.
 - `.claude/skills/design-system/`, `infra-setup/`, `api-contract/`: fill the ones the stack
   actually needs, and **delete the ones it does not**. An empty skill is worse than no skill.
+- The infra track. On a managed platform with no infrastructure code, delete it whole:
+  `.claude/agents/infra-*.md`, `.claude/skills/infra-bootstrap/`, `infra-change/`,
+  `infra-rulebook/`, `.claude/commands/infra.md`, `.github/workflows/infra.yml.example`, and the
+  `infra-*` profiles in `agentScopes`. If the project owns its infrastructure, keep it and write
+  the IaC ADRs into section 6 and Project decisions of `.claude/skills/infra-rulebook/SKILL.md`.
+  Write no infrastructure code here. After deleting it, find what still mentions it and cut those
+  lines, since the linter only checks links, not backtick paths:
+  `rg -n "/infra|infra-rulebook|infra-bootstrap|infra-change|infra-reviewer|infra-architect|infra-engineer|infra\.paths" --glob '!docs/log.md'`.
+- `agentScopes` in `.claude/gates.json`: point `test-writer`'s `write` globs at this stack's test
+  layout, and the `bash` lists of `code-reviewer` and `test-writer` at its real test and lint
+  commands. A scope that allows the wrong commands refuses every useful call.
 - If the project reads from external services, rename `docs/architecture/_integrations.md` into
   place and record what was actually verified. If it does not, delete the stub.
 
@@ -203,7 +220,8 @@ summary is not evidence.
 - Final commit for this phase on `onboard/initial-setup`. Do not push without being asked.
 
 Finish with a short report: stack chosen, ADRs written, what runs now, what the human should look
-at first, and the open questions you could not resolve. Say explicitly that gates are advisory
+at first, and the open questions you could not resolve. If the infra track was kept, say that
+infrastructure is the next step and starts with `/infra`, which cuts its own spec. Say explicitly that gates are advisory
 until they run `/harden`, and name the one condition that should trigger it: the project stops
 being an experiment.
 

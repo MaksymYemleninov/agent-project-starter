@@ -1,0 +1,82 @@
+# Infrastructure CI, deliberately inactive.
+#
+# GitHub only runs files ending in .yml or .yaml, so this one does nothing until you rename it:
+#
+#     git mv .github/workflows/infra.yml.example .github/workflows/infra.yml
+#
+# Do that when infrastructure code exists, as the last step of infra-bootstrap. Before that it
+# would check an empty tree and pass, and a check that always passes vacuously is
+# indistinguishable from one that is broken (docs/decisions/0005-defer-code-scaffolding.md).
+#
+# It runs only what needs no cloud credentials: formatting, validation without a backend, lint and
+# static security analysis. `plan` in CI needs read access to the real account, which is an ADR of
+# its own (OIDC federation to a read-only role, never stored keys). `apply` does not run here at
+# all: the human runs it.
+#
+# Pick one tool below and delete the other. Versions are placeholders on purpose: resolve the
+# current ones and pin them, the same rule as everywhere else in infra-rulebook.
+
+name: Infra
+
+on:
+  pull_request:
+    paths: ["infra/**", "**/*.tf", "**/*.hcl", "**/*.tfvars", ".github/workflows/infra.yml"]
+  push:
+    branches: [main]
+    paths: ["infra/**", "**/*.tf", "**/*.hcl", "**/*.tfvars"]
+
+permissions:
+  contents: read
+
+jobs:
+  static:
+    name: Format, validate, lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Terraform
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "RESOLVE-ME"
+      # OpenTofu instead:
+      # - uses: opentofu/setup-opentofu@v1
+      #   with:
+      #     tofu_version: "RESOLVE-ME"
+
+      - name: Format
+        run: terraform fmt -check -recursive infra
+
+      - name: Validate every root module without a backend
+        run: |
+          set -euo pipefail
+          for dir in $(find infra -name '*.tf' -not -path '*/.terraform/*' -exec dirname {} \; | sort -u); do
+            if grep -qE '^\s*(backend|provider)\s' "$dir"/*.tf; then
+              echo "::group::$dir"
+              terraform -chdir="$dir" init -backend=false -input=false
+              terraform -chdir="$dir" validate
+              echo "::endgroup::"
+            fi
+          done
+
+      # Terragrunt trees: replace the two steps above with these.
+      # - name: Install Terragrunt
+      #   run: |
+      #     curl -fsSL -o terragrunt "https://github.com/gruntwork-io/terragrunt/releases/download/vRESOLVE-ME/terragrunt_linux_amd64"
+      #     chmod +x terragrunt && sudo mv terragrunt /usr/local/bin/
+      # - name: Format
+      #   run: terragrunt hcl fmt --check
+      # - name: Validate
+      #   working-directory: infra/live
+      #   run: terragrunt run --all validate
+
+      - uses: terraform-linters/setup-tflint@v4
+      - name: Lint
+        run: tflint --recursive --chdir=infra
+
+      - name: Static security analysis
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: infra
+          framework: terraform
+          soft_fail: false

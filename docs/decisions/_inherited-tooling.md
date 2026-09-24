@@ -11,7 +11,7 @@ superseded_by: null
 # 0001 - Tooling inherited from the template
 
 > Stub. `/onboard` renames this into place on a first run and sets today's date. It replaces the
-> template's own records `0001` through `0005`, which describe how the tooling was built rather
+> template's own numbered records after `0000`, which describe how the tooling was built rather
 > than anything about this project.
 
 ## Context
@@ -53,6 +53,15 @@ repository; what they establish is:
 - **Test setup and code CI are not scaffolded at onboarding.** They arrive with the first feature
   that needs them, when the shape of the thing is known rather than guessed. `/harden` requires
   them before the gates start holding.
+- **Agents stay in their lane, mechanically.** Every subagent that can write or run commands has
+  a scope profile in `agentScopes` in `.claude/gates.json`, enforced by a hook in its own
+  frontmatter: which files it may write, which commands it may run. A missing profile refuses
+  everything. A reviewer cannot edit what it reviews.
+- **Agents never change real infrastructure.** `apply`, `destroy`, `import` and state moves are
+  refused for agents at every stage, like secret reads. The human runs them from a plan summary.
+- **Infrastructure is optional and follows the same rules.** When the project owns
+  infrastructure, `/infra` plans it into a spec, builds it in batches and reviews it. Changing an
+  infrastructure foundation (state backend, root configuration, an environment) needs an ADR.
 - **Gate behaviour is configuration, not code.** `.claude/gates.json` holds source paths,
   manifests, guardrail paths, thresholds and secret paths. Editing `scripts/` to change gate
   behaviour means the configuration is missing a knob.

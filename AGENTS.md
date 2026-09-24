@@ -32,9 +32,14 @@ a principle here, stop and say so instead of working around it.
    secret manager named in `docs/ops/environments.md`, never in files or examples.
 6. **Irreversible actions need a human.** Deploy, delete, migrate, drop, force-push, and any
    production write require explicit confirmation in the conversation. Never chain them into a
-   script to avoid the prompt.
+   script to avoid the prompt. Infrastructure `apply`, `destroy`, `import` and state moves are
+   never run by an agent at all: hand the human the command and the plan summary.
 7. **Report what happened, not what should have happened.** If tests fail, say so with output.
-   If a step was skipped, say which and why.
+   If a step was skipped, say which and why. Documents hold the same line: write only what you
+   verified, mark the rest `<!-- TODO: question -->`, and never collapse "not determined" into
+   "none".
+8. **Resolve, do not recall.** Versions, prices, limits, API shapes and CLI flags are looked up at
+   their source when used, and the source is cited. Memory is the training data, which is old.
 
 <!-- onboard:principles -->
 Stack-specific principles are appended here by `/onboard` from the stack ADRs.
@@ -48,10 +53,10 @@ Stack-specific principles are appended here by `/onboard` from the stack ADRs.
 | `CLAUDE.md` | Claude Code shim, imports `AGENTS.md`. Do not duplicate rules into it. |
 | `.claude/rules/` | Path-scoped rules. Each needs a `paths` glob, or it loads every session. |
 | `.claude/skills/` | Repeatable procedures. Long instructions belong here, not in this file. |
-| `.claude/agents/` | Subagents for isolated review, research and test work. |
-| `.claude/commands/` | Slash commands: `/onboard`, `/adr`, `/spec`, `/ship`, `/lint`. |
-| `.claude/hooks/` | Mechanical reminders fired by Claude Code events. |
-| `.claude/gates.json` | Tuning for the gates: source paths, manifests, thresholds, secret paths. |
+| `.claude/agents/` | Subagents: review, research, tests, and the infra architect, engineer, reviewer. Each is held to its lane by `agent-scope.mjs`. |
+| `.claude/commands/` | Slash commands: `/onboard`, `/adr`, `/spec`, `/ship`, `/lint`, `/harden`, `/infra`. |
+| `.claude/hooks/` | Mechanical reminders fired by Claude Code events, plus the secret and apply guard. |
+| `.claude/gates.json` | Tuning for the gates: source, manifest, infra and secret paths, thresholds, agent scopes. |
 | `.claude/onboarding.json` | `/onboard` checkpoint, so a dead session resumes instead of restarting. |
 | `docs/INDEX.md` | Map of every document. Entry point for humans and agents. |
 | `docs/log.md` | Chronological journal of decisions and notable changes. |
@@ -61,6 +66,7 @@ Stack-specific principles are appended here by `/onboard` from the stack ADRs.
 | `docs/decisions/` | ADRs, numbered, append-only. Superseded, never deleted. |
 | `docs/architecture/` | overview, data model, integrations. |
 | `docs/ops/` | runbook, environments. |
+| `infra/` | Infrastructure code, when the project has any. Built and changed through `/infra`. |
 | `scripts/` | Repo tooling. `lint-docs.mjs` and `check-adr-drift.mjs` run in CI. |
 
 <!-- onboard:code-map -->
@@ -95,22 +101,37 @@ same change.
 
 ## 6. Working agreement
 
-Before a multi-step change:
+Before a change, size it. Exactly one of:
+
+- **Tier 1, an edit to something that exists**, in one place: do it, verify it, log it.
+- **Tier 2, something the project does not have yet**, or more than one file: spec first (`/spec`).
+- **Tier 3, the shape moves**: a boundary in `docs/architecture/overview.md`, a non-goal, a new
+  environment, a replaced core dependency. ADR and the human's agreement first. Do not do it as a
+  side effect of a Tier 1 or 2 change.
+
+Then:
 
 1. Read `docs/INDEX.md`, then the specific spec or ADR that covers the area.
-2. If no spec covers it and the change spans more than one file, write one first (`/spec`).
-3. State the plan before editing. Name the files you will touch and the observable end state.
+2. State the plan before editing. Name the files you will touch and the observable end state.
 
 While working:
 
 - Prefer extending an existing module over adding a parallel one.
 - When you discover a constraint the docs do not mention, record it. A comment in the code is
   the floor, an ADR is the ceiling, pick honestly.
+- Classify every failure before reacting. One naming your file, input or logic is yours: fix it.
+  One naming a credential, a missing binary, the network or an external service is the
+  environment's: stop, report it verbatim, do not edit code to get around it.
+- In specs and plans, tag deviations when you make them: `[OVERRIDE: requirement]` when a stated
+  requirement forces a departure from a default, `[PROPOSED: reason]` when it is your own idea.
+  Reviewers skip tagged items and flag untagged ones.
 
 After:
 
 - Run `npm run lint:docs` and the project test command.
 - Update `docs/log.md` with 3 to 6 short bullets: what changed and where, not a retelling.
+- Name any rule gap: a problem you hit that no rule, skill or ADR would have prevented. Propose
+  the rule in one line; the human decides whether it is written. Never add it silently.
 
 ## 7. What does not belong in this file
 
@@ -125,3 +146,5 @@ After:
 - Two documents contradict each other and the resolution changes behavior.
 - The change requires a new external dependency, a new paid service, or a schema migration.
 - You are about to delete or rewrite an existing ADR.
+- An environment error blocks the work. You report it; the human fixes the environment.
+- A reviewer's second cycle still has findings. Two agent passes is the limit, not a suggestion.

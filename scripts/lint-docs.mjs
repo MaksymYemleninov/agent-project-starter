@@ -464,6 +464,38 @@ for (const abs of walk(join(ROOT, '.claude/commands')).filter((f) => f.endsWith(
   if (!fm?.description) warn(r, 'command has no `description`, so it shows unlabelled in the menu');
 }
 
+// Subagents carry their own hooks in frontmatter. The runtime does not complain when one points at
+// a missing script or an unconfigured scope profile; it just refuses, or allows, in silence.
+const gatesForAgents = (() => {
+  try {
+    return JSON.parse(read(join(ROOT, '.claude/gates.json')));
+  } catch {
+    return {};
+  }
+})();
+for (const abs of walk(join(ROOT, '.claude/agents')).filter((f) => f.endsWith('.md'))) {
+  const r = rel(abs);
+  const text = read(abs);
+  const head = text.startsWith('---') ? text.slice(0, text.indexOf('\n---', 3) + 1) : '';
+  if (!head) {
+    err(r, 'agent has no frontmatter, so it has no name, description or tool list');
+    continue;
+  }
+  for (const m of head.matchAll(/(\.claude\/hooks\/[\w.-]+)/g)) {
+    if (!existsSync(join(ROOT, m[1]))) err(r, `frontmatter hook points at \`${m[1]}\`, which does not exist`);
+  }
+  const scopes = [...head.matchAll(/agent-scope\.mjs\\?"?\s+([\w-]+)/g)].map((m) => m[1]);
+  for (const name of new Set(scopes)) {
+    if (!gatesForAgents.agentScopes?.[name]) {
+      err(r, `uses scope profile \`${name}\`, which \`agentScopes\` in .claude/gates.json does not define, so every call is refused`);
+    }
+  }
+  const tools = (head.match(/^tools:\s*(.*)$/m) ?? [])[1] ?? '';
+  if (/\b(Write|Edit|Bash)\b/.test(tools) && scopes.length === 0) {
+    warn(r, 'can write or run commands but has no agent-scope hook, so nothing keeps it inside its role');
+  }
+}
+
 if (existsSync(join(ROOT, '.claude/settings.json'))) {
   try {
     const s = JSON.parse(read(join(ROOT, '.claude/settings.json'), 'utf8'));
@@ -532,6 +564,20 @@ if (existsSync(join(ROOT, '.claude/gates.json'))) {
     for (const key of ['sourcePaths', 'manifests', 'guardrails', 'secretPaths']) {
       if (key in g && (!Array.isArray(g[key]) || g[key].length === 0)) {
         err(f, `\`${key}\` is present but empty, so everything it gates is silently unchecked`);
+      }
+    }
+
+    if ('infra' in g) {
+      for (const key of ['paths', 'foundations']) {
+        if (key in g.infra && (!Array.isArray(g.infra[key]) || g.infra[key].length === 0)) {
+          err(f, `\`infra.${key}\` is present but empty, so everything it gates is silently unchecked`);
+        }
+      }
+    }
+    for (const [name, p] of Object.entries(g.agentScopes ?? {})) {
+      if (name.startsWith('$')) continue;
+      if (!Array.isArray(p.write) || !Array.isArray(p.bash)) {
+        err(f, `\`agentScopes.${name}\` needs \`write\` and \`bash\` arrays (empty means none allowed)`);
       }
     }
 

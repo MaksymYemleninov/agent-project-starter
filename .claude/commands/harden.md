@@ -54,10 +54,19 @@ and that is how the practice gets abandoned.
    gh label create no-adr-needed --color 0E8A16 --description "Reason is in the PR description"
    ```
 
-9. Rename `docs/ops/_runbook.md` into place and fill it. By this point there has been a deploy, so
+9. If the project has infrastructure code, it holds too:
+   - `.github/workflows/infra.yml.example` renamed to `infra.yml` and green;
+   - the state backend, its locking and who may apply are in `docs/ops/environments.md`;
+   - `infra.paths` and `infra.foundations` in `.claude/gates.json` match the real tree (list what
+     they match, do not assume);
+   - the rulebook's naming and Project decisions sections reflect the accepted ADRs;
+   - an `infra-reviewer` code review of the current tree has reached `READY`.
+10. Rename `docs/ops/_runbook.md` into place and fill it. By this point there has been a deploy, so
    there is something to write: the exact commands, the rollback, and what to check when it breaks.
    An untested rollback is a hope.
-9. Add an entry to `docs/log.md` saying the project moved to `building` and why now.
+11. Name the rule gaps the exploration period exposed: mistakes that repeated, reviewer findings
+    that no rule would have prevented. Propose the rules; the human picks which are written.
+12. Add an entry to `docs/log.md` saying the project moved to `building` and why now.
 
 ## Afterwards
 
