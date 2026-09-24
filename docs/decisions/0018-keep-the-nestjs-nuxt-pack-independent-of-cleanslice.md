@@ -24,8 +24,9 @@ superseded_by: null
 
 The owner does not expect CleanSlice to change or publish any of it, and asked for the template
 to decide for itself or drop those parts. Meanwhile the TypeScript pack gained parameterized
-dependency-cruiser rules (cycles, feature entry points, feature order, layers, a barrel name check)
-that can express CleanSlice's three checks with this layout's values.
+dependency-cruiser rules (cycles, feature entry points, feature order, layers, a barrel name check).
+With this layout's values they cover CleanSlice's three checks, and add a stricter entry-point rule
+and a Prisma rule of their own. None of it has run against a real project on this stack yet.
 
 ## Options considered
 
@@ -44,8 +45,9 @@ the CleanSlice MCP as an opt-in, and CleanSlice's docs at commit `42380cc` as it
 
 ### Positive
 
-- A project on this stack gets a working boundary check at onboarding, built the same way as the
-  other TypeScript packs, and "Prisma only in `data/`" becomes a checked rule.
+- A project on this stack gets boundary rules at onboarding, built the same way as the other
+  TypeScript packs, with no script to obtain first; Prisma in controllers, guards and the domain
+  becomes a checked rule.
 - No third-party text reaches the agent unless the human asks for it.
 - Nothing in the pack waits on another company.
 
@@ -54,7 +56,11 @@ the CleanSlice MCP as an opt-in, and CleanSlice's docs at commit `42380cc` as it
 - The pack drifts from CleanSlice as CleanSlice changes. Following them is now a deliberate pack
   update, not automatic.
 - The rules have to be written at onboarding from the pack's parameters rather than copied as a
-  finished script; the first project on this stack is the first real test of them.
+  finished script, and they are unproven: an independent review of the first draft found that its
+  entry points would have rejected every `#prisma` and `#core` import. The first project on this
+  stack is the real test, and proving each rule red at onboarding is the safeguard.
+- The rules are stricter than CleanSlice's own check (no reaching into a neighbour slice inside a
+  group), so code copied from CleanSlice examples can fail here.
 - `app/` has no boundary check: Nuxt auto-imports hide most dependencies, so frontend boundaries
   are review-only by decision.
 - A project that says yes to the MCP still takes on unpinned docs and outbound queries, with the

@@ -112,7 +112,10 @@ may hold one slice of the same name (`user/user/`).
   concrete gateway holding "business logic, Prisma queries", a controller injecting the gateway);
   this pack does not follow the table. The concrete gateway does data access and mapping only,
   which keeps "domain has no I/O" from section 1. *Boundary check (`no-gateway-in-edge`,
-  `no-prisma-outside-data`) + reviewed.*
+  `no-prisma-in-edge-or-domain`) + reviewed.*
+- **Guards call a service too.** CleanSlice's `AuthGuard` example injects `IAuthGateway`. Here a
+  guard is edge code like a controller: it calls `AuthService`, which uses the gateway. *Lint
+  (`no-gateway-in-edge`) + reviewed.*
 - **Abstract classes as DI tokens, `I` prefix.** `IUserGateway` as an abstract class, provided
   with `{ provide: IUserGateway, useClass: UserGateway }`. Accepted: Nest needs a runtime token.
   The name rule below keys on the `Gateway` suffix, so keep it. *Reviewed.*
@@ -145,8 +148,9 @@ may hold one slice of the same name (`user/user/`).
   *Boundary check + lint (gateway names) + reviewed.*
 - **Every endpoint has `@ApiOperation({ operationId })`**, so the app's SDK is generated, not
   written. *Reviewed.*
-- **Prisma only in `data/`** and in the prisma setup slice. *Boundary check
-  (`no-prisma-outside-data`).*
+- **No Prisma in controllers, guards or the domain.** *Boundary check
+  (`no-prisma-in-edge-or-domain`).* Prisma in DTOs, modules or setup code outside the prisma slice
+  is a review finding; the rule does not look there.
 - **Errors** are domain error classes mapped to HTTP once, in the error interceptor of the setup
   group. *Reviewed.*
 - **Components** follow Provider (fetches with `useAsyncData`), Item (props only), Form (emits
@@ -157,42 +161,64 @@ may hold one slice of the same name (`user/user/`).
 
 ## Boundary rules
 
-The rules from typescript.md, with this layout's parameters. The TypeScript pack's options,
-wrapper and "does not see" list apply unchanged (`tsPreCompilationDeps`, `tsConfig` so the `#`
-aliases resolve, exit 2 on a missing folder or an empty cruise).
+The rules from typescript.md, with this layout's parameters. The TypeScript pack's options and
+"does not see" list apply unchanged (`tsPreCompilationDeps`, `tsConfig` so the `#` aliases
+resolve), and so does its wrapper, with one change below.
 
 | Parameter | This layout |
 |---|---|
 | feature root | `api/src/slices/<group>/`; a feature is `<group>/<slice>` |
-| entry points | `domain/index.ts`, `dtos/index.ts`, `<entity>.module.ts` |
+| entry points | the slice's root `index.ts`, `domain/index.ts`, `dtos/index.ts`, `<entity>.module.ts` |
 | edge files | `*.controller.ts`, `*.guard.ts` |
 | domain files | `domain/**` |
 | adapter files | `data/**` |
 
-So `no-feature-internals` lets another slice import `#user/user/domain`, `#user/user/dtos` and the
-module, nothing else. `no-upward-feature` is generated from `groups` in `boundaries.config.cjs`
-(lowest first; a group missing on disk exits 2), and applies between groups, not inside one.
+The root `index.ts` is how setup slices export what everyone uses: `PrismaService` from
+`setup/prisma`, the response decorators and `BaseError` from `setup/core`. A feature slice may
+have one too. So `no-feature-internals` lets another slice import `#prisma`, `#core`,
+`#user/user/domain`, `#user/user/dtos` and the module, and nothing deeper.
+
+CleanSlice's tsconfig maps `#*` to `src/slices/*`, which assumes flat slices. With groups, map
+`#*` to `src/slices/*` for grouped paths (`#user/user/domain`) and add explicit aliases for the
+setup slices (`#prisma` to `src/slices/setup/prisma`, `#core` to `src/slices/setup/core`).
+
+`no-upward-feature` is generated from `groups` in `boundaries.config.cjs` (lowest first; a group
+missing on disk exits 2), and applies between groups, not inside one.
+
+The wrapper change: in this layout a slice without `domain/` is normal (most setup slices), so
+"the edge, domain or adapter pattern matches no file" applies only once the first slice with a
+`domain/` folder exists. Before that, the wrapper checks folders and a non-empty cruise only, and
+onboarding proves the rules red on the first feature slice instead of on the skeleton.
 
 One rule this layout adds:
 
 | Rule | Forbids | Sees |
 |---|---|---|
-| `no-prisma-outside-data` | an edge or domain file importing `@prisma/client` or the prisma setup slice | paths |
+| `no-prisma-in-edge-or-domain` | an edge or domain file importing the Prisma client or the prisma setup slice | paths |
+
+dependency-cruiser matches `to.path` against the resolved file, so the rule names
+`node_modules/@prisma/client`, `node_modules/\.prisma/client`, and, when the schema sets a
+generator `output`, that folder, plus `src/slices/setup/prisma/`. With a custom `output` and no
+entry for it, the rule stays green on a violation; proving it red at onboarding is what catches
+that. DTOs, modules and setup code are not covered by this rule.
 
 Plus the name check for the barrel, `no-gateway-in-edge`: ESLint `no-restricted-imports` for the
 edge files, with `importNamePattern` matching `Gateway$`, since a controller can reach
-`IUserGateway` through `domain/index.ts` without touching `data/`. *Lint.*
+`IUserGateway` through `domain/index.ts` without touching `data/`. Guards are edge files too, so
+a guard calls a service, not a gateway (see the resolution above). *Lint.*
 
 Run `check:boundaries` in `predev` as well as in `code.yml`, so a violation stops `npm run dev`
-before anything else starts. Prove each rule red once, as onboarding asks.
+before anything else starts.
 
 `app/` gets no import rules. Nuxt auto-imports components, composables and stores, so most
 dependencies between slices never appear as import statements, and a rule over the rest would
 look like coverage it is not. Frontend boundaries are review-only, and the stack ADR says so.
 
-The rule set follows the three checks CleanSlice's boundary-check doc describes (groups downward,
-no cycles, layers inside a slice, including the name check through the barrel). Their script is
-not needed.
+How this relates to CleanSlice's boundary-check doc: it covers their three checks (groups
+downward, no cycles, layers inside a slice with the name check through the barrel) and adds two
+of its own, `no-feature-internals` and `no-prisma-in-edge-or-domain`. So it is stricter than
+CleanSlice: a slice reaching into a neighbour's `data/` inside the same group, which their doc
+allows, fails here. Their script is not needed.
 
 ## Commands to put in AGENTS.md
 
