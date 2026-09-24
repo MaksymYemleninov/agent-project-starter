@@ -573,6 +573,10 @@ if (existsSync(join(ROOT, '.claude/gates.json'))) {
           err(f, `\`infra.${key}\` is present but empty, so everything it gates is silently unchecked`);
         }
       }
+      const light = g.infra.lightBootstrapMaxComponents;
+      if (light !== undefined && !(Number.isInteger(light) && light >= 0)) {
+        err(f, `\`infra.lightBootstrapMaxComponents: ${light}\` must be a whole number, 0 to always run the full pipeline`);
+      }
     }
     for (const [name, p] of Object.entries(g.agentScopes ?? {})) {
       if (name.startsWith('$')) continue;

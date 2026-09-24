@@ -1,6 +1,6 @@
 ---
 name: infra-bootstrap
-description: Build infrastructure for this project from nothing, or add a whole new environment. Turns requirements into an infrastructure spec, drives infra-architect and infra-reviewer until the plan is clean and approved, has infra-engineer build it in batches, reviews the code, and hands the human a punch list before apply. Use when the user asks to set up, bootstrap or plan infrastructure and there is no IaC tree yet, or for a new environment or region.
+description: Build infrastructure for this project from nothing, or add a whole new environment - or only lay its foundation now and build later. Turns requirements into an infrastructure spec, has infra-architect plan it, scales the rest to its size (light for a handful of components, full review loops for large trees), has infra-engineer build it, reviews the code, and hands the human a punch list before apply. Use when the user asks to set up, bootstrap or plan infrastructure and there is no IaC tree yet, or for a new environment or region.
 ---
 
 # Infrastructure bootstrap
@@ -22,9 +22,21 @@ reads its inputs from disk, and two copies of the same input is two sources of t
 
 ## Phase 0: guard and requirements
 
+**Resume a laid foundation.** If an infrastructure spec exists with an approved `plan.md` and no
+IaC tree yet, the foundation was laid earlier and building was deferred. Do not gather again:
+spawn the architect for a refresh pass (its "Stale plans" section re-resolves every version),
+size the build (Phase 1 step 4), re-present the plan at the approval gate, then Phase 2.
+
 **Guard.** If an IaC tree already exists (`infra/`, or anything matching `infra.paths` in
 `.claude/gates.json`) and the request is not a new environment or region, stop and route to
 `infra-change`. Bootstrapping over existing infrastructure rewrites what is already deployed.
+
+**Build now, or only lay the foundation?** Ask this first. Foundation-only is for a project that
+knows it will need infrastructure but not yet: it runs Phase 0, Phase 1 and the approval gate, so
+the spec, the plan and the foundation ADRs exist and are accepted, and stops there. Nothing is
+built, nothing is applied, and the later `/infra` resumes from the plan. If `/onboard` already
+recorded the foundation ADRs from the architect's Mode 0, read them now and do not re-ask what
+they settle.
 
 **Gather, cheaply first.** Ask the human, in one message, for the broad shape: what the
 infrastructure serves, cloud and region, environments, the services they expect, and anything
@@ -44,15 +56,28 @@ band (accounts, domains, quotas to request), open questions. Get it to `status: 
 spec is the human-owned ground truth from here on: when an answer changes later, the spec changes
 with the human's agreement, and the plan follows it, never the other way round.
 
-## Phase 1: plan, at most two review cycles
+## Phase 1: plan, then size the rest
 
 1. Spawn `infra-architect` (Mode 1) with the spec path.
 2. If it returns **BLOCKED - fundamental input missing**, put its questions to the human, update the
    spec, and spawn it again.
-3. Add every ADR it proposed to `docs/INDEX.md` under Decisions (it cannot), then spawn
-   `infra-reviewer` (Mode 1), cycle 1, with the spec path. Link `review.md` from the spec.
-4. Any verdict other than `READY - no findings`: architect fix pass with the `review.md` path, then
-   reviewer cycle 2. After cycle 2, remaining findings go to the human as they are. No third cycle.
+3. Add every ADR it proposed to `docs/INDEX.md` under Decisions (it cannot).
+4. **Size it.** Count the distinct components in section 4 of the plan and the environments in
+   section 3. At most `infra.lightBootstrapMaxComponents` components (`.claude/gates.json`, 5 as
+   shipped) and at most two environments: **light**. Otherwise **full**. Tell the human which and
+   why in one line; they can override it either way.
+
+   | | Light | Full |
+   |---|---|---|
+   | Plan review | none; the human reviews the plan at the gate | reviewer, up to two cycles |
+   | Build | one engineer spawn, all batches | one spawn per batch |
+   | Code review | one cycle, one fix pass, no re-review | up to two cycles |
+   | Unchanged | resolved versions, a plan per component, the approval gate, the punch list, no agent applies | same |
+
+5. **Full only:** spawn `infra-reviewer` (Mode 1), cycle 1, with the spec path, and link
+   `review.md` from the spec. Any verdict other than `READY - no findings`: architect fix pass with
+   the `review.md` path, then reviewer cycle 2. After cycle 2, remaining findings go to the human
+   as they are. No third cycle.
 
 ## Gate: human approval
 
@@ -60,7 +85,8 @@ Present the plan's paths, the proposed ADRs and the open items. Ask for **approv
 feedback. The reply is exactly one of:
 
 1. **"Approved", nothing new.** Mark the ADRs `accepted` (the human agreed in this conversation),
-   then Phase 2.
+   then Phase 2. **Foundation-only:** stop here instead. Set the spec to `approved`, log it, and
+   tell the human that `/infra` picks it up from this plan when they are ready to build.
 2. **Answers to open items or new facts.** They are requirements: record them in the spec, then
    re-spawn the architect to fold them in. Re-review only if the plan changed structurally. Then
    ask again. Never start the engineer on a plan that has not absorbed the answers: the engineer
@@ -70,9 +96,10 @@ feedback. The reply is exactly one of:
 The question to ask yourself: does the reply contain anything the engineer would need that the
 plan does not yet say? If yes, it is 2 or 3.
 
-## Phase 2: build, one batch per spawn
+## Phase 2: build
 
-Spawn `infra-engineer` (Mode B) with the spec path. After each return read `tasks.md`:
+Spawn `infra-engineer` (Mode B) with the spec path, saying **light** if the build is light: it then
+does every batch in the one spawn. After each return read `tasks.md`:
 
 - more batches remain: spawn it again for the next;
 - **design blocker**: take the question to the human or the architect, then resume the engineer;
@@ -80,11 +107,14 @@ Spawn `infra-engineer` (Mode B) with the spec path. After each return read `task
   You do not fix environments either. Resume once they say it is fixed;
 - all done: keep the engineer's **For the human, before apply** block verbatim for the end.
 
-## Phase 3: code review, at most two cycles
+## Phase 3: code review
 
-`infra-reviewer` (Mode 2), cycle 1. Any finding, blocking or not, goes back to the engineer as a
-Mode A fix pass pointing at `review.md`, then cycle 2. After cycle 2, remaining findings go to the
-human.
+`infra-reviewer` (Mode 2), cycle 1. Link `review.md` from the spec if Phase 1 did not. Any finding,
+blocking or not, goes back to the engineer as a Mode A fix pass pointing at `review.md`.
+
+- **Light:** stop after the fix pass. The engineer's plans confirm the fixes; anything it could not
+  fix goes to the human in the punch list.
+- **Full:** reviewer cycle 2. After it, remaining findings go to the human.
 
 ## Phase 4: finish
 

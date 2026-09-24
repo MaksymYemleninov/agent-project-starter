@@ -79,8 +79,12 @@ holds. All three are wired up here.
 
 ## Infrastructure, when the project owns some
 
-A project on a managed platform deletes this track at onboarding. A project with its own cloud
-account keeps it, and `/infra` becomes the entry point for everything under `infra/`:
+Whether a project needs this is decided at onboarding with `infra-architect` advising: managed
+platform or own account, a rough topology and bill, and which foundation choices to record now even
+if nothing is built yet. A project on a managed platform deletes the track. One that keeps it uses
+`/infra` for everything under `infra/`, and can either build now or only lay the foundation (spec,
+plan, accepted ADRs) and build later from it. Small trees (up to five components, two environments)
+run a light pipeline; larger ones the full one:
 
 - **`infra-bootstrap`** turns requirements into an infrastructure spec, has `infra-architect` write
   the plan with every version resolved from its source and the foundation choices proposed as

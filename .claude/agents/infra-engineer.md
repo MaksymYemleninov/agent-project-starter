@@ -54,6 +54,11 @@ allow-list, a key). Placeholders deploy as real configuration. Stop and name wha
 
 ## Mode B: build from an approved plan, one batch per spawn
 
+(On a **light** build the caller says so, and you do every batch in this one spawn, in order,
+still planning each component as you write it and still journaling each batch. The tree is small
+enough that context does not run out; the per-component plan is what keeps it honest, and that
+does not get lighter.)
+
 A large tree built in one long session drifts from the rulebook as the context fills. Each spawn
 does one batch with fresh context and re-reads the rules for that batch's components.
 

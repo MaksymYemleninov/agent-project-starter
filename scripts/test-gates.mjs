@@ -289,6 +289,12 @@ try {
   writeFileSync(join(sandbox, '.claude/gates.json'), JSON.stringify(withoutStage, null, 2));
   check('gates.json without a stage is rejected', exitCode('node scripts/lint-docs.mjs'), 1);
 
+  writeFileSync(
+    join(sandbox, '.claude/gates.json'),
+    JSON.stringify({ ...shipped, infra: { ...shipped.infra, lightBootstrapMaxComponents: 'few' } }, null, 2),
+  );
+  check('a non-numeric light threshold is rejected', exitCode('node scripts/lint-docs.mjs'), 1);
+
   writeFileSync(join(sandbox, '.claude/gates.json'), JSON.stringify({ ...shipped, sourcePaths: [] }, null, 2));
   check('an empty sourcePaths is rejected', exitCode('node scripts/lint-docs.mjs'), 1);
   sh('git checkout -- .claude/gates.json');

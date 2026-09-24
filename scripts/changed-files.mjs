@@ -109,7 +109,7 @@ export function loadGates(root = '.') {
     stopHook: { sourceFilesWithoutSpec: 3, requireLogEntry: true, requireAdrForGuardrails: true },
     secretPaths: ['**/.env', '**/.env.*', '**/*.pem', '**/*.key', '**/id_rsa*'],
     secretPathAllowlist: ['**/.env.example', '**/.env.sample', '**/.env.template'],
-    infra: { paths: ['infra/**', '**/*.tf', '**/*.tfvars', '**/*.hcl'], foundations: [] },
+    infra: { paths: ['infra/**', '**/*.tf', '**/*.tfvars', '**/*.hcl'], foundations: [], lightBootstrapMaxComponents: 5 },
     agentScopes: {},
   };
   const file = `${root}/.claude/gates.json`;

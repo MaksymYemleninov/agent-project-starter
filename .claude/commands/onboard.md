@@ -141,6 +141,14 @@ infrastructure itself is planned later, by `/infra`, against an approved spec.
 Prefer boring and reversible over interesting and sticky. Match the constraints from phase 2, not
 your preference. If the team is one person, say so and pick accordingly.
 
+**Hosting goes to the architect first**, unless the project plainly runs nothing server-side (a
+static site, a CLI, a library). Spawn `infra-architect` in Mode 0 with the paths to the idea and the
+product documents, and the phase 2 answers about where it runs, budget and constraints. Put its
+recommendation into the hosting row of the table, and show its "decide now, build later" list and
+its unverified items with it. This is where the infrastructure track is kept or dropped, so the
+human decides it with the reasoning in front of them. If the track is kept, those foundation choices
+are part of what gets approved here and recorded in phase 5, even though nothing is built yet.
+
 **Stop here and get approval.** Present the table and wait. Do not write ADRs for choices the
 human has not agreed to.
 

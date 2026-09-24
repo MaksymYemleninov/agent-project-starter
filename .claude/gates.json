@@ -21,7 +21,7 @@
     "composer.json"
   ],
   "infra": {
-    "$comment": "Infrastructure as code. `paths` is what counts as infrastructure: it feeds the Stop hook's spec and log nudges, and is the write scope of the infra-engineer agent. `foundations` is the subset that fixes the shape of the infrastructure (state backend, root configuration, one environment or account); changing one of those is a decision and the ADR gate asks for a record. Editing a module is not. /onboard deletes nothing here when there is no infrastructure: globs that match nothing gate nothing.",
+    "$comment": "Infrastructure as code. `paths` is what counts as infrastructure: it feeds the Stop hook's spec and log nudges, and is the write scope of the infra-engineer agent. `foundations` is the subset that fixes the shape of the infrastructure (state backend, root configuration, one environment or account); changing one of those is a decision and the ADR gate asks for a record. Editing a module is not. /onboard deletes nothing here when there is no infrastructure: globs that match nothing gate nothing. `lightBootstrapMaxComponents`: a bootstrap whose plan has at most this many distinct components and at most two environments runs light (no separate plan review, one engineer pass, one code review cycle). Above it, the full pipeline.",
     "paths": [
       "infra/**",
       "**/*.tf",
@@ -36,7 +36,8 @@
       "**/env.hcl",
       "**/account.hcl",
       "**/region.hcl"
-    ]
+    ],
+    "lightBootstrapMaxComponents": 5
   },
   "guardrails": [
     "scripts/lint-docs.mjs",

@@ -58,8 +58,14 @@ The track is three agents (`infra-architect`, `infra-engineer`, `infra-reviewer`
 orchestrating skills (`infra-bootstrap` for a new tree or environment, `infra-change` for the
 day-to-day, triaged into three tiers), a generic rulebook (`infra-rulebook`: Terraform or OpenTofu,
 optionally Terragrunt, with a worked AWS baseline), the `/infra` entry point, and an inactive
-`infra.yml.example` that runs only credential-free checks. `/onboard` deletes all of it when the
-project runs on a managed platform.
+`infra.yml.example` that runs only credential-free checks.
+
+The track costs what the project's size warrants. At onboarding the architect advises, writing
+nothing, whether the project needs its own infrastructure at all and which foundation choices to
+record now even if nothing is built; `/onboard` deletes the track when the answer is a managed
+platform. A bootstrap may stop after an approved plan and accepted foundation ADRs, and resume
+later from them. A plan with at most `infra.lightBootstrapMaxComponents` components and two
+environments runs light: no separate plan review, one engineer pass, one code review cycle.
 
 ## Consequences
 
@@ -80,6 +86,11 @@ project runs on a managed platform.
   bootstrap runs through them, the mapping onto specs and tasks is a design, not a result.
 - The template grows by a dozen files that most application-only projects delete on day one, which
   is onboarding work that did not exist before.
+- The light path drops the plan review and the second code review, trading a check for speed on
+  small trees. The threshold is a guess until real projects have gone through both paths, and a
+  project just above it pays the full ceremony for one extra component.
+- A foundation laid at onboarding and built weeks later has a stale plan. The refresh pass
+  re-resolves versions, but nothing re-checks that the requirements still hold.
 - AWS is the only worked example. A project on another cloud gets the rules without the baseline.
 - Letting the architect write proposed ADRs means one more agent writes into `docs/decisions/`, a
   directory whose value depends on records being considered rather than generated.

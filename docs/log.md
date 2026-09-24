@@ -11,6 +11,8 @@ Newest entry on top.
 - Optional infrastructure track: `infra-architect`, `infra-engineer`, `infra-reviewer`, skills
   `infra-bootstrap` and `infra-change`, the generic `infra-rulebook`, `/infra`, and an inactive
   `infra.yml.example`. Mapped onto specs, tasks and ADRs, see [ADR 0007](decisions/0007-optional-infrastructure-track.md).
+  It scales: architect Mode 0 advises on hosting at onboarding, `/infra` can lay the foundation
+  only, and small trees run light (`infra.lightBootstrapMaxComponents`).
 - New `agent-scope.mjs` holds every writing or executing subagent to its files and commands, from
   `agentScopes` in `.claude/gates.json`; `pre-bash.mjs` refuses `apply`, `destroy`, `import` and
   state moves at every stage. Reasoning in [ADR 0008](decisions/0008-scope-agents-and-refuse-infrastructure-mutation.md).
