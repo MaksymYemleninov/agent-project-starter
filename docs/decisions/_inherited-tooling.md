@@ -67,6 +67,10 @@ repository; what they establish is:
   warning count fall but not rise.
 - **Test repairs are bounded.** `/repair` runs headless attempts under a dollar and turn cap; the
   script, not the agent, checks that the test files are unchanged and judges by the test's exit code.
+- **Security is designed in.** The threat model lives in `docs/security/`, the ASVS level is an
+  ADR, every approved spec states its security impact, `security-reviewer` and `/security-review`
+  check changes, the `security-guidance` plugin reviews every turn, and CI scans for secrets from
+  the first push.
 - **Gate behaviour is configuration, not code.** `.claude/gates.json` holds source paths,
   manifests, guardrail paths, thresholds and secret paths. Editing `scripts/` to change gate
   behaviour means the configuration is missing a knob.

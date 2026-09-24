@@ -351,6 +351,16 @@ for (const entry of existsSync(join(DOCS, 'specs')) ? readdirSync(join(DOCS, 'sp
     err(specPath, `status is \`${fm.status}\` but the spec still contains template placeholders`);
   }
 
+  // Security is part of the requirement, not a review afterthought. An approved spec says what it
+  // changes for the threat model, or in a sentence why it changes nothing.
+  if (['approved', 'in-progress', 'done'].includes(fm.status)) {
+    const sec = section(doc.text, '## Security');
+    if (sec === null) err(specPath, `status is \`${fm.status}\` but there is no \`## Security\` section`);
+    else if (prose(sec).length < 20) {
+      err(specPath, '`## Security` is empty. State the threat-model impact and abuse cases, or why there is none.');
+    }
+  }
+
   if (['in-progress', 'done'].includes(fm.status)) {
     if (!existsSync(join(dir, 'plan.md'))) err(specPath, `status is \`${fm.status}\` but there is no plan.md`);
     if (!existsSync(join(dir, 'tasks.md'))) err(specPath, `status is \`${fm.status}\` but there is no tasks.md`);
@@ -366,8 +376,8 @@ const OTHER_STATUS = ['template', 'draft', 'stable', 'deprecated'];
 
 for (const [r, doc] of docs) {
   if (!doc.fm || r.startsWith('docs/decisions/') || r.startsWith('docs/specs/')) continue;
-  if (!['product', 'architecture', 'ops'].includes(doc.fm.type)) {
-    err(r, `frontmatter \`type: ${doc.fm.type}\` must be product | architecture | ops`);
+  if (!['product', 'architecture', 'ops', 'security'].includes(doc.fm.type)) {
+    err(r, `frontmatter \`type: ${doc.fm.type}\` must be product | architecture | ops | security`);
   }
   oneOf(r, doc.fm, 'status', OTHER_STATUS);
   if (!isDate(doc.fm.last_verified)) err(r, 'frontmatter `last_verified` must be YYYY-MM-DD');
@@ -556,6 +566,13 @@ if (existsSync(join(ROOT, '.claude/onboarding.json'))) {
       if (agents.includes('<!-- onboard:')) {
         warn('AGENTS.md', 'still has onboarding placeholder markers; remove them once filled');
       }
+      if (!existsSync(join(ROOT, 'docs/security/threat-model.md'))) {
+        err(f, 'onboarding is marked complete but `docs/security/threat-model.md` does not exist. Phase 3 writes it.');
+      }
+      const guidance = join(ROOT, '.claude/claude-security-guidance.md');
+      if (existsSync(guidance) && read(guidance).includes('replaces this stub')) {
+        warn('.claude/claude-security-guidance.md', 'still the template stub, so the security plugin reviews without this project\'s rules');
+      }
       if (s.agreedButNotWritten?.length) {
         err(f, `onboarding is marked complete but ${s.agreedButNotWritten.length} decision(s) are still unwritten`);
       }
@@ -629,6 +646,14 @@ if (existsSync(join(ROOT, '.claude/gates.json'))) {
 
   } catch (e) {
     err(f, `is not valid JSON, so the gates fell back to defaults silently: ${e.message}`);
+  }
+}
+
+// The security plugin appends this file to every review prompt and cuts it at 8 KB, silently.
+{
+  const guidance = join(ROOT, '.claude/claude-security-guidance.md');
+  if (existsSync(guidance) && statSync(guidance).size > 8192) {
+    warn('.claude/claude-security-guidance.md', `${statSync(guidance).size} bytes; the plugin truncates past 8192, so the last rules are never read`);
   }
 }
 

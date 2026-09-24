@@ -77,6 +77,31 @@ are not prose:
 Reminders are cheap and unreliable. Hooks catch forgetfulness. CI is the only thing that actually
 holds. All three are wired up here.
 
+## Security from the first question
+
+Security starts at onboarding rather than at the first review:
+
+- **Onboarding** asks what data is sensitive, who the users and roles are, what reaches the system
+  from outside and which rules apply; writes `docs/security/threat-model.md` (assets, entry points,
+  threats, controls, abuse cases); records an OWASP ASVS level (L1, L2, L3) as an ADR; and writes
+  the project's rules for the security plugin into `.claude/claude-security-guidance.md`.
+- **Every approved spec** has a `## Security` section, and its abuse cases are `If ...` criteria, so
+  the controls are tested like any behaviour. The linter rejects an empty one.
+- **Every change** that touches identity, input, data or dependencies gets `security-reviewer` (a
+  read-only agent working from the threat model and the ASVS level) and the built-in
+  `/security-review`, in `/ship`.
+- **Every edit and turn** is watched by Anthropic's
+  [`security-guidance`](https://github.com/anthropics/claude-plugins-official/tree/main/plugins/security-guidance)
+  plugin, enabled for the project in `.claude/settings.json`: pattern warnings, an LLM diff review,
+  an agentic review at commit. It sends diffs to the model and costs tokens per turn; its
+  environment variables turn layers off.
+- **CI** scans the whole history for secrets from the first push. `security.yml.example`
+  (osv-scanner, semgrep) and `dependabot.yml.example` activate with the code.
+- **`/security`** audits the whole project into a dated report; `/harden` will not flip the gates
+  with an open HIGH, a stale threat model or the security workflow off.
+
+The standard behind all of it is `.claude/skills/security-rulebook/`.
+
 ## Infrastructure, when the project owns some
 
 Whether a project needs this is decided at onboarding with `infra-architect` advising: managed
@@ -176,6 +201,7 @@ mistake worth catching: it is invisible at runtime and it compounds.
 | `/harden` | Move the project from exploration to building: gates start blocking |
 | `/infra` | Infrastructure: bootstrap it if there is none, otherwise size and run the change |
 | `/repair` | Make one failing test pass in a budget-capped headless loop that cannot touch the test |
+| `/security` | Whole-project security audit: threat model against the code, scanners, reviewer, dated report |
 
 ## Known limits
 

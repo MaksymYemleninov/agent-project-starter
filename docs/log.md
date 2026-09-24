@@ -6,6 +6,17 @@ the actual content.
 
 Newest entry on top.
 
+## 2026-09-24 - Security track
+
+- Onboarding asks the security questions, writes `docs/security/threat-model.md`, records an ASVS
+  level ADR and the project rules for the `security-guidance` plugin. See [ADR 0012](decisions/0012-security-designed-in.md).
+- New `security-rulebook` skill, read-only `security-reviewer` agent, and `/security` audit command
+  writing dated reports. `/ship` runs the reviewer and the built-in `/security-review`.
+- Approved specs must carry a non-empty `## Security` section. `security-guidance` enabled as a
+  project plugin.
+- `ci.yml` gains a gitleaks history scan at every stage; `security.yml.example` (osv-scanner,
+  semgrep) and `dependabot.yml.example` wait for code. `/harden` blocks on all of it.
+
 ## 2026-09-24 - Bounded repair loop
 
 - `scripts/repair.mjs` and `/repair`: headless `claude -p` attempts under a dollar cap and a turn

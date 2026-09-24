@@ -1,0 +1,30 @@
+# Dependency updates, deliberately inactive. Rename to dependabot.yml to turn it on:
+#
+#     git mv .github/dependabot.yml.example .github/dependabot.yml
+#
+# Keep the ecosystems this project uses and delete the rest. /harden asks for this or an equivalent
+# (Renovate) once there are dependencies. Security updates arrive as pull requests, which go
+# through the same gates as any other change.
+
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+  # - package-ecosystem: npm
+  #   directory: /
+  #   schedule:
+  #     interval: weekly
+  # - package-ecosystem: pip
+  #   directory: /
+  #   schedule:
+  #     interval: weekly
+  # - package-ecosystem: gomod
+  #   directory: /
+  #   schedule:
+  #     interval: weekly
+  # - package-ecosystem: terraform
+  #   directory: /infra
+  #   schedule:
+  #     interval: weekly
