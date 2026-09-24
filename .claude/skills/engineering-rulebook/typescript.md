@@ -63,7 +63,7 @@ src/
 ## Boundary rules
 
 What phase 6 writes into `.dependency-cruiser.cjs`. The rules take four parameters from the
-pack's layout, so a pack with another layout (Next.js) supplies its own values instead of
+pack's layout, so a pack with another layout (Next.js, NestJS + Nuxt) supplies its own values instead of
 inheriting these:
 
 | Parameter | This layout |
