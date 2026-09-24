@@ -132,6 +132,15 @@ Most gates check that something is written down. Four check that it stays right:
 - **Compaction.** After a context compaction the start hook puts the branch, the uncommitted files
   and the tasks marked `doing` back in front of the agent.
 
+## Repairing a failing test
+
+`/repair` (or `npm run repair -- --test "<command>" --test-file <path>`) runs headless `claude -p`
+attempts with the limits enforced by the script rather than asked of the agent: a total dollar
+budget, a turn cap, edits only inside `sourcePaths`, Bash only for the test command. After every
+attempt the script checks the test files' hashes and every changed path, and runs the test itself;
+the test's exit code is the only judge. It refuses a dirty tree and a test that already passes, and
+without `--confirm` it only prints the plan.
+
 ## Path-scoped rules
 
 `.claude/rules/*.md` is what keeps the constitution under 200 lines. A rule that applies to one
@@ -166,6 +175,7 @@ mistake worth catching: it is invisible at runtime and it compounds.
 | `/lint` | Run the documentation linters and summarize |
 | `/harden` | Move the project from exploration to building: gates start blocking |
 | `/infra` | Infrastructure: bootstrap it if there is none, otherwise size and run the change |
+| `/repair` | Make one failing test pass in a budget-capped headless loop that cannot touch the test |
 
 ## Known limits
 
@@ -191,6 +201,8 @@ Worth stating plainly, because a guardrail you trust more than it deserves is wo
   subshells, `env`, `timeout`, `aws-vault` and `sh -c`, but a command built to evade them (an
   alias, a script file) will. Frontmatter hooks are a Claude Code feature; another runtime reading
   these agents gets the prompts without the enforcement.
+- **`/repair` treats the test as the specification.** A wrong or flaky test gets code bent to fit
+  it. It has been tested against a fake `claude`, not yet against the real CLI.
 - **The infra track is unproven end to end.** The hooks are tested; the agents and skills are
   prompts that have not yet run a real bootstrap. Treat the first one as the test.
 - **The gate defaults assume a JavaScript layout.** `sourcePaths` in `.claude/gates.json` lists

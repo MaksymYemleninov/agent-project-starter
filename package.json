@@ -8,7 +8,8 @@
     "lint:docs": "node scripts/lint-docs.mjs",
     "check:adr": "node scripts/check-adr-drift.mjs",
     "test:gates": "node scripts/test-gates.mjs",
-    "check": "npm run lint:docs && npm run check:adr && npm run test:gates"
+    "check": "npm run lint:docs && npm run check:adr && npm run test:gates",
+    "repair": "node scripts/repair.mjs"
   },
   "engines": {
     "node": ">=20"

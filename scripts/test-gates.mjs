@@ -317,6 +317,73 @@ try {
     rmSync(join(sandbox, 'docs/specs/0001-demo'), { recursive: true, force: true });
   }
 
+  // The repair loop, against a fake `claude` that behaves as told. Nothing real is spent.
+  {
+    mkdirSync(join(sandbox, 'src'), { recursive: true });
+    mkdirSync(join(sandbox, 'tests'), { recursive: true });
+    writeFileSync(join(sandbox, 'src/sum.mjs'), 'export const sum = (a, b) => a - b;\n');
+    writeFileSync(
+      join(sandbox, 'tests/sum.test.mjs'),
+      "import { sum } from '../src/sum.mjs';\nif (sum(2, 3) !== 5) { console.error('sum(2, 3) is ' + sum(2, 3)); process.exit(1); }\n",
+    );
+    const fake = join(sandbox, 'fake-claude.mjs');
+    writeFileSync(
+      fake,
+      [
+        "import { writeFileSync, readFileSync } from 'node:fs';",
+        "const mode = process.env.FAKE_MODE;",
+        "readFileSync(0, 'utf8');",
+        "if (mode === 'fix') writeFileSync('src/sum.mjs', 'export const sum = (a, b) => a + b;\\n');",
+        "if (mode === 'tamper') writeFileSync('tests/sum.test.mjs', 'process.exit(0);\\n');",
+        "if (mode === 'outside') writeFileSync('README.md', 'rewritten\\n');",
+        "console.log(JSON.stringify({ result: mode === 'blocked' ? 'BLOCKED: test looks wrong' : 'done', total_cost_usd: 0.05 }));",
+      ].join('\n'),
+    );
+    // The script spawns one binary; a wrapper runs the fake through node.
+    writeFileSync(join(sandbox, 'fake-claude.sh'), `#!/bin/sh\nexec node "${fake}" "$@"\n`, { mode: 0o755 });
+    const run = (mode, extra) => {
+      const r = (() => {
+        try {
+          return {
+            code: 0,
+            out: execSync(`node scripts/repair.mjs --test "node tests/sum.test.mjs" --test-file tests/sum.test.mjs ${extra ?? '--confirm'}`, {
+              cwd: sandbox, encoding: 'utf8', stdio: 'pipe',
+              env: { ...process.env, REPAIR_CLAUDE_BIN: join(sandbox, 'fake-claude.sh'), FAKE_MODE: mode },
+            }),
+          };
+        } catch (e) {
+          return { code: e.status, out: e.stdout ?? '' };
+        }
+      })();
+      sh('git checkout -q -- . && git clean -fdq -e fake-claude.sh -e fake-claude.mjs');
+      return r;
+    };
+    sh('git add -A && git -c user.name=t -c user.email=t@t commit -qm fake-claude');
+
+    const dry = run('fix', '');
+    check('repair without --confirm is a dry run', dry.code === 0 && dry.out.includes('"dryRun": true'), true);
+    const fixed = run('fix');
+    check('repair succeeds when the implementation is fixed', fixed.code === 0 && fixed.out.includes('"repaired": true'), true);
+    check('repair stops when the agent edits the test', run('tamper').code, 5);
+    check('repair stops when the agent edits outside its scope', run('outside').code, 5);
+    check('repair gives up after its attempts, changes kept', run('nothing', '--confirm --attempts 2').code, 1);
+    check('repair stops early when the agent reports BLOCKED', run('blocked').out.includes('agent-blocked'), true);
+
+    writeFileSync(join(sandbox, 'src/sum.mjs'), 'export const sum = (a, b) => a + b;\n');
+    sh('git -c user.name=t -c user.email=t@t commit -qam green');
+    check('repair refuses a test that already passes', run('fix').code, 4);
+    writeFileSync(join(sandbox, 'src/sum.mjs'), 'export const sum = () => 0;\n');
+    let dirtyCode;
+    try {
+      execSync('node scripts/repair.mjs --test "node tests/sum.test.mjs" --test-file tests/sum.test.mjs', { cwd: sandbox, stdio: 'pipe' });
+      dirtyCode = 0;
+    } catch (e) {
+      dirtyCode = e.status;
+    }
+    check('repair refuses a dirty working tree', dirtyCode, 4);
+    sh('git checkout -q -- .');
+  }
+
   // Template stubs are ignored entirely: a leading underscore means a starting shape, not a
   // document this project has. Without this the stubs would fail every check a document must pass.
   writeFileSync(join(sandbox, 'docs/_scratch.md'), 'no frontmatter, not in the index, on purpose\n');

@@ -65,6 +65,8 @@ repository; what they establish is:
 - **Fixes and warnings do not quietly regress.** `markers` in `.claude/gates.json` fail lint when
   a string guarding a past fix disappears. After `/harden`, `.claude/lint-baseline.json` lets the
   warning count fall but not rise.
+- **Test repairs are bounded.** `/repair` runs headless attempts under a dollar and turn cap; the
+  script, not the agent, checks that the test files are unchanged and judges by the test's exit code.
 - **Gate behaviour is configuration, not code.** `.claude/gates.json` holds source paths,
   manifests, guardrail paths, thresholds and secret paths. Editing `scripts/` to change gate
   behaviour means the configuration is missing a knob.

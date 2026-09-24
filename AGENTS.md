@@ -55,7 +55,7 @@ Stack-specific principles are appended here by `/onboard` from the stack ADRs.
 | `.claude/rules/` | Path-scoped rules. Each needs a `paths` glob, or it loads every session. |
 | `.claude/skills/` | Repeatable procedures. Long instructions belong here, not in this file. |
 | `.claude/agents/` | Subagents: review, research, tests, and the infra architect, engineer, reviewer. Each is held to its lane by `agent-scope.mjs`. |
-| `.claude/commands/` | Slash commands: `/onboard`, `/adr`, `/spec`, `/ship`, `/lint`, `/harden`, `/infra`. |
+| `.claude/commands/` | Slash commands: `/onboard`, `/adr`, `/spec`, `/ship`, `/lint`, `/harden`, `/infra`, `/repair`. |
 | `.claude/hooks/` | Mechanical reminders fired by Claude Code events, plus the secret and apply guard. |
 | `.claude/gates.json` | Tuning for the gates: source, manifest, infra and secret paths, thresholds, agent scopes. |
 | `.claude/onboarding.json` | `/onboard` checkpoint, so a dead session resumes instead of restarting. |
