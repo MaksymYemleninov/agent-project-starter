@@ -638,6 +638,17 @@ if (existsSync(join(ROOT, '.claude/gates.json'))) {
         err(f, `\`infra.lightBootstrapMaxComponents: ${light}\` must be a whole number, 0 to always run the full pipeline`);
       }
     }
+    for (const key of ['sourceFilesWithoutSpec', 'requireLogEntry']) {
+      if (g.stopHook && key in g.stopHook) {
+        warn(f, `\`stopHook.${key}\` moved to the \`docs\` block (spec 0002); it is honoured for now, move it so CI and the hook read the same key`);
+      }
+    }
+    if ('docs' in g) {
+      const n = g.docs?.filesWithoutSpec;
+      if (!(Number.isInteger(n) && n >= 1)) {
+        err(f, `\`docs.filesWithoutSpec: ${n}\` must be a whole number of at least 1`);
+      }
+    }
     for (const [name, p] of Object.entries(g.agentScopes ?? {})) {
       if (name.startsWith('$')) continue;
       if (!Array.isArray(p.write) || !Array.isArray(p.bash)) {

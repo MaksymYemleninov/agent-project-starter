@@ -17,7 +17,8 @@ export function configureGateFixture(root) {
     stage: 'building',
     sourcePaths: ['src/**'],
     infra: { paths: ['infra/**', '**/*.tf'], foundations: ['**/backend.tf'], lightBootstrapMaxComponents: 5 },
-    stopHook: { sourceFilesWithoutSpec: 3, requireLogEntry: true, requireAdrForGuardrails: true },
+    docs: { filesWithoutSpec: 3, logForNewFiles: true },
+    stopHook: { requireAdrForGuardrails: true },
     agentScopes: { ...gates.agentScopes, ...profiles },
   });
   writeFileSync(path, JSON.stringify(gates, null, 2));

@@ -21,6 +21,9 @@ One directory per feature under `specs/`, numbered. Each holds `spec.md` (what a
 - [0001 - Template lifecycle](specs/0001-template-lifecycle/spec.md) - done
 - [0001 plan](specs/0001-template-lifecycle/plan.md)
 - [0001 tasks](specs/0001-template-lifecycle/tasks.md)
+- [0002 - Documentation gate policy](specs/0002-docs-gate-policy/spec.md) - done
+- [0002 plan](specs/0002-docs-gate-policy/plan.md)
+- [0002 tasks](specs/0002-docs-gate-policy/tasks.md)
 <!-- /specs:list -->
 
 ## Decisions
@@ -48,6 +51,7 @@ Architecture decision records. Append-only: a wrong decision is superseded, neve
 
 <!-- decisions:list -->
 - [0015 - Share template track ownership](decisions/0015-share-template-track-ownership.md) - accepted
+- [0016 - Enforce documentation in proportion to the change, with escape reasons in the pull request](decisions/0016-escape-reasons-live-in-the-pull-request.md) - accepted
 <!-- /decisions:list -->
 
 ## Architecture

@@ -6,6 +6,17 @@ the actual content.
 
 Newest entry on top.
 
+## 2026-09-24 - Documentation gate in CI, reasons instead of labels
+
+- New `check:docs` in CI, a step of the required "ADR drift" job: a new source or infrastructure file needs a log entry,
+  `docs.filesWithoutSpec` changed files a spec or ADR too, a small edit nothing. See
+  [spec 0002](specs/0002-docs-gate-policy/spec.md) and [ADR 0016](decisions/0016-escape-reasons-live-in-the-pull-request.md).
+- The Stop hook uses the same function, `docsGaps` in `scripts/docs-policy.mjs`.
+- Escapes for both gates are `No-docs-reason:` / `No-ADR-reason:` lines of 20+ characters in the
+  pull request description, passed as `PR_BODY`; CI re-runs on `edited`. The label no longer counts.
+- Principle 4 now states the rule that is enforced. Moves and deletions do not count as new code;
+  hidden (commented) reasons and word-less reasons are rejected.
+
 ## 2026-09-24 - Lifecycle follow-ups
 
 - The ADR cleanup exception now reads onboarding status from the comparison base only. The

@@ -47,6 +47,9 @@ repository; what they establish is:
 - **The drift gate runs on pull requests only.** On a push there is no pull request, so neither
   escape from the gate exists and a failure is unfixable after the fact. A check that reports
   failure where no action is possible is worse than no check.
+- **Code carries its documentation, in proportion.** `check:docs` and the Stop hook share one rule:
+  a new file needs a log entry, a change across `docs.filesWithoutSpec` files a spec or ADR too.
+  Escapes are a written reason line in the pull request description, never a label.
 - **Gates are staged.** `stage` in `.claude/gates.json` is `exploration` on a new project: they
   report and block nothing. `/harden` moves it to `building` when the project stops being an
   experiment. The secret guard runs at every stage.

@@ -18,6 +18,7 @@ try {
 }
 
 const { changedFiles, classify, loadGates, blocking, adrDeletions } = await import('./../../scripts/changed-files.mjs');
+const { docsGaps, escapeReason } = await import('./../../scripts/docs-policy.mjs');
 const gates = loadGates();
 
 // At exploration stage the hook stays out of the way entirely.
@@ -58,22 +59,10 @@ if ((c.architecture.length || c.manifests.length || c.infraFoundations.length ||
   );
 }
 
-// Infrastructure code is code. A pile of new modules with no spec is the same gap as a pile of
-// new source files with no spec.
-const built = [...new Set([...c.source, ...c.infra])];
-
-if (built.length >= tuning.sourceFilesWithoutSpec && c.specs.length === 0 && c.adrs.length === 0) {
-  gaps.push(
-    `${built.length} source or infrastructure files changed (threshold ${tuning.sourceFilesWithoutSpec}, tunable in ` +
-      '`.claude/gates.json`) with no spec and no ADR touched. If this was a ' +
-      'multi-step feature it should have had a spec under `docs/specs/`. Name the spec that covers ' +
-      'it, or write one.',
-  );
-}
-
-if (tuning.requireLogEntry && (built.length || c.architecture.length) && c.log.length === 0) {
-  gaps.push('`docs/log.md` has no entry for this work. Add 3 to 6 bullets: what changed and where.');
-}
+// The documentation rule is the CI gate's rule, from the same function, so the hook and
+// `check:docs` cannot disagree about the same change (spec 0002, criterion 10).
+// The same escape as the gate, or a change that passes CI with a written reason is still blocked here.
+if (!escapeReason('docs')?.reason) for (const gap of docsGaps(change, gates)) gaps.push(gap.message);
 
 if (gaps.length === 0) process.exit(0);
 

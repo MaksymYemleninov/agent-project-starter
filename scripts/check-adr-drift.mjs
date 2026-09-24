@@ -10,8 +10,11 @@
  *   node scripts/check-adr-drift.mjs --base <ref> # against an explicit ref
  *   BASE_REF=<ref> node scripts/check-adr-drift.mjs
  *   SKIP_ADR_CHECK="<reason>" node scripts/check-adr-drift.mjs   # escape, reason required
+ *   In CI: `No-ADR-reason: <reason>` in the pull request description, passed as PR_BODY.
+ *   The escape covers coverage triggers only; a forbidden ADR deletion fails regardless.
  */
 import { changedFiles, classify, loadGates, stage, blocking, adrDeletions } from './changed-files.mjs';
+import { escapeReason, escapeHint } from './docs-policy.mjs';
 
 const gates = loadGates();
 const argBase = process.argv.includes('--base')
@@ -27,20 +30,6 @@ const forbidden = adrDeletions(change);
 if (forbidden.length) {
   console.error(`check:adr: ADR deletion is forbidden: ${forbidden.join(', ')}. Supersede records instead.`);
   if (blocking(gates)) process.exit(1);
-}
-const skip = process.env.SKIP_ADR_CHECK;
-if (skip) {
-  if (skip.trim().length < 10) {
-    console.error('SKIP_ADR_CHECK needs an actual reason, not a truthy value.');
-    process.exit(1);
-  }
-  console.log(`check:adr skipped by request: ${skip}`);
-  console.log('Repeat this reason in the pull request description so a reviewer can disagree.');
-  process.exit(0);
-}
-if (!blocking(gates)) {
-  console.log(`check:adr is advisory at stage \`${stage(gates)}\`. Run /harden when the gates should block.`);
-  process.exit(0);
 }
 if (files.length === 0) {
   console.log(`check:adr passed. No changes against ${base}.`);
@@ -68,6 +57,24 @@ if (c.adrs.length > 0) {
   process.exit(0);
 }
 
+// The escape is weighed only once something actually needs it, and it must say why. A label says
+// that someone wanted to skip, not why, so it no longer counts (ADR 0016).
+const escape = escapeReason('adr');
+if (escape?.error) {
+  console.error(`check:adr: ${escape.error}`);
+  process.exit(blocking(gates) ? 1 : 0);
+}
+if (escape) {
+  console.log(`check:adr: ${triggers.length} trigger(s) justified (${escape.source}): ${escape.reason}`);
+  process.exit(0);
+}
+if (!blocking(gates)) {
+  console.log(
+    `check:adr is advisory at stage \`${stage(gates)}\`. It would fail on:\n${triggers.map((t) => `  - ${t}`).join('\n')}`,
+  );
+  process.exit(0);
+}
+
 const guardrailNote = c.guardrails.length
   ? '\nWeakening a gate to make a build pass is the failure mode this check exists to catch.\n' +
     'If the gate is genuinely wrong, that is a decision and it gets an ADR like any other.\n'
@@ -85,10 +92,8 @@ Either:
   2. Or, if this genuinely does not meet the test in
      docs/decisions/0000-record-architecture-decisions.md (expensive to reverse, crosses a
      component boundary, or looks arbitrary to a newcomer), say so with a written reason:
-       - in CI, add the \`no-adr-needed\` label to the pull request. A fresh repository does not
-         have that label yet, so create it once:
-           gh label create no-adr-needed --color 0E8A16 --description "Reason is in the PR description"
-       - locally, run with SKIP_ADR_CHECK="<your reason>".
+     ${escapeHint('adr')}
+     A label alone is not a reason.
 
 Base ref: ${base}
 Files considered: committed on this branch plus the working tree.
