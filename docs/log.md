@@ -6,6 +6,16 @@ the actual content.
 
 Newest entry on top.
 
+## 2026-09-24 - Regression guards for fixes, decisions, warnings and context
+
+- `markers` in `.claude/gates.json`: lint fails, with the reason, when a string guarding a past fix
+  disappears. Six seeded from this template's own fixes. See [ADR 0010](decisions/0010-guard-fixes-decisions-and-context-against-regression.md).
+- Warning ratchet: `/harden` creates `.claude/lint-baseline.json`; warnings may fall, not rise, and
+  `--update-baseline` only lowers it.
+- ADR checks now catch supersede cycles; `code-reviewer` checks the diff against accepted ADRs.
+- `session-start.mjs` restores branch, uncommitted files and tasks in flight after compaction.
+- Principle 7: recording work is not doing it. Ideas taken from a review of ruflo; none of its code.
+
 ## 2026-09-24 - Infrastructure track, agent scopes, working patterns
 
 - Optional infrastructure track: `infra-architect`, `infra-engineer`, `infra-reviewer`, skills

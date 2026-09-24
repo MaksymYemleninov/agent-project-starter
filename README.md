@@ -117,6 +117,21 @@ reviewers cannot edit what they review; the architect writes plans and proposed 
 A missing profile refuses everything, and the linter fails if an agent names one that does not
 exist.
 
+## Things that must not quietly come back
+
+Most gates check that something is written down. Four check that it stays right:
+
+- **Markers.** `markers` in `.claude/gates.json` lists past fixes as a file and a string that must
+  stay in it, with the reason. An agent that "simplifies" the fix away fails lint with that reason.
+  Add one whenever you fix a bug that looks like needless complexity.
+- **Warning ratchet.** `/harden` records the warning count in `.claude/lint-baseline.json`. From then
+  on it may fall and not rise; `npm run lint:docs -- --update-baseline` lowers it after a cleanup
+  and never raises it.
+- **ADR compliance.** `code-reviewer` checks the diff against accepted decisions, not only for new
+  ones missing, and the linter rejects supersede chains that loop.
+- **Compaction.** After a context compaction the start hook puts the branch, the uncommitted files
+  and the tasks marked `doing` back in front of the agent.
+
 ## Path-scoped rules
 
 `.claude/rules/*.md` is what keeps the constitution under 200 lines. A rule that applies to one

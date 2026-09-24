@@ -275,5 +275,44 @@
         "grep"
       ]
     }
-  }
+  },
+  "$markers": "Fixes that must not quietly come back. Each marker is a string that has to stay in `file` for as long as the fix exists; lint-docs fails when it disappears. Add one whenever you fix a bug that an agent could plausibly 'simplify' away, with `why` written for someone who does not know the history. Removing one is a guardrail change and needs an ADR.",
+  "markers": [
+    {
+      "id": "stop-hook-sees-commits",
+      "file": "scripts/changed-files.mjs",
+      "marker": "git(`diff --name-only ${mergeBase} HEAD`)",
+      "why": "The Stop hook and the ADR gate once looked only at the working tree, so an agent that committed and then stopped walked straight past both."
+    },
+    {
+      "id": "untracked-dirs-expanded",
+      "file": "scripts/changed-files.mjs",
+      "marker": "--untracked-files=all",
+      "why": "Without it a new untracked directory is reported as its name only, and file globs such as **/backend.tf never see the files inside it."
+    },
+    {
+      "id": "stop-hook-no-loop",
+      "file": ".claude/hooks/stop-check.mjs",
+      "marker": "payload.stop_hook_active",
+      "why": "A Stop hook that blocks the stop it caused loops forever, and a hook that loops gets deleted."
+    },
+    {
+      "id": "crlf-normalised",
+      "file": "scripts/lint-docs.mjs",
+      "marker": ".replace(/\\r\\n/g, '\\n')",
+      "why": "A Windows checkout with autocrlf made every frontmatter block unparseable and every document report as malformed."
+    },
+    {
+      "id": "apply-guard-wired",
+      "file": ".claude/hooks/pre-bash.mjs",
+      "marker": "irreversibleInfra(command)",
+      "why": "The only check that stops an agent running terraform apply behind cd, a subshell or a wrapper, which permission prefixes miss."
+    },
+    {
+      "id": "gate-tests-force-building",
+      "file": "scripts/test-gates.mjs",
+      "marker": "stage: 'building'",
+      "why": "The suite once inherited the host project stage; at exploration every blocking assertion failed in the first real derived project."
+    }
+  ]
 }
