@@ -1,14 +1,16 @@
 ---
 type: adr
 id: "0017"
-status: accepted
+status: superseded
 date: 2026-09-24
 deciders: [maintainers]
 tags: [process, code-quality]
 supersedes: null
-superseded_by: null
+superseded_by: "0018"
 ---
 # 0017 - Add a NestJS and Nuxt stack pack built on CleanSlice
+
+> Superseded by [0018 - Keep the NestJS and Nuxt pack independent of CleanSlice](0018-keep-the-nestjs-nuxt-pack-independent-of-cleanslice.md).
 
 ## Context
 

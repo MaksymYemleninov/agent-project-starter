@@ -6,6 +6,17 @@ the actual content.
 
 Newest entry on top.
 
+## 2026-09-24 - NestJS and Nuxt pack independent of CleanSlice
+
+- The pack owns its boundary rules: the TypeScript pack's parameterized dependency-cruiser rules
+  with CleanSlice's layout (slice root `index.ts` as an entry point, for `#prisma` and `#core`),
+  plus `no-prisma-in-edge-or-domain` and a `Gateway$` name check that covers guards. Their
+  unpublished script is no longer needed. See [ADR 0018](decisions/0018-keep-the-nestjs-nuxt-pack-independent-of-cleanslice.md).
+- The CleanSlice MCP is opt-in: onboarding asks, and adds it only on a yes, with the same controls.
+- The pack is frozen against CleanSlice's docs at commit `42380cc`; follow-ups towards CleanSlice
+  are dropped. `app/` boundaries are review-only by decision.
+- ADR 0017 superseded by 0018.
+
 ## 2026-09-24 - NestJS and Nuxt pack on CleanSlice
 
 - New pack and track `nestjs-nuxt`: CleanSlice structure, naming, patterns and its

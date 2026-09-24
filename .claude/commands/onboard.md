@@ -228,9 +228,11 @@ Create:
   the whole thing into its sandbox on every run.
 - `sourcePaths` in `.claude/gates.json` pointed at where the code actually is. The linter warns
   when it matches nothing; that warning is expected before this phase and a real hole after it.
-- any MCP server the kept pack names, in `.mcp.json`, with only that server enabled and only its
-  read tools allowed in `.claude/settings.json`, as the pack describes. Today only `nestjs-nuxt.md`
-  names one (CleanSlice). Add it to the threat model as the pack says.
+- an optional MCP server the kept pack names. Ask the human first, in this phase, with the pack's
+  "what to know before saying yes" list in front of them, and record the answer in the stack ADR.
+  Only on a yes: `.mcp.json`, only that server enabled and only its read tools allowed in
+  `.claude/settings.json`, and an entry in the threat model. Today only `nestjs-nuxt.md` names one
+  (CleanSlice); the pack works without it.
 - `.env.example` with every variable and a safe placeholder,
 - the real commands filled into the Commands table in `AGENTS.md`.
 

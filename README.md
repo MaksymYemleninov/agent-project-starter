@@ -104,7 +104,7 @@ prototype in `/ship`. Projects without a UI delete the track at onboarding.
 `.claude/skills/engineering-rulebook/` holds the standard: a short set of principles (simple first,
 structure by feature, dependencies pointing inward, parse at the edge, errors handled once,
 configuration validated at startup) and one pack per stack, for TypeScript, Next.js, Python, Go, and NestJS + Nuxt on the
-[CleanSlice](https://cleanslice.org) architecture, with its MCP server as reference docs.
+[CleanSlice](https://cleanslice.org) architecture, with its MCP server as optional reference docs.
 Each rule says whether a tool enforces it or review checks it.
 
 Onboarding applies the pack. Tool rules become configuration: the strictest type checking, a
