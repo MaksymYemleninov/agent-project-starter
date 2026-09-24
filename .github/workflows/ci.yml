@@ -10,6 +10,12 @@ on:
 permissions:
   contents: read
 
+# `edited` fires on every title or description change. A newer run of the same pull request
+# supersedes an older one; each push to main gets a group of its own, so none is ever cancelled.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
   docs:
     name: Documentation state
@@ -81,7 +87,8 @@ jobs:
       # A step of this job, not a job of its own: "ADR drift" is already a required check, so the
       # documentation gate blocks merges from the day it lands instead of after a settings change.
       - name: Check documentation for the change
-        if: always()
+        # Also after a failed ADR check, so both reports show; not after a cancelled run.
+        if: ${{ !cancelled() }}
         env:
           BASE_REF: ${{ github.event.pull_request.base.sha }}
           PR_BODY: ${{ github.event.pull_request.body }}

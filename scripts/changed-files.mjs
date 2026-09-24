@@ -83,14 +83,15 @@ export function changedFiles({ base: explicitBase } = {}) {
   }
   const changes = [...byPath.values()];
   // Renames are computed separately: deletion checks need them split into D and A, while the
-  // documentation rule should see a moved file as a move, not as new code.
+  // documentation rule should see a moved file as a move, not as new code. Only an exact move
+  // (R100) is a move: git pairs files that are half rewritten, and a rewrite is new code.
   const renamedTo = new Set();
   const moved = gitArgs(['diff', '--name-status', '-z', '-M', mergeBase]);
   if (moved) {
     const f = moved.split('\0');
     for (let i = 0; i < f.length; ) {
       if (/^[RC]\d*$/.test(f[i])) {
-        if (f[i].startsWith('R')) renamedTo.add(f[i + 2]);
+        if (f[i] === 'R100') renamedTo.add(f[i + 2]);
         i += 3;
       } else i += 2;
     }
@@ -177,6 +178,7 @@ export function loadGates(root = '.') {
       docs: {
         ...defaults.docs,
         ...(parsed.stopHook?.sourceFilesWithoutSpec !== undefined ? { filesWithoutSpec: parsed.stopHook.sourceFilesWithoutSpec } : {}),
+        ...(parsed.stopHook?.requireLogEntry !== undefined ? { logForNewFiles: parsed.stopHook.requireLogEntry } : {}),
         ...(parsed.docs ?? {}),
       },
     };

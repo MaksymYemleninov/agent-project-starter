@@ -192,7 +192,10 @@ try {
 
     sh('git mv src/a.mjs src/renamed.mjs');
     check('docs gate: moving a file is not new code', docs().code, 0);
+    appendFileSync(join(sandbox, 'src/renamed.mjs'), 'export const rewritten = 2;\n');
+    check('docs gate: ...but a file changed while moved is', docs().code, 1);
     reset();
+    sh('git reset -q --hard');
     sh('git reset -q --hard');
     for (const n of ['a', 'b', 'c']) rmSync(join(sandbox, `src/${n}.mjs`));
     check('docs gate: deleting dead code needs no spec', docs().code, 0);
@@ -213,6 +216,22 @@ try {
     check('docs gate: the template line left empty is no reason', docs({ PR_BODY: 'No-docs-reason: <!-- why -->' }).code, 1);
     check('docs gate: a local reason passes', docs({ SKIP_DOCS_CHECK: why }).code, 0);
     check(
+      'docs gate: a reason shown in fenced code is an example, not a reason',
+      docs({ PR_BODY: `Syntax:\n\n\`\`\`\nNo-docs-reason: ${why}\n\`\`\`\n` }).code,
+      1,
+    );
+    check(
+      'docs gate: ...a reason after the fence still counts',
+      docs({ PR_BODY: `\`\`\`\nexample\n\`\`\`\n\nNo-docs-reason: ${why}\n` }).code,
+      0,
+    );
+    check(
+      'docs gate: the Stop hook says a short local reason was rejected',
+      hook('stop-check.mjs', { session_id: 'docs-short' }, sandbox, [], { SKIP_DOCS_CHECK: 'typo' }).includes('needs a reason'),
+      true,
+    );
+    rmSync(join(sandbox, '.claude/.state'), { recursive: true, force: true });
+    check(
       'docs gate: the Stop hook reports the same gap',
       hook('stop-check.mjs', { session_id: 'docs-agree' }).includes('with no spec and no ADR added or modified'),
       true,
@@ -232,8 +251,28 @@ try {
       g.stopHook = { ...g.stopHook, sourceFilesWithoutSpec: 10 };
       writeFileSync(gatesFile, JSON.stringify(g, null, 2));
       check('docs gate: a pre-0002 threshold under stopHook is still honoured', docs().code, 0);
-      check('docs gate: ...and lint says to move it', sh('node scripts/lint-docs.mjs || true').includes('moved to the `docs` block'), true);
+      check('docs gate: ...and lint says to move it', sh('node scripts/lint-docs.mjs || true').includes('moved to `docs.filesWithoutSpec`'), true);
       writeFileSync(gatesFile, original);
+    }
+    {
+      const gatesFile = join(sandbox, '.claude/gates.json');
+      const original = readFileSync(gatesFile, 'utf8');
+      const g = JSON.parse(original);
+      delete g.docs;
+      g.stopHook = { ...g.stopHook, requireLogEntry: false };
+      writeFileSync(gatesFile, JSON.stringify(g, null, 2));
+      sh('git checkout -q -- src');
+      writeFileSync(join(sandbox, 'src/legacy.mjs'), 'export const legacy = 1;\n');
+      check('docs gate: a pre-0002 requireLogEntry: false is still honoured', docs().code, 0);
+      rmSync(join(sandbox, 'src/legacy.mjs'));
+      writeFileSync(gatesFile, JSON.stringify({ ...JSON.parse(original), docs: { logForNewFiles: false } }, null, 2));
+      check(
+        'docs gate: lint accepts a docs block without filesWithoutSpec',
+        sh('node scripts/lint-docs.mjs 2>&1 || true').includes('docs.filesWithoutSpec'),
+        false,
+      );
+      writeFileSync(gatesFile, original);
+      edit3();
     }
     {
       const gatesFile = join(sandbox, '.claude/gates.json');

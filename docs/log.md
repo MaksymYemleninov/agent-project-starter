@@ -16,6 +16,9 @@ Newest entry on top.
   pull request description, passed as `PR_BODY`; CI re-runs on `edited`. The label no longer counts.
 - Principle 4 now states the rule that is enforced. Moves and deletions do not count as new code;
   hidden (commented) reasons and word-less reasons are rejected.
+- Review follow-ups: only exact renames (`R100`) are moves; legacy `stopHook.requireLogEntry` is
+  honoured; `docs` keys are optional to lint; reasons in fenced code are ignored; CI runs of one
+  pull request supersede each other.
 
 ## 2026-09-24 - Lifecycle follow-ups
 

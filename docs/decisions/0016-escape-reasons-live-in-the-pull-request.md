@@ -71,8 +71,14 @@ a reason.
 - Existing pull requests that relied on the label now fail until a reason line is added.
 - The documentation gate runs inside the "ADR drift" job so that it is required from the start.
   A failure in that check now means either gate, and the log has to be read to tell which.
-- Moves count as moves only when git's rename detection pairs them; a file rewritten while moved
-  counts as new code and needs a log entry.
+- Moves count as moves only when git reports an exact rename (`R100`); a file changed while moved,
+  even slightly, counts as new code and needs a log entry.
+- Any spec's own files or any ADR satisfy the threshold, including an old spec whose `tasks.md` got
+  one ticked box. The gate checks that a record was touched, not that it covers the change; that
+  is the reviewer's call.
+- Escape lines inside HTML comments or fenced code blocks are ignored, so the syntax can be shown
+  as an example. "Re-run jobs" on an old run reads the description as it was then; editing the
+  description starts a new run that reads the current one.
 
 ## Revisit when
 

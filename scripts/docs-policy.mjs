@@ -12,7 +12,8 @@ export const MIN_REASON = 20;
 /**
  * Documentation gaps for a change, as `{ kind, message }`. Proportionate on purpose: a one-file fix
  * needs nothing, a new file needs a log line, a change across the threshold needs a spec or a
- * decision record plus the log line. Deletions count toward the threshold but are not "new".
+ * decision record plus the log line. Deletions and exact moves count neither toward the threshold
+ * nor as new files.
  */
 export function docsGaps(change, gates) {
   const policy = { filesWithoutSpec: 3, logForNewFiles: true, ...(gates.docs ?? {}) };
@@ -72,7 +73,11 @@ export function escapeReason(kind, env = process.env) {
   }
   // Hidden text is no reason: a reviewer must be able to read what they might dispute, so HTML
   // comments are removed from the whole description before looking, not just from one line.
-  const body = String(env.PR_BODY ?? '').replace(/\r\n/g, '\n').replace(/<!--[\s\S]*?-->/g, '');
+  // Fenced code is removed too: a description that shows the syntax as an example is not using it.
+  const body = String(env.PR_BODY ?? '')
+    .replace(/\r\n/g, '\n')
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/^[ \t]*(`{3,}|~{3,})[^\n]*\n[\s\S]*?^[ \t]*\1[ \t]*$/gm, '');
   const candidates = [...body.matchAll(new RegExp(`^[ \\t]*${LINES[kind]}:[ \\t]*(.*)$`, 'gmi'))]
     .map((m) => m[1].trim())
     .filter(Boolean);
@@ -91,4 +96,5 @@ function isReason(text) {
 
 export const escapeHint = (kind) =>
   `add a line \`${LINES[kind]}: <why, at least ${MIN_REASON} characters>\` to the pull request description ` +
-  `(CI re-runs when it is edited), or locally run with ${VARS[kind]}="<why>".`;
+  '(editing it starts a new CI run; "Re-run jobs" on an old run still sees the old description), ' +
+  `or locally run with ${VARS[kind]}="<why>".`;

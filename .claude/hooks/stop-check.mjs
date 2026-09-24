@@ -62,7 +62,12 @@ if ((c.architecture.length || c.manifests.length || c.infraFoundations.length ||
 // The documentation rule is the CI gate's rule, from the same function, so the hook and
 // `check:docs` cannot disagree about the same change (spec 0002, criterion 10).
 // The same escape as the gate, or a change that passes CI with a written reason is still blocked here.
-if (!escapeReason('docs')?.reason) for (const gap of docsGaps(change, gates)) gaps.push(gap.message);
+const docsEscape = escapeReason('docs');
+if (!docsEscape?.reason) {
+  const docsGapList = docsGaps(change, gates);
+  for (const gap of docsGapList) gaps.push(gap.message);
+  if (docsGapList.length && docsEscape?.error) gaps.push(docsEscape.error);
+}
 
 if (gaps.length === 0) process.exit(0);
 
