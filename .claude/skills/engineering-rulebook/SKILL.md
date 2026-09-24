@@ -1,6 +1,6 @@
 ---
 name: engineering-rulebook
-description: How code in this project is written - structure, boundaries, errors, validation, configuration, logging, testing, dependencies - as stack-agnostic principles plus one pack per stack (TypeScript, Next.js, Python, Go). Read before writing or reviewing application code, and at onboarding to pick and apply the pack. code-reviewer checks changes against it.
+description: How code in this project is written - structure, boundaries, errors, validation, configuration, logging, testing, dependencies - as stack-agnostic principles plus one pack per stack (TypeScript, Next.js, Python, Go, NestJS + Nuxt). Read before writing or reviewing application code, and at onboarding to pick and apply the pack. code-reviewer checks changes against it.
 ---
 
 # Engineering rulebook
@@ -18,6 +18,7 @@ Stack packs, read the one this project uses:
 | [nextjs.md](nextjs.md) | Next.js applications; read together with typescript.md |
 | [python.md](python.md) | Python services, workers, CLIs |
 | [go.md](go.md) | Go services and CLIs |
+| [nestjs-nuxt.md](nestjs-nuxt.md) | NestJS API + Nuxt app on the CleanSlice architecture; read together with typescript.md |
 
 `/onboard` phase 5 picks the pack from the stack ADRs, writes its hard rules into path-scoped
 files under `.claude/rules/`, and deletes the packs this project does not use. Phase 6 configures

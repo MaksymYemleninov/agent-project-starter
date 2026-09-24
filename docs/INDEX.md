@@ -52,6 +52,7 @@ Architecture decision records. Append-only: a wrong decision is superseded, neve
 <!-- decisions:list -->
 - [0015 - Share template track ownership](decisions/0015-share-template-track-ownership.md) - accepted
 - [0016 - Enforce documentation in proportion to the change, with escape reasons in the pull request](decisions/0016-escape-reasons-live-in-the-pull-request.md) - accepted
+- [0017 - Add a NestJS and Nuxt stack pack built on CleanSlice](decisions/0017-nestjs-nuxt-pack-on-cleanslice.md) - accepted
 <!-- /decisions:list -->
 
 ## Architecture

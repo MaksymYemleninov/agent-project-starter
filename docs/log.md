@@ -6,6 +6,18 @@ the actual content.
 
 Newest entry on top.
 
+## 2026-09-24 - NestJS and Nuxt pack on CleanSlice
+
+- New pack and track `nestjs-nuxt`: CleanSlice structure, naming, patterns and its
+  `cleanslice-check.cjs`, with the template's process and principles on top. See
+  [ADR 0017](decisions/0017-nestjs-nuxt-pack-on-cleanslice.md).
+- The pack adds the CleanSlice MCP server to a project's `.mcp.json` as reference. Their workflow
+  rules, "MUST consult" rule and MCP-verifying Stop hook are not taken.
+- Conflicts resolved in the pack: business rules in the domain service, not the gateway;
+  `class-validator` instead of Zod; Nuxt auto-imports instead of "no default exports".
+- Onboarding phase 4 weighs stacks that have a pack; `SKILL.md`, `onboard.md` and the README
+  list the new pack.
+
 ## 2026-09-24 - Documentation gate in CI, reasons instead of labels
 
 - New `check:docs` in CI, a step of the required "ADR drift" job: a new source or infrastructure file needs a log entry,

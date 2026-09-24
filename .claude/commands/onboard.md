@@ -145,6 +145,12 @@ infrastructure itself is planned later, by `/infra`, against an approved spec.
 Prefer boring and reversible over interesting and sticky. Match the constraints from phase 2, not
 your preference. If the team is one person, say so and pick accordingly.
 
+A stack with a pack in `.claude/skills/engineering-rulebook/` arrives with rules, tooling and a
+boundary check; one without starts from nothing. When a packed stack fits the constraints, say so
+in the table and weigh it; when it does not fit, say why and do not bend the project to the pack.
+For a full-stack TypeScript project with an API and a UI, `nestjs-nuxt.md` (CleanSlice) is one
+candidate, alongside Next.js.
+
 **Hosting goes to the architect first**, unless the project plainly runs nothing server-side (a
 static site, a CLI, a library). Spawn `infra-architect` in Mode 0 with the paths to the idea and the
 product documents, and the phase 2 answers about where it runs, budget and constraints. Put its
@@ -181,7 +187,7 @@ Then update:
   ecosystem and drop the others.
 - `.claude/rules/`: replace the placeholder rules with real path-scoped ones for the chosen stack.
   Take them from the stack's pack in `.claude/skills/engineering-rulebook/` (`typescript.md`,
-  `nextjs.md`, `python.md`, `go.md`): the rules marked *reviewed* go into a rule file scoped to the
+  `nextjs.md`, `python.md`, `go.md`, `nestjs-nuxt.md`): the rules marked *reviewed* go into a rule file scoped to the
   stack's source paths, the ones marked with a tool become tool configuration in phase 6. Disable
   unused stack-pack tracks through the adapter, keeping the core `SKILL.md`. Record pack choices that are
   genuinely open (npm or pnpm, mypy or pyright, result types or error classes) in the stack ADRs.
@@ -190,7 +196,7 @@ Then update:
   `--confirm` for the approved cleanup. Do not maintain a second removal list here.
   Disable `design` when there is no UI and `infra` when the project owns no infrastructure code.
   Disable `api` when there is no API contract and `operations` when no operating procedure is
-  needed. Keep only the selected stack packs (`typescript`, `nextjs`, `python`, `go`).
+  needed. Keep only the selected stack packs (`typescript`, `nextjs`, `python`, `go`, `nestjs-nuxt`).
   Fill retained placeholder skills from approved decisions. The adapter removes owned files,
   profiles and plugins and Markdown links to removed packs; review remaining prose references
   in README, AGENTS and commands and adapt them to the selected tracks.
