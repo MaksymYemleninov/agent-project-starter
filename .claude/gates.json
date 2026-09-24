@@ -43,6 +43,8 @@
     "scripts/lint-docs.mjs",
     "scripts/check-adr-drift.mjs",
     "scripts/changed-files.mjs",
+    "scripts/docs-policy.mjs",
+    "scripts/check-docs.mjs",
     "scripts/commands.mjs",
     "scripts/repair.mjs",
     "scripts/test-gates.mjs",
@@ -60,9 +62,12 @@
     "scripts/gate-fixture.mjs",
     ".claude/tracks.json"
   ],
+  "docs": {
+    "$comment": "The documentation rule, shared by the Stop hook and `npm run check:docs` in CI (spec 0002). A change of fewer than `filesWithoutSpec` source or infrastructure files, adding none, needs no documentation. Adding a file needs a `docs/log.md` entry; reaching the threshold needs a spec or ADR plus the log entry.",
+    "filesWithoutSpec": 3,
+    "logForNewFiles": true
+  },
   "stopHook": {
-    "sourceFilesWithoutSpec": 3,
-    "requireLogEntry": true,
     "requireAdrForGuardrails": true
   },
   "secretPaths": [

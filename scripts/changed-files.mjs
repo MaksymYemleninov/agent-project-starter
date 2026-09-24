@@ -82,7 +82,21 @@ export function changedFiles({ base: explicitBase } = {}) {
     byPath.set(path, { path, status: byPath.has(path) ? 'M' : 'A' });
   }
   const changes = [...byPath.values()];
-  return { base, mergeBase, files: changes.map((c) => c.path), changes, reason: null };
+  // Renames are computed separately: deletion checks need them split into D and A, while the
+  // documentation rule should see a moved file as a move, not as new code. Only an exact move
+  // (R100) is a move: git pairs files that are half rewritten, and a rewrite is new code.
+  const renamedTo = new Set();
+  const moved = gitArgs(['diff', '--name-status', '-z', '-M', mergeBase]);
+  if (moved) {
+    const f = moved.split('\0');
+    for (let i = 0; i < f.length; ) {
+      if (/^[RC]\d*$/.test(f[i])) {
+        if (f[i] === 'R100') renamedTo.add(f[i + 2]);
+        i += 3;
+      } else i += 2;
+    }
+  }
+  return { base, mergeBase, files: changes.map((c) => c.path), changes, renamedTo, reason: null };
 }
 
 /** Template IDs alone are insufficient: a derived project can reuse the same number. */
@@ -143,7 +157,8 @@ export function loadGates(root = '.') {
     sourcePaths: ['src/**', 'app/**', 'lib/**', 'server/**', 'packages/**', 'api/**', 'components/**'],
     manifests: ['package.json', 'requirements.txt', 'pyproject.toml', 'go.mod', 'Cargo.toml', 'Gemfile', 'composer.json'],
     guardrails: ['scripts/*.mjs', '.github/workflows/**', '.claude/settings.json', '.claude/gates.json', '.claude/hooks/**'],
-    stopHook: { sourceFilesWithoutSpec: 3, requireLogEntry: true, requireAdrForGuardrails: true },
+    docs: { filesWithoutSpec: 3, logForNewFiles: true },
+    stopHook: { requireAdrForGuardrails: true },
     secretPaths: ['**/.env', '**/.env.*', '**/*.pem', '**/*.key', '**/id_rsa*'],
     secretPathAllowlist: ['**/.env.example', '**/.env.sample', '**/.env.template'],
     infra: { paths: ['infra/**', '**/*.tf', '**/*.tfvars', '**/*.hcl'], foundations: [], lightBootstrapMaxComponents: 5 },
@@ -158,6 +173,14 @@ export function loadGates(root = '.') {
       ...parsed,
       stopHook: { ...defaults.stopHook, ...(parsed.stopHook ?? {}) },
       infra: { ...defaults.infra, ...(parsed.infra ?? {}) },
+      // Projects created before spec 0002 tuned the threshold under stopHook; honour it until they
+      // move it, and lint-docs says so.
+      docs: {
+        ...defaults.docs,
+        ...(parsed.stopHook?.sourceFilesWithoutSpec !== undefined ? { filesWithoutSpec: parsed.stopHook.sourceFilesWithoutSpec } : {}),
+        ...(parsed.stopHook?.requireLogEntry !== undefined ? { logForNewFiles: parsed.stopHook.requireLogEntry } : {}),
+        ...(parsed.docs ?? {}),
+      },
     };
   } catch {
     return defaults;

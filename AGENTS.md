@@ -26,8 +26,11 @@ a principle here, stop and say so instead of working around it.
    `docs/specs/NNNN-slug/spec.md` with acceptance criteria in EARS form.
 3. **No silent scope growth.** `docs/product/non-goals.md` is binding. To cross it, propose an
    ADR first.
-4. **Docs ship with code.** A pull request that changes behavior and leaves `docs/` untouched
-   is incomplete. CI enforces this; do not try to route around it.
+4. **Docs ship with code, in proportion.** CI (`check:docs`) and the Stop hook enforce one rule:
+   adding a source or infrastructure file needs a `docs/log.md` entry; changing
+   `docs.filesWithoutSpec` or more of them needs a spec or ADR as well; a smaller edit needs
+   neither. Decision-shaped changes need an ADR (`check:adr`). An escape is a written reason in the
+   pull request (`No-docs-reason:`, `No-ADR-reason:`), never a label. Review judges the rest.
 5. **Security is designed in, and no secrets in the repository.** The threat model in
    `docs/security/` is kept current, every spec states its security impact, and a change touching
    identity, input, data or dependencies gets a security review before merge
@@ -86,6 +89,7 @@ Source code layout is added here by `/onboard` once the stack is chosen.
 |---|---|
 | Lint documentation | `npm run lint:docs` |
 | Check ADR drift | `npm run check:adr` |
+| Check docs for the change | `npm run check:docs` |
 | Install | TBD after onboarding |
 | Build | TBD after onboarding |
 | Test | TBD after onboarding |

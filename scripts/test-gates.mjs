@@ -21,7 +21,7 @@ import { configureGateFixture } from './gate-fixture.mjs';
 // The caller's escape hatches must not reach the gates under test. `SKIP_ADR_CHECK` set for the
 // caller's own change made every "fails without an ADR" case pass vacuously, and `BASE_REF` would
 // point the sandbox at a commit it does not have.
-for (const key of ['SKIP_ADR_CHECK', 'BASE_REF']) delete process.env[key];
+for (const key of ['SKIP_ADR_CHECK', 'SKIP_DOCS_CHECK', 'PR_BODY', 'BASE_REF']) delete process.env[key];
 
 const ROOT = process.cwd();
 const results = [];
@@ -40,13 +40,13 @@ function exitCode(cmd) {
 }
 
 /** Feed JSON to a hook on stdin, return whatever it wrote. */
-function hook(name, payload, cwd = sandbox, args = []) {
+function hook(name, payload, cwd = sandbox, args = [], env = {}) {
   try {
     return execFileSync('node', [join(sandbox, '.claude/hooks', name), ...args], {
       cwd,
       input: JSON.stringify(payload),
       encoding: 'utf8',
-      env: { ...process.env, CLAUDE_PROJECT_DIR: sandbox },
+      env: { ...process.env, CLAUDE_PROJECT_DIR: sandbox, ...env },
     }).trim();
   } catch (e) {
     throw new Error(`Hook ${name} failed instead of returning a decision: ${e.stderr ?? e.message}`);
@@ -138,11 +138,162 @@ try {
   check('weakening a guardrail without an ADR fails', exitCode('node scripts/check-adr-drift.mjs'), 1);
   sh('git checkout -- scripts/lint-docs.mjs');
 
+  appendFileSync(ARCH(), '\n- a component that needs a reason\n');
   check(
     'escape hatch rejects a reasonless skip',
     exitCode('SKIP_ADR_CHECK=1 node scripts/check-adr-drift.mjs'),
     1,
   );
+  sh('git checkout -- docs/architecture/overview.md');
+
+  // Documentation in proportion to the change, and escapes that carry a reason (spec 0002).
+  {
+    const run = (cmd, env = {}) => {
+      try {
+        return { code: 0, out: execSync(cmd, { cwd: sandbox, encoding: 'utf8', stdio: 'pipe', env: { ...process.env, ...env } }) };
+      } catch (e) {
+        return { code: e.status ?? 1, out: `${e.stdout ?? ''}${e.stderr ?? ''}` };
+      }
+    };
+    const commitAll = (msg) => sh(`git add -A && git -c user.name=t -c user.email=t@t commit -qm "${msg}"`);
+    const reset = () => sh('git checkout -q -- . && git clean -fdq -- src docs/specs');
+    mkdirSync(join(sandbox, 'src'), { recursive: true });
+    for (const n of ['a', 'b', 'c', 'd']) writeFileSync(join(sandbox, `src/${n}.mjs`), `export const ${n} = 1;\n`);
+    commitAll('docs gate base');
+    sh('git branch -f main HEAD');
+    const docs = (env) => run('node scripts/check-docs.mjs', env);
+    const edit3 = () => { for (const n of ['a', 'b', 'c']) appendFileSync(join(sandbox, `src/${n}.mjs`), '// changed\n'); };
+
+    appendFileSync(join(sandbox, 'src/a.mjs'), '// typo fixed\n');
+    check('docs gate: one edited source file needs nothing', docs().code, 0);
+    writeFileSync(join(sandbox, 'src/e.mjs'), 'export const e = 1;\n');
+    check('docs gate: a new source file without a log entry fails', docs().code, 1);
+    appendFileSync(join(sandbox, 'docs/log.md'), '\n- fixture entry\n');
+    check('docs gate: ...and passes with one', docs().code, 0);
+    reset();
+
+    edit3();
+    check('docs gate: the threshold without a spec fails', docs().code, 1);
+    appendFileSync(join(sandbox, 'docs/log.md'), '\n- fixture entry\n');
+    check('docs gate: ...and a log entry alone is not enough', docs().code, 1);
+    mkdirSync(join(sandbox, 'docs/specs/0099-fixture'), { recursive: true });
+    writeFileSync(join(sandbox, 'docs/specs/0099-fixture/junk.txt'), 'not a spec\n');
+    check('docs gate: ...a stray file in a spec directory is not a spec', docs().code, 1);
+    writeFileSync(join(sandbox, 'docs/specs/0099-fixture/spec.md'), '# fixture\n');
+    check('docs gate: ...a spec and a log entry pass it', docs().code, 0);
+    reset();
+
+    edit3();
+    appendFileSync(join(sandbox, 'docs/decisions/0000-record-architecture-decisions.md'), '\n');
+    check('docs gate: the threshold with an ADR modified but no log entry fails', docs().code, 1);
+    appendFileSync(join(sandbox, 'docs/log.md'), '\n- fixture entry\n');
+    check('docs gate: ...an ADR and a log entry pass it', docs().code, 0);
+    reset();
+
+    sh('git mv src/a.mjs src/renamed.mjs');
+    check('docs gate: moving a file is not new code', docs().code, 0);
+    appendFileSync(join(sandbox, 'src/renamed.mjs'), 'export const rewritten = 2;\n');
+    check('docs gate: ...but a file changed while moved is', docs().code, 1);
+    reset();
+    sh('git reset -q --hard');
+    sh('git reset -q --hard');
+    for (const n of ['a', 'b', 'c']) rmSync(join(sandbox, `src/${n}.mjs`));
+    check('docs gate: deleting dead code needs no spec', docs().code, 0);
+    sh('git checkout -q -- src');
+
+    edit3();
+    const why = 'mechanical rename across three files, no behaviour change';
+    {
+      const r = docs({ PR_BODY: `Intro\n\nNo-docs-reason: ${why}\n` });
+      check('docs gate: a reason line in the PR description passes', r.code, 0);
+      check('docs gate: ...and prints the reason', r.out.includes(why), true);
+    }
+    check('docs gate: a reason hidden in a comment is no reason', docs({ PR_BODY: `<!--\nNo-docs-reason: ${why}\n-->` }).code, 1);
+    check('docs gate: the template line then a real reason passes', docs({ PR_BODY: `No-docs-reason: <!-- why -->\n\nNo-docs-reason: ${why}` }).code, 0);
+    check('docs gate: twenty dots are not a reason', docs({ PR_BODY: `No-docs-reason: ${'.'.repeat(24)}` }).code, 1);
+    check('docs gate: a short local reason fails', docs({ SKIP_DOCS_CHECK: 'typo' }).code, 1);
+    check('docs gate: a short reason fails', docs({ PR_BODY: 'No-docs-reason: typo' }).code, 1);
+    check('docs gate: the template line left empty is no reason', docs({ PR_BODY: 'No-docs-reason: <!-- why -->' }).code, 1);
+    check('docs gate: a local reason passes', docs({ SKIP_DOCS_CHECK: why }).code, 0);
+    check(
+      'docs gate: a reason shown in fenced code is an example, not a reason',
+      docs({ PR_BODY: `Syntax:\n\n\`\`\`\nNo-docs-reason: ${why}\n\`\`\`\n` }).code,
+      1,
+    );
+    check(
+      'docs gate: ...a reason after the fence still counts',
+      docs({ PR_BODY: `\`\`\`\nexample\n\`\`\`\n\nNo-docs-reason: ${why}\n` }).code,
+      0,
+    );
+    check(
+      'docs gate: the Stop hook says a short local reason was rejected',
+      hook('stop-check.mjs', { session_id: 'docs-short' }, sandbox, [], { SKIP_DOCS_CHECK: 'typo' }).includes('needs a reason'),
+      true,
+    );
+    rmSync(join(sandbox, '.claude/.state'), { recursive: true, force: true });
+    check(
+      'docs gate: the Stop hook reports the same gap',
+      hook('stop-check.mjs', { session_id: 'docs-agree' }).includes('with no spec and no ADR added or modified'),
+      true,
+    );
+    rmSync(join(sandbox, '.claude/.state'), { recursive: true, force: true });
+    check(
+      'docs gate: the Stop hook accepts the same local reason',
+      hook('stop-check.mjs', { session_id: 'docs-escape' }, sandbox, [], { SKIP_DOCS_CHECK: why }).includes('no spec and no ADR'),
+      false,
+    );
+    rmSync(join(sandbox, '.claude/.state'), { recursive: true, force: true });
+    {
+      const gatesFile = join(sandbox, '.claude/gates.json');
+      const original = readFileSync(gatesFile, 'utf8');
+      const g = JSON.parse(original);
+      delete g.docs;
+      g.stopHook = { ...g.stopHook, sourceFilesWithoutSpec: 10 };
+      writeFileSync(gatesFile, JSON.stringify(g, null, 2));
+      check('docs gate: a pre-0002 threshold under stopHook is still honoured', docs().code, 0);
+      check('docs gate: ...and lint says to move it', sh('node scripts/lint-docs.mjs || true').includes('moved to `docs.filesWithoutSpec`'), true);
+      writeFileSync(gatesFile, original);
+    }
+    {
+      const gatesFile = join(sandbox, '.claude/gates.json');
+      const original = readFileSync(gatesFile, 'utf8');
+      const g = JSON.parse(original);
+      delete g.docs;
+      g.stopHook = { ...g.stopHook, requireLogEntry: false };
+      writeFileSync(gatesFile, JSON.stringify(g, null, 2));
+      sh('git checkout -q -- src');
+      writeFileSync(join(sandbox, 'src/legacy.mjs'), 'export const legacy = 1;\n');
+      check('docs gate: a pre-0002 requireLogEntry: false is still honoured', docs().code, 0);
+      rmSync(join(sandbox, 'src/legacy.mjs'));
+      writeFileSync(gatesFile, JSON.stringify({ ...JSON.parse(original), docs: { logForNewFiles: false } }, null, 2));
+      check(
+        'docs gate: lint accepts a docs block without filesWithoutSpec',
+        sh('node scripts/lint-docs.mjs 2>&1 || true').includes('docs.filesWithoutSpec'),
+        false,
+      );
+      writeFileSync(gatesFile, original);
+      edit3();
+    }
+    {
+      const gatesFile = join(sandbox, '.claude/gates.json');
+      const original = readFileSync(gatesFile, 'utf8');
+      writeFileSync(gatesFile, JSON.stringify({ ...JSON.parse(original), stage: 'exploration' }, null, 2));
+      const r = docs();
+      check('docs gate: exploration reports and passes', r.code === 0 && r.out.includes('advisory'), true);
+      writeFileSync(gatesFile, original);
+    }
+    reset();
+
+    appendFileSync(ARCH(), '\n- wording only\n');
+    const adr = (env) => run('node scripts/check-adr-drift.mjs', env).code;
+    check('ADR gate: a No-ADR-reason line justifies the trigger', adr({ PR_BODY: 'No-ADR-reason: wording clarified, the architecture itself is unchanged' }), 0);
+    check('ADR gate: a label mentioned without a reason does not', adr({ PR_BODY: 'Labelled no-adr-needed.' }), 1);
+    check('ADR gate: a short reason fails', adr({ PR_BODY: 'No-ADR-reason: meh' }), 1);
+    reset();
+    for (const n of ['a', 'b', 'c', 'd']) rmSync(join(sandbox, `src/${n}.mjs`));
+    commitAll('docs gate cleanup');
+    sh('git branch -f main HEAD');
+  }
 
   // permissions.deny on Read never covered the shell.
   const denied = (cmd) =>

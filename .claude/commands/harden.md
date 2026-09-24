@@ -73,12 +73,9 @@ and that is how the practice gets abandoned.
      record, not by the setting. An item that cannot pass trains people to skip checklist items,
      which is the failure this checklist exists to prevent.
 
-   Either way, create the escape label once, or the only documented way past the gate does not
-   exist:
-
-   ```bash
-   gh label create no-adr-needed --color 0E8A16 --description "Reason is in the PR description"
-   ```
+   The documentation gate runs inside `ADR drift`, so requiring that check covers both. The escape
+   for both gates is a `No-docs-reason:` or `No-ADR-reason:` line in the pull request description;
+   there is no label to create.
 
 12. Rename `docs/ops/_runbook.md` into place and fill it. By this point there has been a deploy, so
    there is something to write: the exact commands, the rollback, and what to check when it breaks.
@@ -95,6 +92,7 @@ and that is how the practice gets abandoned.
 ## Afterwards
 
 Pull requests that change architecture, dependencies or guardrails without a decision record will
-fail. That is the point. The escape is the `no-adr-needed` label with a written reason, and if you
-reach for it more than occasionally the triggers are wrong: narrow them in `.claude/gates.json`
+fail, and so will code changes without their log entry or spec (`check:docs`). That is the point.
+The escape is a reason line in the pull request description, and if you reach for it more than
+occasionally the triggers or the threshold are wrong: tune them in `.claude/gates.json` with an ADR
 rather than making the exit routine.

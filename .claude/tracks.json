@@ -207,9 +207,19 @@
       "path": "docs/decisions/0015-share-template-track-ownership.md"
     },
     {
+      "kind": "adr",
+      "id": "0016",
+      "path": "docs/decisions/0016-escape-reasons-live-in-the-pull-request.md"
+    },
+    {
       "kind": "spec",
       "id": "0001",
       "path": "docs/specs/0001-template-lifecycle"
+    },
+    {
+      "kind": "spec",
+      "id": "0002",
+      "path": "docs/specs/0002-docs-gate-policy"
     }
   ]
 }

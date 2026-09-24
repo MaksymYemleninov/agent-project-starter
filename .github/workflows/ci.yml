@@ -2,11 +2,19 @@ name: CI
 
 on:
   pull_request:
+    # `edited` so that adding an escape reason to the description re-runs the gates (spec 0002).
+    types: [opened, synchronize, reopened, edited]
   push:
     branches: [main]
 
 permissions:
   contents: read
+
+# `edited` fires on every title or description change. A newer run of the same pull request
+# supersedes an older one; each push to main gets a group of its own, so none is ever cancelled.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
 
 jobs:
   docs:
@@ -71,6 +79,17 @@ jobs:
       - name: Check ADR drift
         env:
           BASE_REF: ${{ github.event.pull_request.base.sha }}
-          # The existing label skips coverage, never forbidden ADR deletions. PR 2 changes reason policy.
-          SKIP_ADR_CHECK: ${{ contains(github.event.pull_request.labels.*.name, 'no-adr-needed') && 'no-adr-needed label; reason is in the PR description' || '' }}
+          # The description is read as data through env, never interpolated into the command. Only a
+          # `No-ADR-reason:` line in it justifies the triggers; a label does not (ADR 0016).
+          PR_BODY: ${{ github.event.pull_request.body }}
         run: npm run check:adr
+
+      # A step of this job, not a job of its own: "ADR drift" is already a required check, so the
+      # documentation gate blocks merges from the day it lands instead of after a settings change.
+      - name: Check documentation for the change
+        # Also after a failed ADR check, so both reports show; not after a cancelled run.
+        if: ${{ !cancelled() }}
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.sha }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: npm run check:docs

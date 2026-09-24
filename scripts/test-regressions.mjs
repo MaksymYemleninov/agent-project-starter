@@ -12,7 +12,7 @@ let failed = 0;
 // The caller's escape hatches must not reach the gates under test. `SKIP_ADR_CHECK` set for the
 // caller's own change made every "fails without an ADR" case pass vacuously, and `BASE_REF` would
 // point the sandbox at a commit it does not have.
-for (const key of ['SKIP_ADR_CHECK', 'BASE_REF']) delete process.env[key];
+for (const key of ['SKIP_ADR_CHECK', 'SKIP_DOCS_CHECK', 'PR_BODY', 'BASE_REF']) delete process.env[key];
 
 function run(dir, command, args = [], env = {}) {
   return spawnSync(command, args, { cwd: dir, encoding: 'utf8', env: { ...process.env, ...env } });
@@ -92,6 +92,7 @@ test('deleting a project ADR is not coverage, even beside a new ADR', (dir) => {
   rmSync(join(dir, file)); projectAdr(dir, '0091');
   expect(run(dir, 'node', ['scripts/check-adr-drift.mjs']), 1);
   expect(run(dir, 'node', ['scripts/check-adr-drift.mjs'], { SKIP_ADR_CHECK: 'fixture skip with a reason' }), 1);
+  expect(run(dir, 'node', ['scripts/check-adr-drift.mjs'], { PR_BODY: 'No-ADR-reason: fixture reason that tries to excuse a deletion' }), 1);
 });
 test('missing test runner is an environment failure before dry-run plan', (dir) => {
   const r = run(dir, 'node', ['scripts/repair.mjs', '--test', 'starter-fixture-command-does-not-exist', '--test-file', 'README.md']);

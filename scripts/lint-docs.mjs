@@ -638,6 +638,21 @@ if (existsSync(join(ROOT, '.claude/gates.json'))) {
         err(f, `\`infra.lightBootstrapMaxComponents: ${light}\` must be a whole number, 0 to always run the full pipeline`);
       }
     }
+    for (const [key, now] of [['sourceFilesWithoutSpec', 'filesWithoutSpec'], ['requireLogEntry', 'logForNewFiles']]) {
+      if (g.stopHook && key in g.stopHook) {
+        warn(f, `\`stopHook.${key}\` moved to \`docs.${now}\` (spec 0002); it is honoured for now, move it so CI and the hook read the same key`);
+      }
+    }
+    // Both keys are optional: loadGates fills the defaults, so lint only rejects a bad value.
+    if (g.docs && 'filesWithoutSpec' in g.docs) {
+      const n = g.docs.filesWithoutSpec;
+      if (!(Number.isInteger(n) && n >= 1)) {
+        err(f, `\`docs.filesWithoutSpec: ${n}\` must be a whole number of at least 1`);
+      }
+    }
+    if (g.docs && 'logForNewFiles' in g.docs && typeof g.docs.logForNewFiles !== 'boolean') {
+      err(f, `\`docs.logForNewFiles: ${g.docs.logForNewFiles}\` must be true or false`);
+    }
     for (const [name, p] of Object.entries(g.agentScopes ?? {})) {
       if (name.startsWith('$')) continue;
       if (!Array.isArray(p.write) || !Array.isArray(p.bash)) {

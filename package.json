@@ -8,10 +8,11 @@
     "lint:docs": "node scripts/lint-docs.mjs",
     "check:adr": "node scripts/check-adr-drift.mjs",
     "test:gates": "node scripts/test-gates.mjs",
-    "check": "npm run lint:docs && npm run check:adr && npm run test:gates && npm run test:regressions",
+    "check": "npm run lint:docs && npm run check:adr && npm run check:docs && npm run test:gates && npm run test:regressions",
     "repair": "node scripts/repair.mjs",
     "test:derived": "node scripts/test-derived.mjs",
-    "test:regressions": "node scripts/test-regressions.mjs"
+    "test:regressions": "node scripts/test-regressions.mjs",
+    "check:docs": "node scripts/check-docs.mjs"
   },
   "engines": {
     "node": ">=20"

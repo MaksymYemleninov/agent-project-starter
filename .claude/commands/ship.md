@@ -18,6 +18,7 @@ Run each and fix what it reports. Do not proceed past a failure.
 
 - `npm run lint:docs`
 - `npm run check:adr`
+- `npm run check:docs`: a new file needs a log entry, a change across the threshold a spec or ADR
 - the project test command from the Commands table in @AGENTS.md
 - the project lint command from the same table
 
@@ -76,7 +77,8 @@ If the spec is complete, set its `status: done`.
 - Conventional commit subject, body explaining **why**, not what.
 - Push and open the pull request. **Ask before pushing.**
 - PR description: what changed, which spec or ADR it implements, how it was verified, what was
-  deliberately left out.
+  deliberately left out. If a gate genuinely does not apply, a `No-docs-reason:` or
+  `No-ADR-reason:` line with the reason (20 characters at least); a label is not a reason.
 
 If any gate failed and you could not fix it, say so explicitly with the output. Do not open the
 pull request and hope review catches it.

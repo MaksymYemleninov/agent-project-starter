@@ -71,6 +71,11 @@ are not prose:
 - `npm run lint:docs` validates structure, frontmatter, links, orphans and staleness,
 - `npm run check:adr` fails a pull request that changes `docs/architecture/` or dependencies
   without adding a decision record,
+- `npm run check:docs` fails a pull request whose code arrives without its documentation, in
+  proportion: a new file needs a `docs/log.md` entry, a change across `docs.filesWithoutSpec`
+  files a spec or ADR too, a small edit nothing. The Stop hook applies the same rule locally,
+- escapes are a `No-docs-reason:` or `No-ADR-reason:` line in the pull request description, of at
+  least 20 characters, re-checked when the description is edited. A label is not a reason,
 - `npm run test:gates` tests the gate mechanisms with controlled profiles in a disposable copy of the repository,
   because every bug found in them so far would otherwise have come back on the next edit.
 
