@@ -69,6 +69,15 @@ export function validateTracks(root) {
         }
       }
     }
+    // A pack that extends another (Next.js on TypeScript) names it; it cannot outlive it.
+    for (const [name, track] of Object.entries(manifest.tracks)) {
+      if (track.requires === undefined) continue;
+      if (!Array.isArray(track.requires)) throw new Error(`${name}.requires must be an array`);
+      for (const dep of track.requires) {
+        if (!manifest.tracks[dep]) errors.push(`${name}: requires unknown track ${dep}`);
+        else if (track.enabled && !manifest.tracks[dep].enabled) errors.push(`${name}: requires disabled track ${dep}`);
+      }
+    }
     const files = ['agents', 'skills', 'commands', 'rules'].flatMap((d) => walkFiles(root, `.claude/${d}`));
     files.push(...walkFiles(root, '.github/workflows').filter((f) => /\.(yml|yaml)(\.example)?$/.test(f)));
     for (const file of ['.github/dependabot.yml.example', '.github/dependabot.yml']) if (existsSync(join(root, file))) files.push(file);

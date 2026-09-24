@@ -111,7 +111,10 @@
         ".claude/skills/engineering-rulebook/nextjs.md"
       ],
       "profiles": [],
-      "plugins": []
+      "plugins": [],
+      "requires": [
+        "typescript"
+      ]
     },
     "python": {
       "enabled": true,
@@ -135,7 +138,10 @@
         ".claude/skills/engineering-rulebook/nestjs-nuxt.md"
       ],
       "profiles": [],
-      "plugins": []
+      "plugins": [],
+      "requires": [
+        "typescript"
+      ]
     }
   },
   "templateRecords": [

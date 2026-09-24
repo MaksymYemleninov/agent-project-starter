@@ -22,6 +22,10 @@ export function adaptTemplate(root, { disable = [], resetRecords = false, confir
     for (const plugin of track.plugins) delete settings.enabledPlugins[plugin];
     track.enabled = false;
   }
+  for (const [name, track] of Object.entries(manifest.tracks)) {
+    const missing = (track.requires ?? []).filter((dep) => track.enabled && !manifest.tracks[dep]?.enabled);
+    if (missing.length) throw new Error(`Track ${name} requires ${missing.join(', ')}; disable it too or keep them`);
+  }
   if (resetRecords) {
     if (!['not-started', 'in-progress'].includes(state.status)) throw new Error('Template cleanup requires unfinished onboarding');
     if (!existsSync(safePath(root, 'docs/decisions/_inherited-tooling.md'))) throw new Error('Inherited tooling stub is missing; do not replay template cleanup');

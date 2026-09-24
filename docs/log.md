@@ -13,10 +13,13 @@ Newest entry on top.
   [ADR 0017](decisions/0017-nestjs-nuxt-pack-on-cleanslice.md).
 - The pack adds the CleanSlice MCP server to a project's `.mcp.json` as reference. Their workflow
   rules, "MUST consult" rule and MCP-verifying Stop hook are not taken.
-- Conflicts resolved in the pack: business rules in the domain service, not the gateway;
-  `class-validator` instead of Zod; Nuxt auto-imports instead of "no default exports".
-- Onboarding phase 4 weighs stacks that have a pack; `SKILL.md`, `onboard.md` and the README
-  list the new pack.
+- Conflicts resolved in the pack, including CleanSlice pages that disagree with each other:
+  controller calls only the service; grouped slices; `class-validator` with `transform` and
+  `forbidNonWhitelisted` on the API, zod in the app; Nuxt auto-imports.
+- Tracks can declare `requires`: `nextjs` and `nestjs-nuxt` require `typescript`, and the
+  adapter and manifest lint refuse to drop it while they are kept. New regression test.
+- Onboarding phase 4 weighs stacks that have a pack; phase 6 writes a pack's MCP server with
+  only its read tools allowed. ADR 0017 is `proposed` until the owner approves its choices.
 
 ## 2026-09-24 - Documentation gate in CI, reasons instead of labels
 
