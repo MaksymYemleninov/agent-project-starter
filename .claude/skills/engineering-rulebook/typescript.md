@@ -60,7 +60,47 @@ src/
 - **Imports across features** go through `index.ts` only. *dependency-cruiser.*
 - **Environment** is read only in `config.ts`. *Lint (`no-restricted-properties` on `process.env`).*
 
+## Boundary rules
+
+What phase 6 writes into `.dependency-cruiser.cjs`, mapped to the layout above: the edge is
+`*.routes.ts`, the domain is `*.service.ts` and `*.schema.ts`, the adapter is `*.repo.ts`, and
+`index.ts` is the only place that wires an adapter into a service.
+
+| Rule | Forbids | Sees |
+|---|---|---|
+| `no-circular` | any dependency cycle under `src/` | paths |
+| `no-feature-internals` | a file in `src/<a>/` importing anything in `src/<b>/` except `src/<b>/index.ts` | paths |
+| `no-upward-feature` | a feature importing one placed above it, when the overview orders features | paths |
+| `no-adapter-in-edge` | `*.routes.ts` importing `*.repo.ts` | paths |
+| `no-adapter-in-domain` | `*.service.ts` or `*.schema.ts` importing `*.repo.ts` | paths |
+
+When the overview orders features, keep the order in one list (`boundaries.config.cjs`,
+`groups`, lowest first) and generate `no-upward-feature` from it. The script that generates the
+rules never names a feature itself; the list is the project's configuration.
+
+A path rule cannot see an adapter that reaches the edge through a barrel: `index.ts` exports a
+repo, and a routes file imports it by name. Close that with ESLint `no-restricted-imports` in an
+override for `**/*.routes.ts`, using a pattern with `importNamePattern` on the adapter suffix
+(`Repo$`). Resolve the option shape against the ESLint version you pin. *Lint.*
+
+`npm run check:boundaries` runs a small wrapper, not bare `depcruise`: it exits 2 when a folder
+named in the configuration or in `groups` does not exist, or when the cruise found no modules, and
+only then runs `depcruise src --config .dependency-cruiser.cjs`. Keep `tsConfig` in the
+dependency-cruiser options so path aliases resolve. Prove every rule red once, as onboarding asks.
+
+What the check does not see, so review still does:
+
+- runtime wiring: a service handed the wrong adapter by a factory passes;
+- imports that do not resolve: no edge, no violation;
+- namespace (`import * as`) and dynamic (`await import(path)`) imports;
+- I/O written straight into a service: the rules are shaped by paths, not content;
+- test files, which are excluded on purpose because they wire across layers.
+
+The rule set and the "does not see" list are adapted from CleanSlice's boundary check
+(<https://github.com/CleanSlice/mcp/blob/main/docs/02-standards/boundary-check.md>), where a
+path-only check missed six controllers importing an adapter through a barrel.
+
 ## Commands to put in AGENTS.md
 
 `npm run typecheck` (`tsc --noEmit`), `npm run lint`, `npm run format:check`, `npm run
-check:boundaries` (`depcruise src`), `npm test`.
+check:boundaries` (the wrapper above, then `depcruise src`), `npm test`.

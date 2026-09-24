@@ -39,17 +39,18 @@ jobs:
         run: npm ci
 
       # The mechanical floor from .claude/skills/engineering-rulebook/SKILL.md section 2.
+      # No --if-present here: a missing floor script must fail the job, not skip the step.
       - name: Format
-        run: npm run format:check --if-present
+        run: npm run format:check
 
       - name: Lint
-        run: npm run lint --if-present
+        run: npm run lint
 
       - name: Type check
-        run: npm run typecheck --if-present
+        run: npm run typecheck
 
       - name: Boundaries
-        run: npm run check:boundaries --if-present
+        run: npm run check:boundaries
 
       - name: Build
         run: npm run build --if-present

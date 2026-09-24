@@ -6,6 +6,18 @@ the actual content.
 
 Newest entry on top.
 
+## 2026-09-24 - Concrete boundary rules in the stack packs
+
+- `engineering-rulebook/SKILL.md` section 2: the boundary checker now has a minimum rule set
+  (cycles, feature entry points and direction, layers inside a feature) and must fail when its
+  configuration names a path that does not exist.
+- `typescript.md` gains a "Boundary rules" section: five dependency-cruiser rules mapped to the
+  pack's layout, an ESLint name check for adapters imported through a barrel, the wrapper behind
+  `check:boundaries`, and what the check does not see. Adapted from CleanSlice's boundary check.
+- `python.md` and `go.md` gain the same section in import-linter and depguard terms.
+- `code.yml.example`: the floor steps no longer use `--if-present`, so a missing script fails CI
+  instead of skipping. A pack fix under ADR 0013's "Revisit when".
+
 ## 2026-09-24 - Documentation gate in CI, reasons instead of labels
 
 - New `check:docs` in CI, a step of the required "ADR drift" job: a new source or infrastructure file needs a log entry,

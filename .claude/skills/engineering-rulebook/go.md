@@ -56,6 +56,21 @@ package that everything imports.
 contextcheck, containedctx, bodyclose, noctx, revive, gocritic, gocyclo, depguard, exhaustive,
 gochecknoglobals`, with `gocyclo` loose.
 
+## Boundary rules
+
+Section 2 of `SKILL.md`, in Go terms. Cycles between packages are a compile error already.
+`internal/` keeps code outside the module from importing it. `depguard` carries the rest from the
+overview: which feature packages may import which, and that no feature imports another
+feature's adapter package when a feature is split into subpackages. Resolve the `depguard`
+configuration shape against the golangci-lint version you pin.
+
+A `depguard` rule whose file glob matches nothing is silent. Prove each rule red once, and fail the
+check step when a package path named in the rules does not exist (`go list <path>` exits non-zero).
+
+The limit to say out loud: when `handler.go`, `service.go` and `store.go` share one package, the
+layers inside a feature are files, and no import checker sees them. That layer split is review,
+unless the project splits features into subpackages.
+
 ## Commands to put in AGENTS.md
 
 `gofmt -l .` (empty output means formatted), `golangci-lint run`, `go vet ./...`, `govulncheck

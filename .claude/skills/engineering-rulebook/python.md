@@ -56,6 +56,21 @@ The `src/` layout keeps tests running against the installed package, not the wor
 Ruff rule selection to start from: `E, F, W, I, B, UP, S, BLE, T20, SIM, RET, PTH, C90`, with
 `C90` complexity set loose.
 
+## Boundary rules
+
+The contracts phase 6 writes for import-linter, following section 2 of `SKILL.md`: a `layers`
+contract per feature (`api` above `service` above `repo`, with `api` not importing `repo`
+directly), a contract between features that allows only their package-level names, and the
+feature order from the overview when it has one. Resolve the contract types and their options
+against the import-linter version you pin.
+
+The check fails, not passes, when a module a contract names does not exist: wrap `lint-imports`
+in a step that asserts every named module imports, and prove each contract red once.
+
+It does not see what the import graph cannot: an adapter passed in at runtime, imports inside
+functions (`importlib`, local `import` under a condition), or I/O written straight into
+`service.py`. Those stay review.
+
 ## Commands to put in AGENTS.md
 
 `uv run ruff check .`, `uv run ruff format --check .`, `uv run mypy src` (or `pyright`), `uv run
