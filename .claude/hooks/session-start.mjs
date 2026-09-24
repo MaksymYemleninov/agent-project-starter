@@ -16,7 +16,52 @@ try {
   process.exit(0);
 }
 
+let payload = {};
+try {
+  payload = JSON.parse(readFileSync(0, 'utf8') || '{}');
+} catch {}
+
 const lines = [];
+
+// After compaction or a clear the conversation that knew what was in flight is gone, and the agent
+// carries on from a summary that may have dropped exactly the step it was on. The repository still
+// knows: put the branch, the uncommitted work and the unfinished tasks back in front of it.
+if (['compact', 'clear', 'resume'].includes(payload.source)) {
+  const sh = (cmd) => {
+    try {
+      return execSync(cmd, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+    } catch {
+      return '';
+    }
+  };
+  lines.push(
+    `Context was ${payload.source === 'resume' ? 'resumed' : payload.source === 'clear' ? 'cleared' : 'compacted'}. ` +
+      'Before continuing, re-read the spec or task you were working on; do not rely on the summary for ' +
+      'what is done.',
+  );
+  const branch = sh('git branch --show-current');
+  if (branch) lines.push(`Branch: ${branch}`);
+  const { git, parsePorcelain } = await import('./../../scripts/changed-files.mjs');
+  const dirty = parsePorcelain(git('status --porcelain --untracked-files=all'));
+  if (dirty.length) {
+    lines.push(
+      `Uncommitted: ${dirty.length} file(s): ${dirty.slice(0, 12).join(', ')}` +
+        (dirty.length > 12 ? ', ...' : ''),
+    );
+  }
+  const tasks = sh(
+    "grep -HE '\\|\\s*(doing|blocked)\\s*\\|' docs/specs/*/tasks.md 2>/dev/null | grep -v _template",
+  )
+    .split('\n')
+    .filter(Boolean)
+    .slice(0, 10)
+    .map((l) => {
+      const [file, ...row] = l.split(':');
+      const cells = row.join(':').split('|').map((c) => c.trim()).filter(Boolean);
+      return `${file.replace('docs/specs/', '').replace('/tasks.md', '')} #${cells[0]} ${cells[1]} (${cells.at(-1)})`;
+    });
+  if (tasks.length) lines.push(`Tasks in flight: ${tasks.join('; ')}`);
+}
 
 if (existsSync('docs/INDEX.md')) {
   lines.push('Documentation entry point is `docs/INDEX.md`. Read it before multi-step work.');

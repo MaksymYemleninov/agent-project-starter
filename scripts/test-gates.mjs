@@ -250,6 +250,73 @@ try {
 
   check('tree is green again', exitCode('node scripts/lint-docs.mjs'), 0);
 
+  // A fix that must stay: removing its marker fails lint, naming why it mattered.
+  {
+    const file = join(sandbox, 'scripts/changed-files.mjs');
+    const original = readFileSync(file, 'utf8');
+    writeFileSync(file, original.replace(/--untracked-files=all/g, ''));
+    let out = '';
+    try {
+      out = sh('node scripts/lint-docs.mjs');
+    } catch (e) {
+      out = e.stdout ?? '';
+    }
+    check('removing a guarded fix fails lint', out.includes('marker `untracked-dirs-expanded` is gone'), true);
+    writeFileSync(file, original);
+  }
+
+  // Each supersede link can be consistent while the chain loops, leaving nothing in force.
+  {
+    const adr = (id, by, sup) =>
+      ['---', 'type: adr', `id: "${id}"`, 'status: superseded', 'date: 2026-09-24', 'deciders: [x]', 'tags: [t]',
+       `supersedes: "${sup}"`, `superseded_by: "${by}"`, '---', `# ${id} - Loop`, '', '## Context', 'x'.repeat(220), '',
+       '## Options considered', '| Option | Pros |', '|---|---|', '| A | a |', '| B | b |', '', '## Decision',
+       'We will loop, which is the point of this fixture.', '', '## Consequences', '### Negative',
+       '- Nothing in the chain is in force, which the linter must catch.', ''].join('\n');
+    writeFileSync(join(sandbox, 'docs/decisions/0091-loop-a.md'), adr('0091', '0092', '0092'));
+    writeFileSync(join(sandbox, 'docs/decisions/0092-loop-b.md'), adr('0092', '0091', '0091'));
+    let out = '';
+    try {
+      out = sh('node scripts/lint-docs.mjs');
+    } catch (e) {
+      out = e.stdout ?? '';
+    }
+    check('a supersede cycle fails lint', out.includes('loops back on itself'), true);
+    rmSync(join(sandbox, 'docs/decisions/0091-loop-a.md'));
+    rmSync(join(sandbox, 'docs/decisions/0092-loop-b.md'));
+  }
+
+  // Warnings may fall below the baseline, never rise above it, and the update never raises it.
+  {
+    const base = join(sandbox, '.claude/lint-baseline.json');
+    sh('node scripts/lint-docs.mjs --update-baseline');
+    const created = JSON.parse(readFileSync(base, 'utf8')).warnings;
+    check('update-baseline creates the baseline', Number.isInteger(created), true);
+    check('lint passes at the baseline', exitCode('node scripts/lint-docs.mjs'), 0);
+    writeFileSync(base, JSON.stringify({ warnings: created - 1 }));
+    check('lint fails when warnings rise above the baseline', exitCode('node scripts/lint-docs.mjs'), 1);
+    sh('node scripts/lint-docs.mjs --update-baseline || true');
+    check('update-baseline never raises it', JSON.parse(readFileSync(base, 'utf8')).warnings, created - 1);
+    writeFileSync(base, JSON.stringify({ warnings: created + 3 }));
+    sh('node scripts/lint-docs.mjs --update-baseline');
+    check('update-baseline lowers it after a cleanup', JSON.parse(readFileSync(base, 'utf8')).warnings, created);
+    rmSync(base);
+  }
+
+  // After compaction the agent gets back the branch and the tasks in flight.
+  {
+    mkdirSync(join(sandbox, 'docs/specs/0001-demo'), { recursive: true });
+    writeFileSync(
+      join(sandbox, 'docs/specs/0001-demo/tasks.md'),
+      '| # | Task | Depends on | Done when | Status |\n|---|---|---|---|---|\n| 3 | Wire the API | 2 | green | doing |\n',
+    );
+    const out = hook('session-start.mjs', { source: 'compact' });
+    check('after compaction, tasks in flight are restored', out.includes('0001-demo #3 Wire the API (doing)'), true);
+    check('after compaction, the branch is restored', out.includes('Branch: work'), true);
+    check('a normal start does not claim a compaction', hook('session-start.mjs', { source: 'startup' }).includes('compacted'), false);
+    rmSync(join(sandbox, 'docs/specs/0001-demo'), { recursive: true, force: true });
+  }
+
   // Template stubs are ignored entirely: a leading underscore means a starting shape, not a
   // document this project has. Without this the stubs would fail every check a document must pass.
   writeFileSync(join(sandbox, 'docs/_scratch.md'), 'no frontmatter, not in the index, on purpose\n');

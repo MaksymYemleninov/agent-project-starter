@@ -37,7 +37,8 @@ a principle here, stop and say so instead of working around it.
 7. **Report what happened, not what should have happened.** If tests fail, say so with output.
    If a step was skipped, say which and why. Documents hold the same line: write only what you
    verified, mark the rest `<!-- TODO: question -->`, and never collapse "not determined" into
-   "none".
+   "none". Recording work is not doing it: created, configured, reachable, healthy and passing are
+   five different facts, and a status names only the one you checked.
 8. **Resolve, do not recall.** Versions, prices, limits, API shapes and CLI flags are looked up at
    their source when used, and the source is cited. Memory is the training data, which is old.
 

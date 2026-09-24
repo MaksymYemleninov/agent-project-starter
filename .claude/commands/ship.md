@@ -29,6 +29,11 @@ Run each and fix what it reports. Do not proceed past a failure.
   to the spec or ADR that holds the detail?
 - Did anything you learned contradict an existing document? Say which, and do not overwrite it
   silently.
+- Did this change fix a bug an agent could plausibly "simplify" back in? Add a marker to
+  `markers` in `.claude/gates.json`: the file, a string that must stay while the fix exists, and
+  why, for someone who does not know the history.
+- If `.claude/lint-baseline.json` exists and lint now reports fewer warnings, lower it:
+  `npm run lint:docs -- --update-baseline`.
 
 ## 4. Review
 

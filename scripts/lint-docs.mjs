@@ -7,11 +7,13 @@
  *
  * Errors fail the build. Warnings are printed and do not.
  */
-import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
+import { readFileSync, readdirSync, statSync, existsSync, writeFileSync } from 'node:fs';
 import { join, relative, dirname, resolve, basename } from 'node:path';
 import { loadGates, stage, blocking, STAGES, globToRegExp } from './changed-files.mjs';
 
-const ROOT = resolve(process.argv[2] ?? '.');
+const args = process.argv.slice(2);
+const UPDATE_BASELINE = args.includes('--update-baseline');
+const ROOT = resolve(args.find((a) => !a.startsWith('--')) ?? '.');
 const DOCS = join(ROOT, 'docs');
 
 const errors = [];
@@ -285,6 +287,23 @@ for (const [id, { path, fm }] of adrs) {
     else if (String(target.fm.superseded_by) !== id) {
       err(target.path, `should declare \`superseded_by: "${id}"\` to match ${path}`);
     }
+  }
+}
+
+// A supersede chain that loops back on itself leaves no record in force: every one of them claims
+// to be replaced by another. The pairwise checks above cannot see it, because each link is
+// consistent on its own.
+for (const [start] of adrs) {
+  const seen = new Set([start]);
+  let cur = adrs.get(start)?.fm.superseded_by;
+  while (cur) {
+    const id = String(cur);
+    if (seen.has(id)) {
+      err(adrs.get(start).path, `supersede chain loops back on itself through ${[...seen, id].join(' -> ')}, so no record in it is in force`);
+      break;
+    }
+    seen.add(id);
+    cur = adrs.get(id)?.fm.superseded_by;
   }
 }
 
@@ -610,6 +629,87 @@ if (existsSync(join(ROOT, '.claude/gates.json'))) {
 
   } catch (e) {
     err(f, `is not valid JSON, so the gates fell back to defaults silently: ${e.message}`);
+  }
+}
+
+/* ------------------------------------------------- 8d. fixes that must stay */
+
+// A fix an agent does not know the reason for is a fix it will "simplify" away, and nothing fails:
+// the code still runs, it just runs the old bug again. Each marker names a string that has to stay
+// in a file for as long as the fix exists. Removing one is a change to gates.json, which is a
+// guardrail, so the ADR gate asks why.
+{
+  const g = (() => {
+    try {
+      return JSON.parse(read(join(ROOT, '.claude/gates.json')));
+    } catch {
+      return {};
+    }
+  })();
+  const markers = g.markers ?? [];
+  if (!Array.isArray(markers)) err('.claude/gates.json', '`markers` must be an array');
+  else {
+    const ids = new Set();
+    for (const m of markers) {
+      const label = `marker \`${m?.id ?? '?'}\``;
+      if (!m?.id || !m?.file || !m?.marker || !m?.why) {
+        err('.claude/gates.json', `${label} needs \`id\`, \`file\`, \`marker\` and \`why\``);
+        continue;
+      }
+      if (ids.has(m.id)) err('.claude/gates.json', `${label} is declared twice`);
+      ids.add(m.id);
+      const abs = join(ROOT, m.file);
+      if (!existsSync(abs)) {
+        err(m.file, `${label} guards a file that no longer exists. Why it mattered: ${m.why}`);
+      } else if (!read(abs).includes(m.marker)) {
+        err(
+          m.file,
+          `${label} is gone: \`${m.marker}\` no longer appears. Why it mattered: ${m.why} ` +
+            'If the fix moved, move the marker; if it is genuinely obsolete, remove the marker with an ADR.',
+        );
+      }
+    }
+  }
+}
+
+/* ------------------------------------------------------- 8e. warning ratchet */
+
+// Warnings that only print are read for about a week and then ignored, and a new one arrives
+// unnoticed among the old ones. Once a baseline exists, the count may fall but not rise.
+// `--update-baseline` lowers it after a cleanup, and creates it; it never raises it. Raising it is
+// a hand edit, visible in review, which is the point.
+const BASELINE = join(ROOT, '.claude/lint-baseline.json');
+{
+  let baseline = null;
+  if (existsSync(BASELINE)) {
+    try {
+      baseline = JSON.parse(read(BASELINE)).warnings;
+      if (!Number.isInteger(baseline) || baseline < 0) {
+        err('.claude/lint-baseline.json', '`warnings` must be a whole number');
+        baseline = null;
+      }
+    } catch (e) {
+      err('.claude/lint-baseline.json', `is not valid JSON: ${e.message}`);
+    }
+  }
+  const count = warnings.length;
+  if (UPDATE_BASELINE) {
+    if (baseline === null || count < baseline) {
+      writeFileSync(BASELINE, `${JSON.stringify({ warnings: count }, null, 2)}\n`);
+      console.log(`lint baseline ${baseline === null ? 'created at' : `lowered from ${baseline} to`} ${count} warning(s).`);
+      baseline = count;
+    } else if (count > baseline) {
+      console.log(`lint baseline not raised: ${count} warning(s) against ${baseline}. Fix them, or raise it by hand in review.`);
+    }
+  }
+  if (baseline !== null && count > baseline) {
+    err(
+      '.claude/lint-baseline.json',
+      `warnings rose from ${baseline} to ${count}. The new ones are listed above. Fix them rather than ` +
+        'raising the baseline; if one is genuinely acceptable, raise it by hand and say why in the PR.',
+    );
+  } else if (baseline !== null && count < baseline && !UPDATE_BASELINE) {
+    console.log(`\n${baseline - count} fewer warning(s) than the baseline. Lock it in: npm run lint:docs -- --update-baseline`);
   }
 }
 

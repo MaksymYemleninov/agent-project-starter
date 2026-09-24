@@ -43,6 +43,22 @@ are invisible in six months.
 **Undocumented decisions.** Does the diff contain a choice that meets the ADR test in
 `docs/decisions/0000-record-architecture-decisions.md` with no ADR written? Name it precisely.
 
+**ADR compliance.** The documentation gate checks that decisions are written well; nothing else
+checks that the code still follows them. Find the accepted ADRs that bear on this diff: those the
+spec links, those whose text names a changed path or component (`rg -l` over `docs/decisions/` for
+each), and those that constrain `docs/architecture/overview.md` where the diff touches it. Read
+only the Decision and Consequences sections of accepted ones; a superseded ADR is history, not a
+rule. Then report:
+
+- **Violations** `[BLOCKING]`: the diff does what an accepted Decision rules out. Quote the line
+  of the ADR and the line of code.
+- **Stale references**: the code or docs cite a superseded ADR as if it were in force.
+- **Uncovered**: a changed area no ADR speaks to. Not a finding by itself; it tells the author
+  where the undocumented-decision question above applies.
+
+A violation is resolved by changing the code or by a new ADR superseding the old one, never by
+editing the accepted record.
+
 **Security.** Injection, authz checks missing or in the wrong layer, secrets in code or logs,
 unvalidated input crossing a trust boundary, dependencies added without review.
 

@@ -66,7 +66,12 @@ and that is how the practice gets abandoned.
    An untested rollback is a hope.
 11. Name the rule gaps the exploration period exposed: mistakes that repeated, reviewer findings
     that no rule would have prevented. Propose the rules; the human picks which are written.
-12. Add an entry to `docs/log.md` saying the project moved to `building` and why now.
+12. Lock in the warning count: `npm run lint:docs -- --update-baseline` creates
+    `.claude/lint-baseline.json`, and from then on warnings may fall but not rise. Before it, read
+    every warning: the baseline freezes whatever is there as acceptable.
+13. Look through `docs/log.md` for bugs fixed during exploration that could silently return, and
+    add a marker for each to `markers` in `.claude/gates.json`.
+14. Add an entry to `docs/log.md` saying the project moved to `building` and why now.
 
 ## Afterwards
 

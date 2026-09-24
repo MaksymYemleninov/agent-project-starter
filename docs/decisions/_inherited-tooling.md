@@ -62,6 +62,9 @@ repository; what they establish is:
 - **Infrastructure is optional and follows the same rules.** When the project owns
   infrastructure, `/infra` plans it into a spec, builds it in batches and reviews it. Changing an
   infrastructure foundation (state backend, root configuration, an environment) needs an ADR.
+- **Fixes and warnings do not quietly regress.** `markers` in `.claude/gates.json` fail lint when
+  a string guarding a past fix disappears. After `/harden`, `.claude/lint-baseline.json` lets the
+  warning count fall but not rise.
 - **Gate behaviour is configuration, not code.** `.claude/gates.json` holds source paths,
   manifests, guardrail paths, thresholds and secret paths. Editing `scripts/` to change gate
   behaviour means the configuration is missing a knob.

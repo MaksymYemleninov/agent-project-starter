@@ -27,7 +27,7 @@ Architecture decision records. Append-only: a wrong decision is superseded, neve
 
 - [ADR template](decisions/_template.md)
 - [Inherited tooling stub](decisions/_inherited-tooling.md) - `/onboard` renames this into place on a
-  new project, replacing records `0001`-`0009` below, which are this template's own history
+  new project, replacing records `0001`-`0010` below, which are this template's own history
 - [0000 - Record architecture decisions](decisions/0000-record-architecture-decisions.md) - accepted
 - [0001 - Enforce documentation in CI, not in prose](decisions/0001-enforce-documentation-in-ci.md) - accepted
 - [0002 - Configure the gates, and check ADR substance](decisions/0002-configure-and-substantiate-the-gates.md) - accepted
@@ -38,6 +38,7 @@ Architecture decision records. Append-only: a wrong decision is superseded, neve
 - [0007 - Ship infrastructure as an optional track built on specs and ADRs](decisions/0007-optional-infrastructure-track.md) - accepted
 - [0008 - Hold agents to their lane by hook, and refuse infrastructure mutation at every stage](decisions/0008-scope-agents-and-refuse-infrastructure-mutation.md) - accepted
 - [0009 - Move five working patterns from the infrastructure pipeline into the constitution](decisions/0009-working-patterns-in-the-constitution.md) - accepted
+- [0010 - Guard fixes, decisions and context against quiet regression](decisions/0010-guard-fixes-decisions-and-context-against-regression.md) - accepted
 
 <!-- decisions:list -->
 <!-- /decisions:list -->
