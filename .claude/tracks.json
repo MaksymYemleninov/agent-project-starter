@@ -1,0 +1,215 @@
+{
+  "version": 1,
+  "tracks": {
+    "core": {
+      "enabled": true,
+      "files": [
+        ".claude/agents/code-reviewer.md",
+        ".claude/agents/researcher.md",
+        ".claude/agents/security-reviewer.md",
+        ".claude/agents/test-writer.md",
+        ".claude/skills/doc-maintenance/SKILL.md",
+        ".claude/skills/engineering-rulebook/SKILL.md",
+        ".claude/skills/security-rulebook/SKILL.md",
+        ".claude/skills/security-rulebook/review-checklist.md",
+        ".claude/skills/security-rulebook/scanners.md",
+        ".claude/skills/security-rulebook/threat-model.md",
+        ".claude/skills/writing-adr/SKILL.md",
+        ".claude/skills/writing-spec/SKILL.md",
+        ".claude/commands/adr.md",
+        ".claude/commands/assess.md",
+        ".claude/commands/harden.md",
+        ".claude/commands/lint.md",
+        ".claude/commands/onboard.md",
+        ".claude/commands/repair.md",
+        ".claude/commands/security.md",
+        ".claude/commands/ship.md",
+        ".claude/commands/spec.md",
+        ".claude/rules/documentation.md",
+        ".claude/rules/source.md",
+        ".github/workflows/ci.yml",
+        ".github/workflows/code.yml.example",
+        ".github/workflows/security.yml.example",
+        ".github/dependabot.yml.example"
+      ],
+      "profiles": [
+        "code-reviewer",
+        "researcher",
+        "test-writer",
+        "security-reviewer"
+      ],
+      "plugins": [
+        "security-guidance@claude-plugins-official"
+      ]
+    },
+    "infra": {
+      "enabled": true,
+      "files": [
+        ".claude/agents/infra-architect.md",
+        ".claude/agents/infra-engineer.md",
+        ".claude/agents/infra-reviewer.md",
+        ".claude/skills/infra-bootstrap/SKILL.md",
+        ".claude/skills/infra-change/SKILL.md",
+        ".claude/skills/infra-rulebook/SKILL.md",
+        ".claude/skills/infra-rulebook/aws-example.md",
+        ".claude/skills/infra-rulebook/layout.md",
+        ".claude/skills/infra-rulebook/plan-format.md",
+        ".claude/skills/infra-rulebook/review-checklist.md",
+        ".claude/commands/infra.md",
+        ".claude/rules/infra.md",
+        ".github/workflows/infra.yml.example"
+      ],
+      "profiles": [
+        "infra-architect",
+        "infra-engineer",
+        "infra-reviewer"
+      ],
+      "plugins": []
+    },
+    "design": {
+      "enabled": true,
+      "files": [
+        ".claude/agents/design-reviewer.md",
+        ".claude/skills/design-system/SKILL.md",
+        ".claude/skills/design-system/system-format.md",
+        ".claude/commands/design.md"
+      ],
+      "profiles": [
+        "design-reviewer"
+      ],
+      "plugins": [
+        "frontend-design@claude-plugins-official"
+      ]
+    },
+    "api": {
+      "enabled": true,
+      "files": [
+        ".claude/skills/api-contract/SKILL.md"
+      ],
+      "profiles": [],
+      "plugins": []
+    },
+    "operations": {
+      "enabled": true,
+      "files": [
+        ".claude/skills/infra-setup/SKILL.md"
+      ],
+      "profiles": [],
+      "plugins": []
+    },
+    "typescript": {
+      "enabled": true,
+      "files": [
+        ".claude/skills/engineering-rulebook/typescript.md"
+      ],
+      "profiles": [],
+      "plugins": []
+    },
+    "nextjs": {
+      "enabled": true,
+      "files": [
+        ".claude/skills/engineering-rulebook/nextjs.md"
+      ],
+      "profiles": [],
+      "plugins": []
+    },
+    "python": {
+      "enabled": true,
+      "files": [
+        ".claude/skills/engineering-rulebook/python.md"
+      ],
+      "profiles": [],
+      "plugins": []
+    },
+    "go": {
+      "enabled": true,
+      "files": [
+        ".claude/skills/engineering-rulebook/go.md"
+      ],
+      "profiles": [],
+      "plugins": []
+    }
+  },
+  "templateRecords": [
+    {
+      "kind": "adr",
+      "id": "0001",
+      "path": "docs/decisions/0001-enforce-documentation-in-ci.md"
+    },
+    {
+      "kind": "adr",
+      "id": "0002",
+      "path": "docs/decisions/0002-configure-and-substantiate-the-gates.md"
+    },
+    {
+      "kind": "adr",
+      "id": "0003",
+      "path": "docs/decisions/0003-run-the-adr-gate-on-pull-requests-only.md"
+    },
+    {
+      "kind": "adr",
+      "id": "0004",
+      "path": "docs/decisions/0004-gates-are-staged.md"
+    },
+    {
+      "kind": "adr",
+      "id": "0005",
+      "path": "docs/decisions/0005-defer-code-scaffolding.md"
+    },
+    {
+      "kind": "adr",
+      "id": "0006",
+      "path": "docs/decisions/0006-what-a-project-inherits.md"
+    },
+    {
+      "kind": "adr",
+      "id": "0007",
+      "path": "docs/decisions/0007-optional-infrastructure-track.md"
+    },
+    {
+      "kind": "adr",
+      "id": "0008",
+      "path": "docs/decisions/0008-scope-agents-and-refuse-infrastructure-mutation.md"
+    },
+    {
+      "kind": "adr",
+      "id": "0009",
+      "path": "docs/decisions/0009-working-patterns-in-the-constitution.md"
+    },
+    {
+      "kind": "adr",
+      "id": "0010",
+      "path": "docs/decisions/0010-guard-fixes-decisions-and-context-against-regression.md"
+    },
+    {
+      "kind": "adr",
+      "id": "0011",
+      "path": "docs/decisions/0011-bounded-repair-loop.md"
+    },
+    {
+      "kind": "adr",
+      "id": "0012",
+      "path": "docs/decisions/0012-security-designed-in.md"
+    },
+    {
+      "kind": "adr",
+      "id": "0013",
+      "path": "docs/decisions/0013-engineering-rulebook-with-stack-packs.md"
+    },
+    {
+      "kind": "adr",
+      "id": "0014",
+      "path": "docs/decisions/0014-design-before-frontend.md"
+    },
+    {
+      "kind": "adr",
+      "id": "0015",
+      "path": "docs/decisions/0015-share-template-track-ownership.md"
+    },
+    {
+      "kind": "spec",
+      "id": "0001",
+      "path": "docs/specs/0001-template-lifecycle"
+    }
+  ]
+}

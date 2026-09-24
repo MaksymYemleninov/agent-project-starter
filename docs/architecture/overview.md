@@ -31,3 +31,11 @@ Link every ADR that constrains this page. If a reader cannot get from here to th
 the reasoning will be refactored away.
 
 - [ADR 0000](../decisions/0000-record-architecture-decisions.md)
+
+## Template tooling boundary
+
+Before onboarding, the template owns `.claude/tracks.json`. `scripts/tracks.mjs` validates its
+complete ownership inventory; `scripts/adapt-template.mjs` applies approved local cleanup.
+Onboarding and the disposable lifecycle test use that same adapter. Gate mechanism fixtures
+are separate from the project's enabled profiles. See [ADR 0015](../decisions/0015-share-template-track-ownership.md).
+Onboarding replaces this template overview with the project's architecture.

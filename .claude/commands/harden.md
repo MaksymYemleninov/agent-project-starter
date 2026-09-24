@@ -32,7 +32,7 @@ and that is how the practice gets abandoned.
    rather than today, with a note that they are recorded retroactively.
 5. **A test command must exist, run, and fail when the code is wrong.** Verify the last part:
    break something on purpose, watch the tests go red, put it back. Test setup was deliberately
-   deferred at onboarding (`docs/decisions/0005-defer-code-scaffolding.md`), and this is the
+   deferred at onboarding (see the inherited tooling ADR in a derived project), and this is the
    checkpoint where that deferral either gets paid off or turns into a project with no tests.
    Also check that `.github/workflows/code.yml.example` has been renamed to `code.yml`, or the
    suite is not running in CI at all. The rest of the mechanical floor from

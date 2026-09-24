@@ -9,7 +9,7 @@
 # has nothing to do, and a check that always passes vacuously is indistinguishable from a check
 # that is broken.
 #
-# Reasoning: docs/decisions/0005-defer-code-scaffolding.md
+# Reasoning: the inherited tooling ADR in a derived project
 #
 # If the stack is not Node, replace the steps rather than adapting them. This file is a starting
 # point, not a contract.

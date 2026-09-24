@@ -6,6 +6,17 @@ the actual content.
 
 Newest entry on top.
 
+## 2026-09-24 - Make the template lifecycle verifiable
+
+- Added complete track ownership, validated by doc lint, and a shared preview-first onboarding
+  adapter; registered template specs and ADRs for cleanup. See [ADR 0015](decisions/0015-share-template-track-ownership.md).
+- Gate tests use controlled scope profiles and placeholder inputs, and omit deleted working files.
+- ADR checks retain Git statuses, reject record deletion separately and limit onboarding cleanup
+  to exact base-manifest paths; moved the committed-change regression marker with the fix.
+- Repair distinguishes missing runners, execution failures, timeout and signals from failed tests.
+- Added disposable regression and derived-project checks to CI. Verification and limitations are
+  recorded in [spec 0001 tasks](specs/0001-template-lifecycle/tasks.md).
+
 ## 2026-09-24 - Design track before frontend work
 
 - `/design` (create, light, revise) makes the design system with the `frontend-design` plugin skill:

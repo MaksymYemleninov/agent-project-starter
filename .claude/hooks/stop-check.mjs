@@ -17,7 +17,7 @@ try {
   process.exit(0);
 }
 
-const { changedFiles, classify, loadGates, blocking } = await import('./../../scripts/changed-files.mjs');
+const { changedFiles, classify, loadGates, blocking, adrDeletions } = await import('./../../scripts/changed-files.mjs');
 const gates = loadGates();
 
 // At exploration stage the hook stays out of the way entirely.
@@ -39,11 +39,15 @@ const stateDir = '.claude/.state';
 const marker = join(stateDir, `stop-warned-${sessionId}`);
 if (existsSync(marker)) process.exit(0);
 
-const { files, reason } = changedFiles();
+const change = changedFiles();
+const { files, reason } = change;
 if (reason || files.length === 0) process.exit(0);
 
 const c = classify(files, gates);
+c.adrs = classify(change.changes.filter((c) => ['A', 'M'].includes(c.status)).map((c) => c.path), gates).adrs;
 const gaps = [];
+const forbidden = adrDeletions(change);
+if (forbidden.length) gaps.push(`ADR deletion is forbidden: ${forbidden.join(', ')}. Supersede records instead.`);
 
 const guardrailTrigger = tuning.requireAdrForGuardrails && c.guardrails.length > 0;
 if ((c.architecture.length || c.manifests.length || c.infraFoundations.length || guardrailTrigger) && c.adrs.length === 0) {

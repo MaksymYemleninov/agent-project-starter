@@ -71,7 +71,7 @@ are not prose:
 - `npm run lint:docs` validates structure, frontmatter, links, orphans and staleness,
 - `npm run check:adr` fails a pull request that changes `docs/architecture/` or dependencies
   without adding a decision record,
-- `npm run test:gates` tests the gates themselves against a disposable copy of the repository,
+- `npm run test:gates` tests the gate mechanisms with controlled profiles in a disposable copy of the repository,
   because every bug found in them so far would otherwise have come back on the next edit.
 
 Reminders are cheap and unreliable. Hooks catch forgetfulness. CI is the only thing that actually
@@ -266,6 +266,32 @@ Worth stating plainly, because a guardrail you trust more than it deserves is wo
   `src/`, `app/`, `lib/` and friends. For a Python or Go project those match nothing and the Stop
   hook quietly stops noticing source changes, so `/onboard` rewrites them in phase 5. If you skip
   onboarding, edit that file first.
+
+## Template ownership and lifecycle checks
+
+`.claude/tracks.json` assigns every agent, skill file, command, rule, scope profile, plugin and
+workflow to `core` or one optional track. `lint:docs` checks completeness, duplicates, enabled
+items that are missing and disabled items that remain. Activating a `.yml.example` workflow keeps
+its ownership. Register new project tooling in the manifest in the same change.
+
+Onboarding and `npm run test:derived` use `scripts/adapt-template.mjs`. Its default is a preview;
+`--confirm` applies the reviewed local cleanup. `--disable infra,design` removes owned items;
+`--reset-records` removes exactly the registered template ADRs and specs, installs the inherited
+record and resets the template log. It refuses completed onboarding, invalid paths and symlinks.
+
+`npm run test:derived` creates a disposable project, disables optional tracks, replaces fixture
+placeholders and runs `npm run check` at exploration and building, including a warning baseline.
+It verifies the mechanical portion of hardening, not deployments, scanners or human approvals.
+`npm run test:regressions` exercises the defects fixed during the template lifecycle review.
+Neither command spawns a paid agent. CI runs both separately from `check` to avoid recursion.
+
+Deleted ADRs never count as coverage. Deleting a project ADR is a separate violation even with
+another ADR or an escape reason. Only exact template ADR paths registered in the comparison-base
+manifest can be cleaned up before onboarding completes. Exploration reports violations without
+blocking; building blocks them. Supersede project records rather than deleting them.
+
+`repair` exits 3 for a missing/non-executable test runner, command-not-found output, timeout or
+signal termination, before generating a repair plan or starting an agent.
 
 ## Tuning
 

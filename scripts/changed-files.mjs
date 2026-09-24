@@ -5,7 +5,7 @@
  * committed its work and then stopped walked straight past it. A guardrail that two callers
  * implement separately is a guardrail with two different behaviors.
  */
-import { execSync } from 'node:child_process';
+import { execSync, execFileSync } from 'node:child_process';
 import { readFileSync, existsSync } from 'node:fs';
 
 export function git(cmd) {
@@ -38,7 +38,10 @@ export function parsePorcelain(raw) {
 }
 
 export function resolveBase(explicit) {
-  if (explicit && git(`rev-parse --verify ${explicit}`)) return explicit;
+  if (explicit) {
+    if (explicit.startsWith('-') || !gitArgs(['rev-parse', '--verify', explicit])) throw new Error(`Invalid base ref: ${explicit}`);
+    return explicit;
+  }
   const candidate = ['origin/main', 'origin/master', 'main', 'master'].find((r) =>
     git(`rev-parse --verify ${r}`),
   );
@@ -50,22 +53,54 @@ export function resolveBase(explicit) {
  * Every path this branch touches relative to its base: committed work plus anything still
  * uncommitted. Committing is not a way out of the gate.
  */
+export function gitArgs(args) {
+  try {
+    return execFileSync('git', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+  } catch { return null; }
+}
+
 export function changedFiles({ base: explicitBase } = {}) {
-  if (!inRepo()) return { base: null, files: [], reason: 'not a git repository' };
-
+  if (!inRepo()) return { base: null, files: [], changes: [], reason: 'not a git repository' };
   const base = resolveBase(explicitBase);
-  // `--untracked-files=all`, or a brand-new directory is reported as `infra/` rather than the files
-  // inside it, and any glob that names a file (`**/backend.tf`) never sees them.
-  const working = parsePorcelain(git('status --porcelain --untracked-files=all'));
-
   if (!base) {
-    return { base: null, files: working, reason: 'no base commit to compare against yet' };
+    const files = parsePorcelain(git('status --porcelain --untracked-files=all'));
+    return { base: null, files, changes: [], reason: 'no base commit to compare against yet' };
   }
+  const mergeBase = gitArgs(['merge-base', base, 'HEAD'])?.trim() ?? base;
+  // Comparing the base directly with the working tree includes committed, staged and unstaged
+  // changes. NUL delimiters preserve spaces/newlines; disabling rename detection exposes removals.
+  const raw = gitArgs(['diff', '--name-status', '-z', '--no-renames', mergeBase]);
+  if (raw === null) throw new Error(`Cannot compare working tree with ${mergeBase}`);
+  const fields = raw.split('\0');
+  const byPath = new Map();
+  for (let i = 0; i + 1 < fields.length; i += 2) {
+    byPath.set(fields[i + 1], { path: fields[i + 1], status: fields[i] });
+  }
+  const untracked = gitArgs(['ls-files', '--others', '--exclude-standard', '-z']);
+  if (untracked === null) throw new Error('Cannot list untracked files');
+  for (const path of untracked.split('\0').filter(Boolean)) {
+    byPath.set(path, { path, status: byPath.has(path) ? 'M' : 'A' });
+  }
+  const changes = [...byPath.values()];
+  return { base, mergeBase, files: changes.map((c) => c.path), changes, reason: null };
+}
 
-  const mergeBase = git(`merge-base ${base} HEAD`) ?? base;
-  const committed = (git(`diff --name-only ${mergeBase} HEAD`) ?? '').split('\n').filter(Boolean);
-
-  return { base, files: [...new Set([...committed, ...working])], reason: null };
+/** Template IDs alone are insufficient: a derived project can reuse the same number. */
+export function adrDeletions(change) {
+  const deleted = change.changes.filter((c) => c.status === 'D' && /^docs\/decisions\/\d{4}-.+\.md$/.test(c.path));
+  if (!deleted.length) return [];
+  let records = [];
+  let before;
+  let current;
+  try {
+    records = JSON.parse(gitArgs(['show', `${change.mergeBase}:.claude/tracks.json`])).templateRecords;
+    before = JSON.parse(gitArgs(['show', `${change.mergeBase}:.claude/onboarding.json`])).status;
+    current = JSON.parse(readFileSync('.claude/onboarding.json', 'utf8')).status;
+  } catch { /* Missing evidence grants no cleanup exception. */ }
+  const onboarding = ['not-started', 'in-progress'];
+  return deleted.filter(({ path }) => !(onboarding.includes(before) && onboarding.includes(current) &&
+    Array.isArray(records) && records.some((r) => r.kind === 'adr' && r.path === path &&
+      r.id === path.match(/\/(\d{4})-/)?.[1]))).map((c) => c.path);
 }
 
 /**

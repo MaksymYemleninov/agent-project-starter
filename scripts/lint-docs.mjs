@@ -11,6 +11,8 @@ import { readFileSync, readdirSync, statSync, existsSync, writeFileSync } from '
 import { join, relative, dirname, resolve, basename } from 'node:path';
 import { loadGates, stage, blocking, STAGES, globToRegExp } from './changed-files.mjs';
 
+import { validateTracks } from './tracks.mjs';
+
 const args = process.argv.slice(2);
 const UPDATE_BASELINE = args.includes('--update-baseline');
 const ROOT = resolve(args.find((a) => !a.startsWith('--')) ?? '.');
@@ -759,6 +761,8 @@ const BASELINE = join(ROOT, '.claude/lint-baseline.json');
     console.log(`\n${baseline - count} fewer warning(s) than the baseline. Lock it in: npm run lint:docs -- --update-baseline`);
   }
 }
+
+for (const message of validateTracks(ROOT)) err('.claude/tracks.json', message);
 
 /* ---------------------------------------------------------------- 9. report */
 
