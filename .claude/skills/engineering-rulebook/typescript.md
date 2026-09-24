@@ -60,7 +60,69 @@ src/
 - **Imports across features** go through `index.ts` only. *dependency-cruiser.*
 - **Environment** is read only in `config.ts`. *Lint (`no-restricted-properties` on `process.env`).*
 
+## Boundary rules
+
+What phase 6 writes into `.dependency-cruiser.cjs`. The rules take four parameters from the
+pack's layout, so a pack with another layout (Next.js) supplies its own values instead of
+inheriting these:
+
+| Parameter | This layout |
+|---|---|
+| feature root | `src/` (every folder in it except `shared/`) |
+| edge files | `*.routes.ts` |
+| domain files | `*.service.ts`, `*.schema.ts` |
+| adapter files | `*.repo.ts` |
+
+`shared/` and `config.ts` are not features: any feature may import them, and they import no
+feature. `index.ts` is the only file that wires an adapter into a service: it builds the service
+from the repo and the routes from the service (`createRoutes(service)`). No file in a feature
+imports its own `index.ts`, which keeps that wiring from becoming a cycle.
+
+| Rule | Forbids | Sees |
+|---|---|---|
+| `no-circular` | any dependency cycle under `src/` | paths |
+| `no-feature-internals` | a file in feature `<a>` importing anything in feature `<b>` except `<b>/index.ts` | paths |
+| `no-upward-feature` | a feature importing one placed above it, when the overview orders features | paths |
+| `no-adapter-in-edge` | an edge file importing an adapter file | paths |
+| `no-adapter-in-domain` | a domain file importing an adapter file | paths |
+
+Set `tsPreCompilationDeps: true` in the options. Without it dependency-cruiser drops type-only
+imports, and with `verbatimModuleSyntax` an `import type` from a repo is exactly how a service
+starts depending on one. Keep `tsConfig` in the options so path aliases resolve.
+
+When the overview orders features, keep the order in one list (`boundaries.config.cjs`,
+`groups`, lowest first) and generate `no-upward-feature` from it. The script that generates the
+rules never names a feature itself; the list is the project's configuration.
+
+A path rule cannot see an adapter that reaches the edge through a barrel: `index.ts` exports a
+repo, and an edge file imports it by name. Close that with ESLint `no-restricted-imports` in a
+flat-config block whose `files` are the edge files, with a pattern that has a `regex` (or
+`group`) matching any module and `importNamePattern` matching the adapter names
+(`(Repo|Repository)$`). Resolve the option shape against the ESLint version you pin. *Lint.*
+
+`npm run check:boundaries` runs a small wrapper, not bare `depcruise`. It exits 2 when a folder
+named in the configuration or in `groups` does not exist, when the cruise found no modules, or,
+once the first feature exists, when the edge, domain or adapter pattern matches no file. Only then
+does it run `depcruise src --config .dependency-cruiser.cjs`. Prove every rule red once, as
+onboarding asks.
+
+What the check does not see, so review still does:
+
+- runtime wiring: a service handed the wrong adapter by a factory passes;
+- imports that do not resolve: no edge, no violation;
+- namespace (`import * as`) and dynamic (`await import(path)`) imports;
+- adapters not named with the adapter suffix, in files or in exported names;
+- I/O written straight into a service: the rules are shaped by paths, not content;
+- test files, which are excluded on purpose because they wire across layers.
+
+The rule set and the "does not see" list are adapted from CleanSlice's boundary check
+(<https://github.com/CleanSlice/mcp/blob/main/docs/02-standards/boundary-check.md>), where a
+path-only check missed six controllers importing an adapter through a barrel.
+
+Pack changes: 2026-09-24, boundary rules added. A project onboarded earlier can compare its
+`.dependency-cruiser.cjs` with this section.
+
 ## Commands to put in AGENTS.md
 
 `npm run typecheck` (`tsc --noEmit`), `npm run lint`, `npm run format:check`, `npm run
-check:boundaries` (`depcruise src`), `npm test`.
+check:boundaries` (the wrapper above, then `depcruise src`), `npm test`.
