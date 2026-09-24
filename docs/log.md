@@ -6,6 +6,15 @@ the actual content.
 
 Newest entry on top.
 
+## 2026-09-24 - Design track before frontend work
+
+- `/design` (create, light, revise) makes the design system with the `frontend-design` plugin skill:
+  `docs/design/system.md`, `design/tokens.css`, HTML prototypes approved in a browser. See [ADR 0014](decisions/0014-design-before-frontend.md).
+- `design-system` skill filled: artifacts, three-layer tokens, the accessibility and states floor,
+  how code uses tokens. New read-only `design-reviewer` agent, run by `/ship` on UI changes.
+- Specs carry `ui: true`; the linter refuses to approve one until the design is `stable`.
+- `/harden` checks security, design and infrastructure before flipping the stage, not after.
+
 ## 2026-09-24 - Engineering rulebook with stack packs
 
 - New `engineering-rulebook` skill: stack-agnostic principles plus packs for TypeScript, Next.js,

@@ -311,6 +311,27 @@
         "trivy config",
         "checkov -d"
       ]
+    },
+    "design-reviewer": {
+      "write": [],
+      "pipes": true,
+      "bash": [
+        "git diff",
+        "git log",
+        "git show",
+        "git status",
+        "ls",
+        "rg",
+        "grep",
+        "head",
+        "tail",
+        "wc",
+        "cat",
+        "npx playwright screenshot",
+        "npx @axe-core/cli",
+        "curl -s http://localhost",
+        "curl -sI http://localhost"
+      ]
     }
   },
   "$markers": "Fixes that must not quietly come back. Each marker is a string that has to stay in `file` for as long as the fix exists; lint-docs fails when it disappears. Add one whenever you fix a bug that an agent could plausibly 'simplify' away, with `why` written for someone who does not know the history. Removing one is a guardrail change and needs an ADR.",

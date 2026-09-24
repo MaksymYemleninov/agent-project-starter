@@ -5,6 +5,8 @@ status: draft
 date: YYYY-MM-DD
 owner: TBD
 adrs: []
+ui: false        # true when this spec changes the interface; then it needs an approved design
+design: null     # the prototype it implements, e.g. design/prototypes/dashboard.html
 ---
 # NNNN - Feature name
 

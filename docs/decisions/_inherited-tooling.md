@@ -74,6 +74,9 @@ repository; what they establish is:
 - **Code follows a rulebook, tools first.** `engineering-rulebook` and this project's stack pack
   define the standard; whatever a tool can check (types, lint, format, module boundaries) is
   configured and runs in CI, and `code-reviewer` checks the rest.
+- **UI follows an approved design.** `/design` produces tokens and prototypes the human approves;
+  a UI spec cannot be approved before the design, components use tokens only, and `design-reviewer`
+  checks the result.
 - **Gate behaviour is configuration, not code.** `.claude/gates.json` holds source paths,
   manifests, guardrail paths, thresholds and secret paths. Editing `scripts/` to change gate
   behaviour means the configuration is missing a knob.
