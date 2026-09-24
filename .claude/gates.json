@@ -102,7 +102,13 @@
         "head",
         "tail",
         "wc",
-        "cat"
+        "cat",
+        "npx tsc --noEmit",
+        "npx depcruise",
+        "go vet",
+        "mypy",
+        "pyright",
+        "lint-imports"
       ]
     },
     "researcher": {

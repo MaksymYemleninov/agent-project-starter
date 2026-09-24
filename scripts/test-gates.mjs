@@ -427,6 +427,16 @@ try {
     writeFileSync(guidance, original);
   }
 
+  // After onboarding, a placeholder rule is a standard nobody wrote.
+  {
+    const ob = join(sandbox, '.claude/onboarding.json');
+    const original = readFileSync(ob, 'utf8');
+    writeFileSync(ob, JSON.stringify({ ...JSON.parse(original), status: 'completed', phase: 7 }));
+    check('placeholder rules warn once onboarding is complete', sh('node scripts/lint-docs.mjs || true').includes('rules/source.md: still a placeholder after onboarding'), true);
+    writeFileSync(ob, original);
+    check('placeholder rules are expected before onboarding', sh('node scripts/lint-docs.mjs || true').includes('still a placeholder after onboarding'), false);
+  }
+
   // Template stubs are ignored entirely: a leading underscore means a starting shape, not a
   // document this project has. Without this the stubs would fail every check a document must pass.
   writeFileSync(join(sandbox, 'docs/_scratch.md'), 'no frontmatter, not in the index, on purpose\n');

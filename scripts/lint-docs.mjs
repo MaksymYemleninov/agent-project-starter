@@ -573,6 +573,16 @@ if (existsSync(join(ROOT, '.claude/onboarding.json'))) {
       if (existsSync(guidance) && read(guidance).includes('replaces this stub')) {
         warn('.claude/claude-security-guidance.md', 'still the template stub, so the security plugin reviews without this project\'s rules');
       }
+      // A placeholder rule or skill left after onboarding is a rule nobody wrote: the agent reads
+      // "PLACEHOLDER" as the standard and writes code to no standard at all.
+      for (const dir of ['.claude/rules', '.claude/skills']) {
+        for (const abs of walk(join(ROOT, dir)).filter((x) => x.endsWith('.md'))) {
+          const fm = frontmatter(read(abs));
+          if (fm?.description && /PLACEHOLDER/.test(fm.description)) {
+            warn(rel(abs), 'still a placeholder after onboarding. Fill it from the stack pack, or delete it if the project does not need it.');
+          }
+        }
+      }
       if (s.agreedButNotWritten?.length) {
         err(f, `onboarding is marked complete but ${s.agreedButNotWritten.length} decision(s) are still unwritten`);
       }

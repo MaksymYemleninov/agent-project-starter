@@ -122,6 +122,8 @@ Then:
 While working:
 
 - Prefer extending an existing module over adding a parallel one.
+- Write code to `.claude/skills/engineering-rulebook/` and this project's stack pack: simple first,
+  patterns only where they earn their place, input parsed at the edge, errors handled once.
 - When you discover a constraint the docs do not mention, record it. A comment in the code is
   the floor, an ADR is the ceiling, pick honestly.
 - Classify every failure before reacting. One naming your file, input or logic is yours: fix it.

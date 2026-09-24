@@ -14,7 +14,8 @@ paths:
 > boundaries, error handling convention, logging, dependency injection, whatever actually applies.
 > Delete anything below that this project does not do.
 
-Until then, the defaults that hold regardless of stack:
+The full standard, with one pack per stack, is `.claude/skills/engineering-rulebook/`. Until the
+pack's rules replace this file, the defaults that hold regardless of stack:
 
 - Respect the boundaries in `docs/architecture/overview.md`. Crossing one is a decision, not a
   shortcut, and needs an ADR.
