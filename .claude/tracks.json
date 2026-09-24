@@ -111,7 +111,10 @@
         ".claude/skills/engineering-rulebook/nextjs.md"
       ],
       "profiles": [],
-      "plugins": []
+      "plugins": [],
+      "requires": [
+        "typescript"
+      ]
     },
     "python": {
       "enabled": true,
@@ -128,6 +131,17 @@
       ],
       "profiles": [],
       "plugins": []
+    },
+    "nestjs-nuxt": {
+      "enabled": true,
+      "files": [
+        ".claude/skills/engineering-rulebook/nestjs-nuxt.md"
+      ],
+      "profiles": [],
+      "plugins": [],
+      "requires": [
+        "typescript"
+      ]
     }
   },
   "templateRecords": [
@@ -210,6 +224,11 @@
       "kind": "adr",
       "id": "0016",
       "path": "docs/decisions/0016-escape-reasons-live-in-the-pull-request.md"
+    },
+    {
+      "kind": "adr",
+      "id": "0017",
+      "path": "docs/decisions/0017-nestjs-nuxt-pack-on-cleanslice.md"
     },
     {
       "kind": "spec",

@@ -171,6 +171,19 @@ test('manifest detects each unregistered surface and duplicate ownership', (dir)
   json(dir, '.claude/tracks.json', (m) => { m.tracks.core.files.push(m.tracks.core.files[0]); return m; });
   const r = run(dir, 'node', ['--input-type=module', '-e', probe]); expect(r, 1); assert.match(r.stdout, /multiple owners/);
 });
+test('adapter refuses to remove a pack another kept pack requires', (dir) => {
+  // Own fixture tracks, so the test holds in derived projects whatever packs they kept.
+  json(dir, '.claude/tracks.json', (m) => {
+    m.tracks['fixture-base'] = { enabled: true, files: [], profiles: [], plugins: [] };
+    m.tracks['fixture-pack'] = { enabled: true, files: [], profiles: [], plugins: [], requires: ['fixture-base'] };
+    return m;
+  });
+  const before = readFileSync(join(dir, '.claude/tracks.json'), 'utf8');
+  const rejected = run(dir, 'node', ['scripts/adapt-template.mjs', '--disable', 'fixture-base', '--confirm']);
+  expect(rejected, 1); assert.match(rejected.stderr, /fixture-pack requires fixture-base/);
+  assert.equal(readFileSync(join(dir, '.claude/tracks.json'), 'utf8'), before);
+  expect(run(dir, 'node', ['scripts/adapt-template.mjs', '--disable', 'fixture-base,fixture-pack', '--confirm']), 0);
+});
 test('adapter refuses traversal before modifying any core file', (dir) => {
   const before = readFileSync(join(dir, '.claude/gates.json'), 'utf8');
   json(dir, '.claude/tracks.json', (m) => { m.tracks.fixture = { enabled: true, files: ['.claude/skills/../../README.md'], profiles: [], plugins: [] }; return m; });

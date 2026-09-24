@@ -6,6 +6,22 @@ the actual content.
 
 Newest entry on top.
 
+## 2026-09-24 - NestJS and Nuxt pack on CleanSlice
+
+- New pack and track `nestjs-nuxt`: CleanSlice structure, naming, patterns and its
+  `cleanslice-check.cjs`, with the template's process and principles on top. See
+  [ADR 0017](decisions/0017-nestjs-nuxt-pack-on-cleanslice.md).
+- The pack adds the CleanSlice MCP server to a project's `.mcp.json` as reference. Their workflow
+  rules, "MUST consult" rule and MCP-verifying Stop hook are not taken.
+- Conflicts resolved in the pack, including CleanSlice pages that disagree with each other:
+  controller calls only the service; grouped slices; `class-validator` with `transform` and
+  `forbidNonWhitelisted` on the API, zod in the app; Nuxt auto-imports.
+- Tracks can declare `requires`: `nextjs` and `nestjs-nuxt` require `typescript`, and the
+  adapter and manifest lint refuse to drop it while they are kept. New regression test.
+- Onboarding phase 4 weighs stacks that have a pack; phase 6 writes a pack's MCP server with
+  only its read tools allowed. ADR 0017 accepted after a council review: precedence is an
+  explicit list, `forbidNonWhitelisted` is per project by client type, MCP use is optional.
+
 ## 2026-09-24 - Concrete boundary rules in the stack packs
 
 - `engineering-rulebook/SKILL.md` section 2: the boundary checker now has a minimum rule set
