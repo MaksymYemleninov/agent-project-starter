@@ -1,7 +1,7 @@
 ---
 type: adr
 id: "0017"
-status: proposed
+status: accepted
 date: 2026-09-24
 deciders: [maintainers]
 tags: [process, code-quality]
@@ -37,6 +37,8 @@ What conflicts with this template:
   and has the controller inject the gateway. `new-project.md` shows flat slices, while the boundary
   check orders slices by group.
 - Its API validation leaves `forbidNonWhitelisted` off, so unknown fields are dropped silently.
+  `whitelist` already strips them; turning rejection on only helps when every client ships with
+  the API, and breaks older or external clients otherwise.
 
 The hosted MCP server answers from the docs of its last deploy, with no version pin.
 
@@ -51,7 +53,15 @@ The hosted MCP server answers from the docs of its last deploy, with no version 
 
 Within the chosen option, validation on the API follows CleanSlice (`class-validator`) rather than
 the TypeScript pack's Zod, because Nest's pipes, DTOs and Swagger generation are built on it; the
-app keeps zod through vee-validate, as CleanSlice's forms do.
+app keeps zod through vee-validate, as CleanSlice's forms do. `forbidNonWhitelisted` is left to
+each project's stack ADR, by who its clients are.
+
+Where structure and principle overlap, a precedence rule of thumb ("CleanSlice for structure,
+template for principles") does not decide anything: business logic placement is both. So the
+pack lists its resolutions explicitly, CleanSlice decides only placement, naming and its named
+patterns outside that list, and anything touching dependency direction, domain I/O or edge parsing
+goes to the principle. The abstract gateway and mapper per entity are named as a deliberate
+exception to "Simple first".
 
 ## Decision
 
@@ -62,8 +72,8 @@ boundary check, and this template for process and principles.
 
 ### Positive
 
-- A project on this stack gets concrete rules, a specified boundary check and searchable pattern
-  docs at onboarding.
+- A project on this stack gets concrete rules, the specification of a boundary check (the script
+  itself still has to be obtained or written) and searchable pattern docs at onboarding.
 - The conflicts, including the ones inside CleanSlice's own docs, are written down once, in the
   pack, instead of rediscovered per project.
 - The pack requires the TypeScript track, and the adapter refuses to remove one without the other.
@@ -72,6 +82,8 @@ boundary check, and this template for process and principles.
 
 - Five packs to keep current. CleanSlice moves on its own schedule, and the pack can drift from it.
 - The boundary check script has to be obtained from CleanSlice or written from its spec.
+- Two validators and MCP examples tuned to CleanSlice's settings, not the project's: the agent and
+  reviewer have to know which one a file follows.
 - The hosted MCP server serves unpinned docs and receives the agent's queries. A project either
   accepts that in its stack ADR or self-hosts from a pinned commit, and records the server in its
   threat model.
@@ -88,5 +100,6 @@ boundary check, and this template for process and principles.
 
 ## Revisit when
 
-CleanSlice changes its layering or its boundary check, its MCP server offers versioned docs, or
-two projects in a row on this stack override the same pack rule.
+CleanSlice changes its layering or its boundary check, publishes the check script or versioned
+docs, a project needs only one half of the pack (split out the other), or two projects in a row on
+this stack override the same pack rule.

@@ -19,7 +19,8 @@ Newest entry on top.
 - Tracks can declare `requires`: `nextjs` and `nestjs-nuxt` require `typescript`, and the
   adapter and manifest lint refuse to drop it while they are kept. New regression test.
 - Onboarding phase 4 weighs stacks that have a pack; phase 6 writes a pack's MCP server with
-  only its read tools allowed. ADR 0017 is `proposed` until the owner approves its choices.
+  only its read tools allowed. ADR 0017 accepted after a council review: precedence is an
+  explicit list, `forbidNonWhitelisted` is per project by client type, MCP use is optional.
 
 ## 2026-09-24 - Documentation gate in CI, reasons instead of labels
 
