@@ -352,8 +352,8 @@
     {
       "id": "untracked-dirs-expanded",
       "file": "scripts/changed-files.mjs",
-      "marker": "--untracked-files=all",
-      "why": "Without it a new untracked directory is reported as its name only, and file globs such as **/backend.tf never see the files inside it."
+      "marker": "gitArgs(['ls-files', '--others', '--exclude-standard', '-z'])",
+      "why": "New untracked files must be listed one by one. `git status` collapses a new directory to its name, and file globs such as **/backend.tf then never see the files inside it."
     },
     {
       "id": "stop-hook-no-loop",

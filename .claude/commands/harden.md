@@ -62,7 +62,8 @@ and that is how the practice gets abandoned.
    - the rulebook's naming and Project decisions sections reflect the accepted ADRs;
    - an `infra-reviewer` code review of the current tree has reached `READY`.
 9. Set `"stage": "building"` in `.claude/gates.json`.
-10. Run `npm run check`. Everything must pass. If something does not, fix it rather than reverting
+10. Run `npm run check` (docs, ADR drift, gate tests, regressions) and `npm run test:derived`, the
+    same set CI runs. Everything must pass. If something does not, fix it rather than reverting
    the stage.
 11. Settle branch protection, one way or the other. The drift gate runs on pull requests only, so a
    direct push to the default branch bypasses it entirely.

@@ -9,6 +9,11 @@ import assert from 'node:assert/strict';
 
 const root = resolve(process.argv[2] ?? '.');
 let failed = 0;
+// The caller's escape hatches must not reach the gates under test. `SKIP_ADR_CHECK` set for the
+// caller's own change made every "fails without an ADR" case pass vacuously, and `BASE_REF` would
+// point the sandbox at a commit it does not have.
+for (const key of ['SKIP_ADR_CHECK', 'BASE_REF']) delete process.env[key];
+
 function run(dir, command, args = [], env = {}) {
   return spawnSync(command, args, { cwd: dir, encoding: 'utf8', env: { ...process.env, ...env } });
 }
@@ -101,18 +106,43 @@ test('runner exit 126, 127, command-not-found and signals stop before spawning',
     assert.equal(JSON.parse(r.stdout).reason, 'test-environment-failure');
   }
 });
+test('an escape hatch in the caller environment does not leak into the gate tests', (dir) => {
+  const r = run(dir, 'node', ['scripts/test-gates.mjs'], { SKIP_ADR_CHECK: 'caller skipping their own change on purpose' });
+  expect(r, 0);
+  assert.match(r.stdout, /ok\s+architecture change without an ADR fails/);
+});
 test('template ADR deletion is allowed only before onboarding completes', (dir) => {
   const manifest = JSON.parse(readFileSync(join(dir, '.claude/tracks.json'), 'utf8'));
   const record = manifest.templateRecords.find((r) => r.kind === 'adr');
   if (!record) return 'no template history remains in this derived project';
   rmSync(join(dir, record.path));
   expect(run(dir, 'node', ['scripts/check-adr-drift.mjs']), 0);
+  // Onboarding completes on the same branch as its cleanup: still the permitted cleanup, silently.
   json(dir, '.claude/onboarding.json', (s) => ({ ...s, status: 'completed' }));
+  const sameBranch = run(dir, 'node', ['scripts/check-adr-drift.mjs']);
+  expect(sameBranch, 0);
+  assert.doesNotMatch(sameBranch.stderr, /ADR deletion is forbidden/);
+  // Once completion is in the base, the same deletion is a violation.
+  run(dir, 'git', ['checkout', '--', record.path]);
+  commit(dir);
+  expect(run(dir, 'git', ['branch', '-f', 'main', 'HEAD']), 0);
+  rmSync(join(dir, record.path));
   expect(run(dir, 'node', ['scripts/check-adr-drift.mjs']), 1);
   json(dir, '.claude/gates.json', (g) => ({ ...g, stage: 'exploration' }));
   const advisory = run(dir, 'node', ['scripts/check-adr-drift.mjs']);
   expect(advisory, 0);
   assert.match(advisory.stderr, /ADR deletion is forbidden/);
+});
+test('resetting onboarding in the working tree cannot reopen the cleanup exception', (dir) => {
+  const manifest = JSON.parse(readFileSync(join(dir, '.claude/tracks.json'), 'utf8'));
+  const record = manifest.templateRecords.find((r) => r.kind === 'adr');
+  if (!record) return 'no template history remains in this derived project';
+  json(dir, '.claude/onboarding.json', (s) => ({ ...s, status: 'completed' }));
+  commit(dir);
+  expect(run(dir, 'git', ['branch', '-f', 'main', 'HEAD']), 0);
+  json(dir, '.claude/onboarding.json', (s) => ({ ...s, status: 'in-progress' }));
+  rmSync(join(dir, record.path));
+  expect(run(dir, 'node', ['scripts/check-adr-drift.mjs']), 1);
 });
 test('registering a project ADR in the same diff cannot excuse its deletion', (dir) => {
   const file = projectAdr(dir, '0090'); commit(dir);

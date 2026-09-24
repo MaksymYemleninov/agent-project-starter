@@ -39,9 +39,10 @@ No application stack, external dependency, deployment or paid repair session is 
    fixtures and pass independently of optional shipped profiles and source-rule placeholders.
 5. If an ADR is deleted, the drift gate shall never count it as coverage and shall report a
    separate violation, even alongside a new ADR or a local skip reason.
-6. Where onboarding is not completed and the deleted path is a registered template ADR, the
-   drift gate shall permit its cleanup; after completion it shall reject the same deletion at
-   building stage. Exploration shall report violations without blocking, as ADR 0004 requires.
+6. Where onboarding is not completed in the comparison base and the deleted path is a registered
+   template ADR, the drift gate shall permit its cleanup, including when the same branch completes
+   onboarding; once a base records completion it shall reject the same deletion at building stage.
+   (Clarified 2026-09-24: the working-tree status is not consulted, see the follow-up in the log.) Exploration shall report violations without blocking, as ADR 0004 requires.
 7. When a tracked file is absent from the working tree, the gate test copier shall omit it.
 8. If a test command cannot execute, exits 126 or 127, reports command not found, times out or
    terminates by signal, repair shall exit 3 before planning or spawning an agent.

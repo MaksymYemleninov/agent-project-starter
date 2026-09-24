@@ -6,6 +6,19 @@ the actual content.
 
 Newest entry on top.
 
+## 2026-09-24 - Lifecycle follow-ups
+
+- The ADR cleanup exception now reads onboarding status from the comparison base only. The
+  canonical onboarding branch, which completes onboarding and cleans up in one diff, had been
+  reported as forbidden deletion; resetting status in the working tree cannot reopen it either.
+  Spec 0001 criterion 6 clarified to match.
+- `npm run check` includes `test:regressions`, so the local check is the CI set bar `test:derived`;
+  `/harden` names both.
+- Marker `untracked-dirs-expanded` moved to the code that now does the work; the marker test uses
+  its own fixture instead of a shipped marker.
+- Test harnesses drop `SKIP_ADR_CHECK` and `BASE_REF`: a caller's skip had made every
+  "fails without an ADR" gate test pass vacuously.
+
 ## 2026-09-24 - Make the template lifecycle verifiable
 
 - Added complete track ownership, validated by doc lint, and a shared preview-first onboarding

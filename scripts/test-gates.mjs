@@ -18,6 +18,11 @@ import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { configureGateFixture } from './gate-fixture.mjs';
 
+// The caller's escape hatches must not reach the gates under test. `SKIP_ADR_CHECK` set for the
+// caller's own change made every "fails without an ADR" case pass vacuously, and `BASE_REF` would
+// point the sandbox at a commit it does not have.
+for (const key of ['SKIP_ADR_CHECK', 'BASE_REF']) delete process.env[key];
+
 const ROOT = process.cwd();
 const results = [];
 let sandbox;
@@ -244,19 +249,34 @@ try {
 
   check('tree is green again', exitCode('node scripts/lint-docs.mjs'), 0);
 
-  // A fix that must stay: removing its marker fails lint, naming why it mattered.
+  // A fix that must stay: removing its marker fails lint, naming why it mattered. The marker is a
+  // fixture of this test, not one the template ships, so moving or retiring a shipped marker
+  // cannot silently turn this into a test of nothing.
   {
-    const file = join(sandbox, 'scripts/changed-files.mjs');
-    const original = readFileSync(file, 'utf8');
-    writeFileSync(file, original.replace(/--untracked-files=all/g, ''));
-    let out = '';
-    try {
-      out = sh('node scripts/lint-docs.mjs');
-    } catch (e) {
-      out = e.stdout ?? '';
-    }
-    check('removing a guarded fix fails lint', out.includes('marker `untracked-dirs-expanded` is gone'), true);
-    writeFileSync(file, original);
+    const gatesFile = join(sandbox, '.claude/gates.json');
+    const gatesOriginal = readFileSync(gatesFile, 'utf8');
+    const fixed = join(sandbox, 'scripts/fixture-fix.mjs');
+    writeFileSync(fixed, "export const guarded = 'fixture-guard-string';\n");
+    const g = JSON.parse(gatesOriginal);
+    g.markers = [...(g.markers ?? []), {
+      id: 'fixture-marker', file: 'scripts/fixture-fix.mjs', marker: 'fixture-guard-string',
+      why: 'fixture: proves the marker mechanism, independent of shipped markers.',
+    }];
+    writeFileSync(gatesFile, JSON.stringify(g, null, 2));
+    const lintOut = () => {
+      try {
+        return sh('node scripts/lint-docs.mjs');
+      } catch (e) {
+        return e.stdout ?? '';
+      }
+    };
+    check('a present marker passes lint', lintOut().includes('fixture-marker'), false);
+    writeFileSync(fixed, 'export const guarded = null;\n');
+    const out = lintOut();
+    check('removing a guarded fix fails lint', out.includes('marker `fixture-marker` is gone'), true);
+    check('...and says why the fix mattered', out.includes('independent of shipped markers'), true);
+    rmSync(fixed);
+    writeFileSync(gatesFile, gatesOriginal);
   }
 
   // Each supersede link can be consistent while the chain loops, leaving nothing in force.
