@@ -38,7 +38,7 @@ template so the new project does not start out claiming someone else's work as i
 2. Replace the template's own decision records with the single inherited one:
    - **Keep** `docs/decisions/0000-record-architecture-decisions.md`. The practice applies to every
      project.
-   - **Delete** every other numbered record the template shipped (`0001` through `0010` at the
+   - **Delete** every other numbered record the template shipped (`0001` through `0011` at the
      time of writing; check `docs/INDEX.md`). Those describe how the template's gates were built.
      They are the template's history, not this project's, and carrying them means half the
      decision record is someone else's before the project writes a line.

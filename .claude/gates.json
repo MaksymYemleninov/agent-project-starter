@@ -44,6 +44,7 @@
     "scripts/check-adr-drift.mjs",
     "scripts/changed-files.mjs",
     "scripts/commands.mjs",
+    "scripts/repair.mjs",
     "scripts/test-gates.mjs",
     ".github/workflows/**",
     ".claude/settings.json",
@@ -313,6 +314,12 @@
       "file": "scripts/test-gates.mjs",
       "marker": "stage: 'building'",
       "why": "The suite once inherited the host project stage; at exploration every blocking assertion failed in the first real derived project."
+    },
+    {
+      "id": "repair-guards-tests",
+      "file": "scripts/repair.mjs",
+      "marker": "hash(f) !== hashes[f]",
+      "why": "The repair loop's only defence against an agent making a test pass by editing the test. Without it the loop cheats and reports success."
     }
   ]
 }

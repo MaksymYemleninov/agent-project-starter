@@ -32,6 +32,8 @@
       "Bash(tflint:*)"
     ],
     "ask": [
+      "Bash(npm run repair:*)",
+      "Bash(node scripts/repair.mjs:*)",
       "Bash(git push:*)",
       "Bash(npm install:*)",
       "Bash(npm uninstall:*)",

@@ -6,6 +6,17 @@ the actual content.
 
 Newest entry on top.
 
+## 2026-09-24 - Bounded repair loop
+
+- `scripts/repair.mjs` and `/repair`: headless `claude -p` attempts under a dollar cap and a turn
+  cap, allowed to edit only inside `sourcePaths` and run only the test command. See
+  [ADR 0011](decisions/0011-bounded-repair-loop.md).
+- The script, not the agent, judges: it hashes the test files, checks every changed path against
+  the scope, runs the test itself, and refuses a dirty tree or an already passing test.
+- Dry run by default; `--confirm` spends, and `npm run repair` is on the permission ask list.
+- Eight gate tests against a fake `claude`, including the agent editing the test. Not yet run
+  against the real CLI.
+
 ## 2026-09-24 - Regression guards for fixes, decisions, warnings and context
 
 - `markers` in `.claude/gates.json`: lint fails, with the reason, when a string guarding a past fix
