@@ -245,10 +245,17 @@ mistake worth catching: it is invisible at runtime and it compounds.
 Worth stating plainly, because a guardrail you trust more than it deserves is worse than none.
 
 - **The permission layer is not a security boundary.** `permissions.deny` on `Read(./.env)` only
-  stops the Read tool, so a `PreToolUse` hook closes the shell path that walked around it. That
-  hook is still string matching against paths: it stops accidents, not a determined attempt. Real
-  containment is the sandbox, the secret manager, and not putting production credentials on the
-  machine.
+  stops the Read tool and the file commands Claude Code recognises. `grep -r KEY .` names no file,
+  and `grep` and `find` are built-in read-only commands that run without a prompt whatever the
+  allow list says. So the project enables Claude Code's sandbox (`sandbox` in
+  `.claude/settings.json`): shell commands cannot read the project's secret files or
+  `~/.aws`, `~/.config/gcloud`, `~/.azure` and `~/.kube`, at the operating-system level.
+  `autoAllowBashIfSandboxed` is off, so the sandbox adds that boundary without removing a single
+  permission prompt. The `PreToolUse` hook stays as the readable second line, and it parses
+  commands so that prose and loaders (`--env-file .env`) do not trip it. On Linux and WSL2 the
+  sandbox needs `bubblewrap` and `socat`; without them Claude Code warns and runs unsandboxed.
+  Run `/sandbox` in the first session to see that it is active. `~/.ssh` is left readable so
+  `git push` over SSH works. Still: no production credentials on the machine.
 - **Hooks are reminders with teeth, not enforcement.** The Stop hook blocks once per session and
   then stands aside by design, because a hook that can block forever is a hook someone deletes.
   CI is the only gate that actually holds.

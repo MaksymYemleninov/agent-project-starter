@@ -46,4 +46,7 @@ One of three, stated plainly with reasoning:
 Do not default to Go. An assessment that never kills anything is not an assessment.
 
 Write the result to `docs/assessment.md` only if the user asks. Otherwise keep it in the
-conversation: an unrequested document is clutter.
+conversation: an unrequested document is clutter. If you do write it, give it the frontmatter the
+other documents carry (`type: product`, `status: draft`, `last_verified: <today>`) and a line in
+`docs/INDEX.md`, or doc lint fails. `/onboard` reads it in phase 1 when it exists, so a later
+session does not ask the same questions again.

@@ -236,6 +236,11 @@
       "path": "docs/decisions/0018-keep-the-nestjs-nuxt-pack-independent-of-cleanslice.md"
     },
     {
+      "kind": "adr",
+      "id": "0019",
+      "path": "docs/decisions/0019-contain-secrets-with-the-sandbox.md"
+    },
+    {
       "kind": "spec",
       "id": "0001",
       "path": "docs/specs/0001-template-lifecycle"

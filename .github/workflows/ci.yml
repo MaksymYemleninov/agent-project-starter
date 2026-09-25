@@ -26,18 +26,27 @@ jobs:
         with:
           node-version: 20
 
-      # Both scripts have zero npm dependencies on purpose: the gates must work on day one,
+      # These scripts have zero npm dependencies on purpose: the gates must work on day one,
       # before any stack exists, and must not break when the stack changes.
       - name: Lint documentation
         run: npm run lint:docs
 
+      # The tests below lint the project's documents at the building stage. At exploration nothing
+      # is supposed to block (ADR 0004), so a failure there is shown as a warning, not a red job.
+      - name: Read the stage
+        id: stage
+        run: echo "stage=$(node -p "require('./.claude/gates.json').stage")" >> "$GITHUB_OUTPUT"
+
       - name: Test the gates
+        continue-on-error: ${{ steps.stage.outputs.stage == 'exploration' }}
         run: npm run test:gates
 
       - name: Test regressions
+        continue-on-error: ${{ steps.stage.outputs.stage == 'exploration' }}
         run: npm run test:regressions
 
       - name: Test a derived project
+        continue-on-error: ${{ steps.stage.outputs.stage == 'exploration' }}
         run: npm run test:derived
 
   secrets:
