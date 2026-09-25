@@ -6,6 +6,17 @@ the actual content.
 
 Newest entry on top.
 
+## 2026-09-25 - Secret handling before the first real project
+
+- `pre-bash.mjs` reads commands with the shared parser: quoted prose, `echo`, `ls`, `--env-file`
+  and `cp .env.example .env` (only while `.env` is absent) no longer trip it; interpreter code,
+  substitutions and redirects are still read strictly. 16 new gate tests.
+- `secretPaths` names concrete `secrets.<ext>` files instead of `secrets.*`.
+- Claude Code's sandbox is on, with the secret files and cloud credential directories unreadable
+  and permission prompts kept. See [ADR 0019](decisions/0019-contain-secrets-with-the-sandbox.md).
+- CI: at exploration the gate, regression and derived tests warn instead of failing the job.
+  `/assess` saves a valid document when asked, and `/onboard` phase 1 reads it.
+
 ## 2026-09-24 - NestJS and Nuxt pack independent of CleanSlice
 
 - The pack owns its boundary rules: the TypeScript pack's parameterized dependency-cruiser rules

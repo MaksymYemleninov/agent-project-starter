@@ -304,6 +304,26 @@ try {
   check('secret guard allows .env.example', denied('cat .env.example'), 'allow');
   check('secret guard allows ordinary work', denied('npm test'), 'allow');
   check('secret guard ignores non-Bash tools', hook('pre-bash.mjs', { tool_name: 'Read' }) ? 'deny' : 'allow', 'allow');
+  // Prose and loaders are not reads: these tripped the old token split in the first hour of work.
+  check('secret guard ignores .env in a commit message', denied('git commit -m "add .env to gitignore"'), 'allow');
+  check('secret guard ignores .env in a quoted title', denied('gh pr create --title "document .env handling"'), 'allow');
+  check('secret guard ignores echo into .gitignore', denied('echo ".env.local" >> .gitignore'), 'allow');
+  check('secret guard allows an env file handed to a loader', denied('docker compose --env-file .env up'), 'allow');
+  check('secret guard allows --env-file=', denied('node --env-file=.env server.js'), 'allow');
+  check('secret guard allows ls of key names', denied('ls config/*.key'), 'allow');
+  check('secret guard allows a file named secrets in code', denied('cat src/config/secrets.ts'), 'allow');
+  check('secret guard allows creating .env from the example', denied('cp .env.example .env'), 'allow');
+  writeFileSync(join(sandbox, '.env'), 'X=1\n');
+  check('...but not over an existing .env', denied('cp .env.example .env'), 'deny');
+  rmSync(join(sandbox, '.env'));
+  // The strict reading still holds where it matters.
+  check('secret guard denies writing .env by redirect', denied('echo X=1 > .env'), 'deny');
+  check('secret guard denies reading by input redirect', denied('cat < .env'), 'deny');
+  check('secret guard denies inside a substitution', denied('echo $(cat .env)'), 'deny');
+  check('secret guard denies inside bash -c', denied('bash -c "cat .env"'), 'deny');
+  check('secret guard denies copying .env out', denied('cp .env /tmp/leak'), 'deny');
+  check('secret guard denies grep on .env', denied('grep -r KEY .env'), 'deny');
+  check('secret guard denies a secrets.json', denied('cat config/secrets.json'), 'deny');
 
   // Prefix-matching permission rules miss `cd infra && terraform apply`. The hook reads inside.
   check('infra guard denies apply', denied('terraform apply'), 'deny');

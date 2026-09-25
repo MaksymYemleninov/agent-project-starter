@@ -69,7 +69,8 @@ the end of phase 7.
 
 ## Phase 1 - Read and reflect back
 
-Read the idea file. Then write, in at most 15 lines:
+Read the idea file, and `docs/assessment.md` if `/assess` left one: its open questions are where
+phase 2 starts, and what it already settled is not asked again. Then write, in at most 15 lines:
 
 - what you understand the product to be,
 - who you think it is for,

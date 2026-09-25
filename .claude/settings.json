@@ -70,12 +70,85 @@
       "Bash(sudo:*)",
       "Bash(chmod 777:*)",
       "Read(./.env)",
-      "Read(./.env.*)",
+      "Read(./.env.local)",
+      "Read(./.env.*.local)",
+      "Read(./.env.development)",
+      "Read(./.env.production)",
+      "Read(./.env.staging)",
+      "Read(./.env.test)",
+      "Read(./.env.dev)",
+      "Read(./.env.prod)",
       "Read(./**/*.pem)",
       "Read(./**/id_rsa*)",
       "Read(./**/*credentials*.json)",
       "Write(./.env)"
     ]
+  },
+  "sandbox": {
+    "enabled": true,
+    "autoAllowBashIfSandboxed": false,
+    "filesystem": {
+      "denyRead": [
+        "./**/.env",
+        "./**/.env.local",
+        "./**/.env.*.local",
+        "./**/.env.development",
+        "./**/.env.production",
+        "./**/.env.staging",
+        "./**/.env.test",
+        "./**/.env.dev",
+        "./**/.env.prod",
+        "./**/*.pem",
+        "./**/*.key",
+        "./**/*.p12",
+        "./**/*.keystore",
+        "./**/id_rsa*",
+        "./**/id_ed25519*",
+        "./**/*credentials*.json",
+        "./**/service-account*.json",
+        "./**/secrets.json",
+        "./**/secrets.yaml",
+        "./**/secrets.yml",
+        "./**/*.tfstate",
+        "./**/*.tfstate.*"
+      ],
+      "allowWrite": [
+        "~/.npm",
+        "~/.cache",
+        "~/Library/Caches"
+      ]
+    },
+    "credentials": {
+      "files": [
+        {
+          "path": "~/.aws",
+          "mode": "deny"
+        },
+        {
+          "path": "~/.config/gcloud",
+          "mode": "deny"
+        },
+        {
+          "path": "~/.azure",
+          "mode": "deny"
+        },
+        {
+          "path": "~/.kube",
+          "mode": "deny"
+        }
+      ]
+    },
+    "network": {
+      "allowedDomains": [
+        "registry.npmjs.org",
+        "github.com",
+        "*.github.com",
+        "pypi.org",
+        "files.pythonhosted.org",
+        "proxy.golang.org",
+        "sum.golang.org"
+      ]
+    }
   },
   "hooks": {
     "SessionStart": [

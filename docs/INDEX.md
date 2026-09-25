@@ -54,6 +54,7 @@ Architecture decision records. Append-only: a wrong decision is superseded, neve
 - [0016 - Enforce documentation in proportion to the change, with escape reasons in the pull request](decisions/0016-escape-reasons-live-in-the-pull-request.md) - accepted
 - [0017 - Add a NestJS and Nuxt stack pack built on CleanSlice](decisions/0017-nestjs-nuxt-pack-on-cleanslice.md) - superseded
 - [0018 - Keep the NestJS and Nuxt pack independent of CleanSlice](decisions/0018-keep-the-nestjs-nuxt-pack-independent-of-cleanslice.md) - accepted
+- [0019 - Contain secrets with the sandbox, and parse commands in the secret guard](decisions/0019-contain-secrets-with-the-sandbox.md) - accepted
 <!-- /decisions:list -->
 
 ## Architecture
