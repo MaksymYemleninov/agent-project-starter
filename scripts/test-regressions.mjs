@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Run against a supplied checkout to establish red results before applying fixes.
 import { execFileSync, spawnSync } from 'node:child_process';
-import { mkdtempSync, mkdirSync, copyFileSync, readFileSync, writeFileSync, rmSync, existsSync, symlinkSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, copyFileSync, readFileSync, writeFileSync, rmSync, existsSync, symlinkSync, chmodSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -219,6 +219,44 @@ test('adapter removes local links inside a checkout path with spaces', (dir) => 
   writeFileSync(source, readFileSync(source, 'utf8') + '\n- [Fixture pack](../fixture-pack/guide.md)\n');
   expect(run(nested, 'node', ['scripts/adapt-template.mjs', '--disable', 'fixture', '--confirm']), 0);
   assert.doesNotMatch(readFileSync(source, 'utf8'), /Fixture pack/);
+});
+
+test('adapter changes nothing when a file it must touch is not writable', (dir) => {
+  if (process.getuid?.() === 0) return; // root opens read-only files for update
+  const files = ['.claude/commands/fixture-a.md', '.claude/commands/fixture-ro.md'];
+  for (const f of files) writeFileSync(join(dir, f), '# Fixture\n');
+  json(dir, '.claude/tracks.json', (m) => { m.tracks.fixture = { enabled: true, files, profiles: [], plugins: [] }; return m; });
+  chmodSync(join(dir, files[1]), 0o444);
+  const before = readFileSync(join(dir, '.claude/tracks.json'), 'utf8');
+  const rejected = run(dir, 'node', ['scripts/adapt-template.mjs', '--disable', 'fixture', '--confirm']);
+  expect(rejected, 1); assert.match(rejected.stderr, /Not writable, nothing was changed[\s\S]*fixture-ro\.md/);
+  assert.ok(existsSync(join(dir, files[0])), 'the writable file must not be removed first');
+  assert.equal(readFileSync(join(dir, '.claude/tracks.json'), 'utf8'), before);
+  chmodSync(join(dir, files[1]), 0o644);
+});
+test('adapter does not rewrite or require a file whose content is unchanged', (dir) => {
+  if (process.getuid?.() === 0) return;
+  const target = '.claude/commands/fixture.md';
+  writeFileSync(join(dir, target), '# Fixture\n');
+  json(dir, '.claude/tracks.json', (m) => { m.tracks.fixture = { enabled: true, files: [target], profiles: [], plugins: [] }; return m; });
+  for (const f of ['.claude/settings.json']) chmodSync(join(dir, f), 0o444);
+  const ok = run(dir, 'node', ['scripts/adapt-template.mjs', '--disable', 'fixture', '--confirm']);
+  chmodSync(join(dir, '.claude/settings.json'), 0o644);
+  expect(ok, 0); assert.ok(!existsSync(join(dir, target)));
+});
+test('adapter says a stray numbered file is a Finder or iCloud copy', (dir) => {
+  copyFileSync(join(dir, '.claude/commands/adr.md'), join(dir, '.claude/commands/adr 2.md'));
+  const rejected = run(dir, 'node', ['scripts/adapt-template.mjs']);
+  expect(rejected, 1); assert.match(rejected.stderr, /adr 2\.md \(looks like a Finder or iCloud copy of \.claude\/commands\/adr\.md/);
+});
+test('reset keeps the ADR entries in the index in order', (dir) => {
+  if (!existsSync(join(dir, 'docs/decisions/_inherited-tooling.md'))) return;
+  expect(run(dir, 'node', ['scripts/adapt-template.mjs', '--reset-records', '--confirm']), 0);
+  const index = readFileSync(join(dir, 'docs/INDEX.md'), 'utf8');
+  assert.doesNotMatch(index, /Inherited tooling stub/);
+  assert.ok(index.indexOf('[0000 - ') !== -1 && index.indexOf('[0000 - ') < index.indexOf('[0001 - Inherited tooling]'));
+  assert.ok(!existsSync(join(dir, 'docs/decisions/_inherited-tooling.md')));
+  assert.ok(existsSync(join(dir, 'docs/decisions/0001-inherited-tooling.md')));
 });
 
 // A real subprocess timeout proves the runner reports an environment failure without waiting

@@ -25,6 +25,7 @@
         ".claude/commands/security.md",
         ".claude/commands/ship.md",
         ".claude/commands/spec.md",
+        ".claude/rules/agent-config.md",
         ".claude/rules/documentation.md",
         ".claude/rules/source.md",
         ".github/workflows/ci.yml",
@@ -249,6 +250,11 @@
       "kind": "spec",
       "id": "0002",
       "path": "docs/specs/0002-docs-gate-policy"
+    },
+    {
+      "kind": "spec",
+      "id": "0003",
+      "path": "docs/specs/0003-adapter-safety-and-guard-false-positives"
     }
   ]
 }

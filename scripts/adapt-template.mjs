@@ -1,8 +1,15 @@
 #!/usr/bin/env node
-import { existsSync, readFileSync, writeFileSync, rmSync, renameSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync, rmSync, openSync, closeSync, accessSync, constants } from 'node:fs';
 import { join, relative, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readJson, validateTracks, safePath, actualFiles, walkFiles } from './tracks.mjs';
+
+/** Replace the inherited-tooling stub entry (two lines) with ADR 0001, placed after 0000. */
+function inheritedAdrInIndex(index) {
+  return index
+    .replace(/- \[Inherited tooling stub\][\s\S]*?\n(?=- \[0000)/, '')
+    .replace(/(- \[0000 [^\n]*\n)/, '$1- [0001 - Inherited tooling](decisions/0001-inherited-tooling.md) - accepted\n');
+}
 
 /** Compute and validate the entire local operation before removing anything. */
 export function adaptTemplate(root, { disable = [], resetRecords = false, confirm = false } = {}) {
@@ -58,29 +65,58 @@ export function adaptTemplate(root, { disable = [], resetRecords = false, confir
     }).join('\n');
     if (before !== after) edited.set(file, after);
   }
-  const plan = { remove, disable, resetRecords, update: [...new Set([...writes, ...edited.keys()])] };
-  if (!confirm) return plan;
-  for (const file of remove) rmSync(safePath(root, file));
+  // Every output is computed before anything is touched, so a failure to write can be reported
+  // while the tree is still whole, and a file whose content would not change is left alone.
+  const today = new Date().toISOString().slice(0, 10);
+  const stub = 'docs/decisions/_inherited-tooling.md';
+  const adr = 'docs/decisions/0001-inherited-tooling.md';
+  const outputs = new Map(edited);
+  const templateSpecs = manifest.templateRecords.filter((r) => r.kind === 'spec');
   if (resetRecords) {
-    for (const record of manifest.templateRecords.filter((r) => r.kind === 'spec')) {
-      // All descendant paths were validated and their files removed above.
-      if (existsSync(join(root, record.path))) rmSync(join(root, record.path), { recursive: true });
-    }
-    renameSync(join(root, 'docs/decisions/_inherited-tooling.md'), join(root, 'docs/decisions/0001-inherited-tooling.md'));
-    const path = join(root, 'docs/decisions/0001-inherited-tooling.md');
-    writeFileSync(path, readFileSync(path, 'utf8').replace(/^date: .*$/m, `date: ${new Date().toISOString().slice(0, 10)}`));
-    const index = edited.get('docs/INDEX.md') ?? readFileSync(join(root, 'docs/INDEX.md'), 'utf8');
-    edited.set('docs/INDEX.md', index.replace(/- \[Inherited tooling stub\][\s\S]*?(?=\n- \[0000)/,
-      '- [0001 - Inherited tooling](decisions/0001-inherited-tooling.md) - accepted'));
-    writeFileSync(join(root, 'docs/log.md'), '# Change Log\n\n## ' + new Date().toISOString().slice(0, 10) + '\n\n- Started from agent-project-starter.\n');
     // Exact old paths must remain available to the branch's base for deletion auditing; current
     // projects must not keep claiming those numeric IDs as removable template history.
     manifest.templateRecords = [];
+    outputs.set(adr, readFileSync(join(root, stub), 'utf8').replace(/^date: .*$/m, `date: ${today}`));
+    outputs.set('docs/INDEX.md', inheritedAdrInIndex(outputs.get('docs/INDEX.md') ?? readFileSync(join(root, 'docs/INDEX.md'), 'utf8')));
+    outputs.set('docs/log.md', `# Change Log\n\n## ${today}\n\n- Started from agent-project-starter.\n`);
   }
-  for (const [file, text] of edited) writeFileSync(safePath(root, file), text);
   for (const [file, value] of [['.claude/tracks.json', manifest], ['.claude/gates.json', gates], ['.claude/settings.json', settings]]) {
-    writeFileSync(join(root, file), `${JSON.stringify(value, null, 2)}\n`);
+    outputs.set(file, `${JSON.stringify(value, null, 2)}\n`);
   }
+  const changed = [...outputs].filter(([file, text]) => {
+    const abs = safePath(root, file);
+    return !existsSync(abs) || readFileSync(abs, 'utf8') !== text;
+  }).map(([file]) => file);
+
+  const notWritable = [];
+  const openable = (abs) => { try { closeSync(openSync(abs, 'r+')); return true; } catch { return false; } };
+  const dirWritable = (abs) => { try { accessSync(dirname(abs), constants.W_OK); return true; } catch { return false; } };
+  // Opening for update does not change the file, and unlike access(2) it fails where the sandbox
+  // denies the path. A removal also needs its directory.
+  for (const file of [...remove, ...(resetRecords ? [stub] : [])]) {
+    const abs = safePath(root, file);
+    if (existsSync(abs) && !(openable(abs) && dirWritable(abs))) notWritable.push(file);
+  }
+  for (const file of changed) {
+    const abs = safePath(root, file);
+    if (!(existsSync(abs) ? openable(abs) : dirWritable(abs))) notWritable.push(file);
+  }
+  if (notWritable.length) {
+    throw new Error(`Not writable, nothing was changed:\n${[...new Set(notWritable)].map((f) => `  - ${f}`).join('\n')}\n` +
+      'Make these writable (or edit them with approval) and run the adapter again.');
+  }
+
+  const plan = { remove, disable, resetRecords, update: changed };
+  if (!confirm) return plan;
+  for (const file of remove) rmSync(safePath(root, file));
+  if (resetRecords) {
+    for (const record of templateSpecs) {
+      // All descendant paths were validated and their files removed above.
+      if (existsSync(join(root, record.path))) rmSync(join(root, record.path), { recursive: true });
+    }
+    rmSync(join(root, stub));
+  }
+  for (const file of changed) writeFileSync(safePath(root, file), outputs.get(file));
   return plan;
 }
 

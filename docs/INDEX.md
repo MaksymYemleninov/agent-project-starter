@@ -24,6 +24,9 @@ One directory per feature under `specs/`, numbered. Each holds `spec.md` (what a
 - [0002 - Documentation gate policy](specs/0002-docs-gate-policy/spec.md) - done
 - [0002 plan](specs/0002-docs-gate-policy/plan.md)
 - [0002 tasks](specs/0002-docs-gate-policy/tasks.md)
+- [0003 - Adapter safety and guard false positives](specs/0003-adapter-safety-and-guard-false-positives/spec.md) - done
+- [0003 plan](specs/0003-adapter-safety-and-guard-false-positives/plan.md)
+- [0003 tasks](specs/0003-adapter-safety-and-guard-false-positives/tasks.md)
 <!-- /specs:list -->
 
 ## Decisions
