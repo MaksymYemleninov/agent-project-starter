@@ -19,6 +19,8 @@
 export function parse(command) {
   const src = String(command ?? '');
   const out = [];
+  // Heredocs opened on the current line; their bodies start after its newline.
+  const pending = [];
   let seg = { words: [], op: null, redirects: [], substitution: false };
   let word = '';
   let inWord = false;
@@ -70,6 +72,7 @@ export function parse(command) {
         continue;
       }
       endSeg(ch);
+      if (ch === '\n' && pending.length) i = readHeredocBodies(src, i + 1, pending, out) - 1;
       continue;
     }
     if (two === '$(' || ch === '`') seg.substitution = true;
@@ -79,6 +82,21 @@ export function parse(command) {
     }
     if (/\s/.test(ch)) {
       endWord();
+      continue;
+    }
+    const heredoc = two === '<<' && src[i + 2] !== '<' ? HEREDOC_OPERATOR.exec(src.slice(i)) : null;
+    if (heredoc) {
+      if (/^\d$/.test(word)) {
+        word = '';
+        inWord = false;
+      } else endWord();
+      pending.push({
+        owner: seg,
+        strip: heredoc[1] === '-',
+        quoted: heredoc[2] !== undefined || heredoc[3] !== undefined || heredoc[4].startsWith('\\'),
+        delimiter: (heredoc[2] ?? heredoc[3] ?? heredoc[4]).replace(/^\\/, ''),
+      });
+      i += heredoc[0].length - 1;
       continue;
     }
     if (ch === '>' || ch === '<') {
@@ -101,6 +119,40 @@ export function parse(command) {
   }
   endSeg(null);
   return out;
+}
+
+const HEREDOC_OPERATOR = /^<<(-?)[ \t]*(?:'([^'\n]*)'|"([^"\n]*)"|(\\?[^\s'"<>;|&()\\]+))/;
+const HEREDOC_INTERPRETERS = new Set(['sh', 'bash', 'zsh', 'python', 'python3', 'node', 'ruby', 'perl', 'deno', 'bun', 'php']);
+
+/**
+ * Consume the bodies of the heredocs opened on the line that just ended, from `from` to the line
+ * that holds each delimiter (or the end of the input, as a shell does). A body is text, not
+ * commands, so a heredoc that writes a compose file is nothing to judge for what it mentions. It is
+ * code, and is parsed into further segments, when the delimiter is unquoted and the body
+ * substitutes (`$(...)`, backticks), or when an interpreter reads it (`bash <<EOF`). Returns the
+ * index after the last body.
+ */
+function readHeredocBodies(src, from, pending, out) {
+  let pos = from;
+  for (const h of pending.splice(0)) {
+    const start = pos;
+    let end = pos;
+    while (pos < src.length) {
+      const nl = src.indexOf('\n', pos);
+      const line = src.slice(pos, nl === -1 ? src.length : nl);
+      const lineStart = pos;
+      pos = nl === -1 ? src.length : nl + 1;
+      if ((h.strip ? line.replace(/^\t+/, '') : line) === h.delimiter) {
+        end = lineStart;
+        break;
+      }
+      end = pos;
+    }
+    const body = src.slice(start, end);
+    const interpreted = h.owner.words.some((w) => HEREDOC_INTERPRETERS.has((w ?? '').split('/').pop()));
+    if (interpreted || (!h.quoted && /\$\(|`/.test(body))) out.push(...parse(body));
+  }
+  return pos;
 }
 
 /** Words of each segment, for callers that only need those. */

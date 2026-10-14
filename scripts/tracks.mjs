@@ -20,6 +20,21 @@ export function safePath(root, file) {
   return abs;
 }
 
+/**
+ * Finder and iCloud name a conflicting copy `name 2.md` or `dir 2/`. If a path has such a segment
+ * and the same path without the number exists, return that original, else null.
+ */
+export function copyOriginal(root, file) {
+  const parts = file.split('/');
+  for (let i = 0; i < parts.length; i++) {
+    const plain = parts[i].replace(/ \d+((?:\.[^./ ]+)*)$/, '$1');
+    if (plain === parts[i]) continue;
+    const candidate = [...parts.slice(0, i), plain, ...parts.slice(i + 1)].join('/');
+    if (existsSync(join(root, candidate))) return candidate;
+  }
+  return null;
+}
+
 export function walkFiles(root, dir) {
   const abs = safePath(root, dir);
   if (!existsSync(abs)) return [];
@@ -87,7 +102,13 @@ export function validateTracks(root) {
       plugins: Object.keys(settings.enabledPlugins ?? {}),
     };
     for (const kind of Object.keys(owned)) {
-      for (const item of inventory[kind]) if (!owned[kind].has(item)) errors.push(`Unregistered ${kind}: ${item}`);
+      for (const item of inventory[kind]) {
+        if (owned[kind].has(item)) continue;
+        const original = copyOriginal(root, item);
+        errors.push(`Unregistered ${kind}: ${item}` + (original
+          ? ` (looks like a Finder or iCloud copy of ${original}; delete it, and keep the repository out of synced folders)`
+          : ''));
+      }
     }
     if (!Array.isArray(manifest.templateRecords)) throw new Error('templateRecords must be an array');
     const records = new Set();

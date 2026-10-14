@@ -6,6 +6,23 @@ the actual content.
 
 Newest entry on top.
 
+## 2026-10-14 - Adapter safety and fewer guard false positives
+
+- `adapt-template.mjs` computes every output first, skips files whose content would not change
+  and probes each remaining path for write access before the first removal, so an unwritable
+  path (a sandbox-protected `settings.json`) fails the run with the full list and no changes.
+  The reset now places ADR 0001 after 0000 in `docs/INDEX.md`.
+- `tracks.mjs` says when an unregistered file looks like a Finder or iCloud copy, naming the
+  original. `session-start.mjs` warns when the repository is under `~/Documents`, `~/Desktop` or
+  `~/Library/Mobile Documents`.
+- `parse()` in `commands.mjs` reads heredoc bodies as data unless the delimiter is unquoted and the
+  body substitutes, or an interpreter reads it, so the secret guard and the agent scope hook no
+  longer deny a command for a file name inside a written document. Tests: 14 guard, 3 session
+  start, 4 adapter. See [spec 0003](specs/0003-adapter-safety-and-guard-false-positives/spec.md).
+- New rule `.claude/rules/agent-config.md`: hooks, skills, commands and `settings.json` are edited
+  with Edit or Write, with the files named beforehand, never by a shell command or by running
+  without the sandbox.
+
 ## 2026-09-25 - Secret handling before the first real project
 
 - `pre-bash.mjs` reads commands with the shared parser: quoted prose, `echo`, `ls`, `--env-file`

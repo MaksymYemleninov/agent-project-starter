@@ -12,7 +12,7 @@
 import { execSync, execFileSync } from 'node:child_process';
 import {
   mkdtempSync, rmSync, writeFileSync, readFileSync, appendFileSync, existsSync,
-  mkdirSync, copyFileSync,
+  mkdirSync, copyFileSync, realpathSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
@@ -324,6 +324,36 @@ try {
   check('secret guard denies copying .env out', denied('cp .env /tmp/leak'), 'deny');
   check('secret guard denies grep on .env', denied('grep -r KEY .env'), 'deny');
   check('secret guard denies a secrets.json', denied('cat config/secrets.json'), 'deny');
+
+  // Session start warns about folders a sync service may rewrite (spec 0003).
+  {
+    const fakeHome = realpathSync(mkdtempSync(join(tmpdir(), 'starter-home-')));
+    const startIn = (sub) => {
+      const project = join(fakeHome, sub);
+      mkdirSync(project, { recursive: true });
+      return hook('session-start.mjs', {}, project, [], { HOME: fakeHome, CLAUDE_PROJECT_DIR: project });
+    };
+    check('session start warns inside ~/Documents', /may be synced/.test(startIn('Documents/GitHub/app')), true);
+    check('session start warns inside iCloud Drive', /may be synced/.test(startIn('Library/Mobile Documents/app')), true);
+    check('session start is quiet elsewhere', /may be synced/.test(startIn('code/app')), false);
+    rmSync(fakeHome, { recursive: true, force: true });
+  }
+
+  // Heredocs: a body is text unless something reads it as code (spec 0003).
+  check('heredoc: quoted body naming .env is data', denied("cat > compose.yaml <<'EOF'\nenv_file: .env\nEOF\nls"), 'allow');
+  check('heredoc: unquoted body without substitution is data', denied('cat > .dockerignore <<EOF\n.env\nnode_modules\nEOF'), 'allow');
+  check('heredoc: <<- with indented delimiter ends the body', denied("cat > x <<-'EOF'\n\t.env\n\tEOF\necho done"), 'allow');
+  check('heredoc: unterminated body runs to the end', denied("cat > x <<'EOF'\n.env"), 'allow');
+  check('heredoc: the command after the body is still judged', denied("cat > x <<'EOF'\nnotes\nEOF\ncat .env"), 'deny');
+  check('heredoc: a secret as redirect target is denied', denied("cat > .env <<'EOF'\nX=1\nEOF"), 'deny');
+  check('heredoc: a redirect after the operator is denied', denied("cat <<'EOF' > .env\nX=1\nEOF"), 'deny');
+  check('heredoc: a substitution in an unquoted body is read', denied('cat > x <<EOF\n$(cat .env)\nEOF'), 'deny');
+  check('heredoc: a substitution in a quoted body is data', denied("cat > x <<'EOF'\n$(cat .env)\nEOF"), 'allow');
+  check('heredoc: an interpreter reads the body as code', denied("bash <<'EOF'\ncat .env\nEOF"), 'deny');
+  check('heredoc: python code is read as code', denied("python3 <<'EOF'\nopen('.env').read()\nEOF"), 'deny');
+  check('heredoc: << inside quotes opens nothing', denied('echo "<< EOF"; cat .env\nEOF'), 'deny');
+  check('heredoc: infra text inside a document is data', denied("cat > notes.md <<'EOF'\nterraform apply\nEOF"), 'allow');
+  check('heredoc: infra mutation fed to a shell is denied', denied("bash <<'EOF'\nterraform apply\nEOF"), 'deny');
 
   // Prefix-matching permission rules miss `cd infra && terraform apply`. The hook reads inside.
   check('infra guard denies apply', denied('terraform apply'), 'deny');

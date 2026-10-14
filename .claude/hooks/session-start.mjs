@@ -23,6 +23,17 @@ try {
 
 const lines = [];
 
+// A sync service rewrites files behind the repository's back and leaves `name 2.md` copies that
+// the adapter then refuses as unregistered. The folder, not the repository, is the cause.
+const home = process.env.HOME;
+const SYNCED = ['Documents', 'Desktop', 'Library/Mobile Documents'];
+if (home && SYNCED.some((d) => `${process.cwd()}/`.startsWith(`${home}/${d}/`))) {
+  lines.push(
+    'This repository is inside a folder that may be synced (iCloud or similar), which can create ' +
+      '`* 2.*` copies of files. If unregistered duplicates appear, move the repository out of it.',
+  );
+}
+
 // After compaction or a clear the conversation that knew what was in flight is gone, and the agent
 // carries on from a summary that may have dropped exactly the step it was on. The repository still
 // knows: put the branch, the uncommitted work and the unfinished tasks back in front of it.
