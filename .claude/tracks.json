@@ -255,6 +255,11 @@
       "kind": "spec",
       "id": "0003",
       "path": "docs/specs/0003-adapter-safety-and-guard-false-positives"
+    },
+    {
+      "kind": "spec",
+      "id": "0004",
+      "path": "docs/specs/0004-onboard-coherence"
     }
   ]
 }

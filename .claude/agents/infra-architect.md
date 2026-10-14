@@ -41,6 +41,10 @@ Read `docs/idea.md`, whatever of `docs/product/` exists, and the answers the cal
 (where it runs, who operates it, budget, data residency, team size). Then the rulebook's sections
 4, 5 and 6, and `aws-example.md` if AWS is in play.
 
+The question is whether the project owns infrastructure outside the user's own machine. An app
+that runs only on that machine, in a local container included, does not; if that is the case,
+say so in one line and return nothing more, so the track is dropped on a stated reason.
+
 **Write nothing.** Return, in at most 40 lines:
 
 1. **Recommendation:** a managed platform, or infrastructure in an account the project owns. One

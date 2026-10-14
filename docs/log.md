@@ -6,6 +6,25 @@ the actual content.
 
 Newest entry on top.
 
+## 2026-10-14 - Onboarding that matches the environment and the template's rules
+
+- `lint-docs` no longer warns about an open question written as a `<!-- TODO: question -->`
+  comment (a bare marker still warns), and
+  a new document status `deferred` requires `adr:` naming a file in `docs/decisions/`, so a
+  document left unwritten on purpose is not read as a forgotten template.
+- `/onboard` phase 4 starts with an environment preflight (tools, services, reachable sources),
+  recorded as `environment` in `.claude/onboarding.json`; an unreachable source gives a
+  `<!-- TODO: verify ... -->` comment and a named host, never an unverified value. Hosting goes to the architect
+  unless the project owns no infrastructure outside the user's own machine; `infra-architect`
+  Mode 0 says the same.
+- Phase 5 names the protected files and says to edit them with Edit or Write after listing them,
+  and sets `data-model.md` to `deferred` when persistence is deferred. Phase 7 cuts the first
+  spec's plan and tasks as drafts, and `writing-spec` states that exception.
+- Tests: 3 linter cases and a presence check on the prompts, which proves the statements exist,
+  not that an agent obeys them; the next real onboarding is the check for that. Spec
+  [0004](specs/0004-onboard-coherence/spec.md); numbering closed up after 0003 (which covered 3
+  and 4 together).
+
 ## 2026-10-14 - Adapter safety and fewer guard false positives
 
 - `adapt-template.mjs` computes every output first, skips files whose content would not change

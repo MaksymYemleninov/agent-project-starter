@@ -131,6 +131,23 @@ Leave `docs/idea.md` untouched. It is the historical record.
 
 ## Phase 4 - Propose the stack, as decisions
 
+**Preflight the environment first**, before the table, so the stack is chosen for the machine it
+will run on. List the tools, services and sources the candidate stacks need, then check each with
+a read-only command and show the output: the tool and its version (`command -v`, `--version`),
+whether a service runs (a container daemon's status call), and whether each source you will cite
+answers (a request to its host, read from the result, never guessed). Candidates decide the list:
+the stack's package registry, the container registry when Docker is a candidate, and
+`endoflife.date` for runtime support dates. Record every result in `.claude/onboarding.json`
+under `environment` as `ok`, `missing`, `unreachable` or `not checked`, and say in the table
+where a result changes a recommendation (a stopped daemon, a runtime whose files the platform
+hides). Send no credentials and none of the project's content to any host. On macOS, note when
+the repository sits in a folder a sync service rewrites.
+
+If a source is `unreachable`, you cannot resolve what it would have told you (principle 8). Write
+`<!-- TODO: verify <value> at <source> -->` where the value would go, never the value as if it
+were checked, name the host the human would have to allow, and list the unverified items in one
+line of the stack ADR. Do not edit code to get around a blocked host: it is the environment's.
+
 Propose a stack. For each significant choice, present:
 
 | Choice | Recommendation | Main alternative | Why this one here | Cost to reverse |
@@ -152,8 +169,9 @@ in the table and weigh it; when it does not fit, say why and do not bend the pro
 For a full-stack TypeScript project with an API and a UI, `nestjs-nuxt.md` (CleanSlice) is one
 candidate, alongside Next.js.
 
-**Hosting goes to the architect first**, unless the project plainly runs nothing server-side (a
-static site, a CLI, a library). Spawn `infra-architect` in Mode 0 with the paths to the idea and the
+**Hosting goes to the architect first**, unless the project owns no infrastructure outside the
+user's own machine (a static site, a CLI, a library, or an app that runs only on the user's
+machine, in a local container included). Spawn `infra-architect` in Mode 0 with the paths to the idea and the
 product documents, and the phase 2 answers about where it runs, budget and constraints. Put its
 recommendation into the hosting row of the table, and show its "decide now, build later" list and
 its unverified items with it. This is where the infrastructure track is kept or dropped, so the
@@ -172,6 +190,11 @@ number**, using
 Each ADR must have a real Context section. "We chose X because it is popular" is not context; the
 constraint from phase 2 that made X the right call is. Each must have honest negative
 consequences.
+
+Some of what follows is in files the sandbox protects: `.claude/skills/*`, `.claude/commands/*`
+and `.claude/settings.json`. Change them with the Edit or Write tool, which asks the human, not
+with a shell command, and list the files you intend to change before the first edit so the
+prompts are expected. If a write is refused, report it; do not retry without the sandbox.
 
 Then update:
 
@@ -205,6 +228,9 @@ Then update:
 - `agentScopes` in `.claude/gates.json`: point `test-writer`'s `write` globs at this stack's test
   layout, and the `bash` lists of `code-reviewer` and `test-writer` at its real test and lint
   commands. A scope that allows the wrong commands refuses every useful call.
+- If a decision says the project has no persistence yet, or defers it to the first spec, set
+  `docs/architecture/data-model.md` to `status: deferred` with `adr:` naming that decision, so it
+  is not read as a template nobody filled in. Otherwise leave it for the first spec that adds data.
 - If the project reads from external services, rename `docs/architecture/_integrations.md` into
   place and record what was actually verified. If it does not, delete the stub.
 
@@ -255,7 +281,9 @@ summary is not evidence.
   task in `tasks.md`, along with renaming `.github/workflows/code.yml.example` to `code.yml`.
   Acceptance criteria in EARS form, with the threat model's abuse cases for this capability as
   `If ...` criteria and its `## Security` section filled. Leave `status: draft` with open
-  questions listed.
+  questions listed. Write its `plan.md` and `tasks.md` now too, each with `status: draft`: the one
+  exception to "spec approved before plan" in `writing-spec`, which ends when the human approves
+  the spec and the plan is revised against it.
 - Update `docs/INDEX.md` so every new document is listed.
 - Add the onboarding entry to `docs/log.md`: 3 to 6 bullets.
 - Run `npm run check` and `npm run test:derived` and fix what they report.

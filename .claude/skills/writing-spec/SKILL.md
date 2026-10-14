@@ -15,6 +15,11 @@ finished.
 `tasks.md`. Writing all three at once produces a plan that quietly redefines the problem to match
 the solution you already had in mind.
 
+One exception: `/onboard` phase 7 cuts the project's first spec with its `plan.md` and `tasks.md`
+in one pass, all `status: draft`. That is allowed because the human has just approved the scope
+it comes from. It ends when the human approves the spec: revise the plan and tasks against the
+approved spec, and only then raise their status.
+
 ## EARS
 
 Every acceptance criterion uses one of five sentence patterns. This is not ceremony: the pattern

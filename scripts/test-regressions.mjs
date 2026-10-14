@@ -259,6 +259,56 @@ test('reset keeps the ADR entries in the index in order', (dir) => {
   assert.ok(existsSync(join(dir, 'docs/decisions/0001-inherited-tooling.md')));
 });
 
+const lint = (dir) => run(dir, 'node', ['scripts/lint-docs.mjs']);
+const setStatus = (dir, file, status, extra = '') => {
+  const abs = join(dir, file);
+  writeFileSync(abs, readFileSync(abs, 'utf8').replace(/^adr: .*\n/m, '').replace(/^status: .*$/m, `status: ${status}${extra}`));
+};
+test('lint does not warn about an open question written as a TODO comment', (dir) => {
+  setStatus(dir, 'docs/product/vision.md', 'draft');
+  const abs = join(dir, 'docs/product/vision.md');
+  writeFileSync(abs, readFileSync(abs, 'utf8') + '\n<!-- TODO: who pays for this? -->\n<!--\nTODO: and when?\n-->\n');
+  assert.doesNotMatch(lint(dir).stdout, /vision\.md: \d+ TODO/);
+});
+test('lint still warns about a bare TODO marker', (dir) => {
+  setStatus(dir, 'docs/product/vision.md', 'draft');
+  const abs = join(dir, 'docs/product/vision.md');
+  writeFileSync(abs, readFileSync(abs, 'utf8') + '\nTODO fix this later\n<!-- TODO: a real question -->\n');
+  assert.match(lint(dir).stdout, /vision\.md: 1 TODO/);
+});
+test('lint accepts a deferred document that names its ADR, and rejects one that does not', (dir) => {
+  const file = 'docs/architecture/data-model.md';
+  const adr = '0000-record-architecture-decisions';
+  for (const ref of ['0000', adr, `${adr}.md`, `decisions/${adr}.md`]) {
+    setStatus(dir, file, 'deferred', `\nadr: ${ref}`);
+    const ok = lint(dir); expect(ok, 0); assert.doesNotMatch(ok.stdout, /data-model\.md: still a template/);
+  }
+  setStatus(dir, file, 'deferred');
+  const missing = lint(dir); expect(missing, 1); assert.match(missing.stdout + missing.stderr, /data-model\.md[\s\S]*no `adr`/);
+  setStatus(dir, file, 'deferred', '\nadr: 0999');
+  const unknown = lint(dir); expect(unknown, 1); assert.match(unknown.stdout + unknown.stderr, /names no file in docs\/decisions/);
+});
+
+// Spec 0004. This proves the statements are present, not that an agent obeys them.
+test('onboarding command keeps the statements that match the environment and the skills', (dir) => {
+  const read = (f) => (existsSync(join(dir, f)) ? readFileSync(join(dir, f), 'utf8') : null);
+  const onboard = read('.claude/commands/onboard.md');
+  if (!onboard) return;
+  const phase4 = onboard.slice(onboard.indexOf('## Phase 4'), onboard.indexOf('## Phase 5'));
+  assert.ok(phase4.indexOf('Preflight the environment') !== -1
+    && phase4.indexOf('Preflight the environment') < phase4.indexOf('Propose a stack.'), 'preflight comes before the stack table');
+  for (const word of ['ok', 'missing', 'unreachable', 'not checked']) assert.match(phase4, new RegExp(`\`${word}\``));
+  assert.match(phase4, /<!-- TODO: verify <value> at <source> -->/);
+  assert.match(phase4, /outside the\s+user's own machine/);
+  assert.match(read('.claude/agents/infra-architect.md') ?? 'outside the user\'s own machine', /outside the user's own machine/);
+  const phase5 = onboard.slice(onboard.indexOf('## Phase 5'), onboard.indexOf('## Phase 6'));
+  assert.match(phase5, /Edit or Write tool[\s\S]*list the files you intend to change before the first edit/);
+  assert.match(phase5, /status: deferred/);
+  const phase7 = onboard.slice(onboard.indexOf('## Phase 7'), onboard.indexOf('## Rules for this command'));
+  assert.match(phase7, /`plan\.md` and `tasks\.md` now too, each with `status: draft`/);
+  assert.match(read('.claude/skills/writing-spec/SKILL.md') ?? 'phase 7', /phase 7/);
+});
+
 // A real subprocess timeout proves the runner reports an environment failure without waiting
 // for repair's production ten-minute timeout. Signal/launch branches also have deterministic inputs.
 try {

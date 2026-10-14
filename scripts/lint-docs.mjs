@@ -386,7 +386,17 @@ for (const entry of existsSync(join(DOCS, 'specs')) ? readdirSync(join(DOCS, 'sp
 
 /* -------------------------------------------- 7. other docs, links, freshness */
 
-const OTHER_STATUS = ['template', 'draft', 'stable', 'deprecated'];
+// `deferred` is a document left unwritten on purpose: an ADR says it waits for something (the first
+// spec, a chosen database), which is different from a template nobody filled in.
+const OTHER_STATUS = ['template', 'draft', 'stable', 'deprecated', 'deferred'];
+
+/** The ADR file a `deferred` document names: a file name, with or without `.md`, or a four-digit id. */
+function deferredAdr(value) {
+  if (!value) return null;
+  const name = String(value).replace(/^.*\//, '').replace(/\.md$/, '');
+  const files = walk(join(ROOT, 'docs/decisions')).map((f) => basename(f, '.md'));
+  return files.find((f) => f === name || (/^\d{4}$/.test(name) && f.startsWith(`${name}-`))) ?? null;
+}
 
 for (const [r, doc] of docs) {
   if (!doc.fm || r.startsWith('docs/decisions/') || r.startsWith('docs/specs/')) continue;
@@ -400,6 +410,11 @@ for (const [r, doc] of docs) {
   }
   if (doc.fm.status === 'template') {
     warn(r, 'still a template. `/onboard` should have filled this in.');
+  }
+  if (doc.fm.status === 'deferred' && !deferredAdr(doc.fm.adr)) {
+    err(r, doc.fm.adr
+      ? `status is \`deferred\` but \`adr: ${doc.fm.adr}\` names no file in docs/decisions/`
+      : 'status is `deferred` but frontmatter has no `adr` naming the decision that defers it');
   }
 }
 
@@ -462,8 +477,11 @@ for (const abs of scan) {
 
 for (const [r, doc] of docs) {
   if (doc.fm?.status === 'template') continue;
-  const todos = (doc.text.match(/\b(TODO|FIXME|XXX)\b/g) ?? []).length;
-  if (todos) warn(r, `${todos} TODO/FIXME marker(s). Move them into a spec's tasks.md or drop them.`);
+  // `<!-- TODO: question -->` is the honest open question the documentation rules ask for in place
+  // of a plausible sentence, so it is not a leftover. Bare markers still are.
+  const bare = doc.text.replace(/<!--\s*TODO:[\s\S]*?-->/g, '');
+  const todos = (bare.match(/\b(TODO|FIXME|XXX)\b/g) ?? []).length;
+  if (todos) warn(r, `${todos} TODO/FIXME marker(s). Move them into a spec's tasks.md, or write an open question as \`<!-- TODO: question -->\`.`);
 }
 
 /* ------------------------------------------- 8b. the .claude/ surface itself */

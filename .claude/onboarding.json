@@ -6,5 +6,7 @@
   "startedAt": null,
   "updatedAt": null,
   "stack": null,
+  "environment": null,
+  "$environment": "Phase 4 preflight: one entry per tool, service or source the candidate stacks need, valued ok | missing | unreachable | not checked. Written once so a resumed onboarding does not probe again.",
   "agreedButNotWritten": []
 }
