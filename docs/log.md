@@ -6,6 +6,21 @@ the actual content.
 
 Newest entry on top.
 
+## 2026-10-15 - Python pack starter configuration and a leaner constitution
+
+- `python.md` gains a starter `[tool.importlinter]` block (one contract per boundary row, plus
+  forbidding the web framework outside the edge), with `include_external_packages = true` and the
+  root-level-only rule for external packages. Version floors stated: `acyclic_siblings` needs
+  import-linter 2.6, wildcards in `forbidden` 2.1. Option names and versions were read from
+  import-linter's documentation and release notes, not recalled; no version is pinned.
+- New macOS note: hidden `.pth` files break editable installs. The `chflags nohidden` step is
+  marked as not verified by the template, with a non-dot environment directory
+  (`UV_PROJECT_ENVIRONMENT`, checked in uv's reference) as the alternative.
+- `AGENTS.md` goes from 163 to 145 lines by merging table rows and tightening prose; no rule,
+  principle number or onboarding block changed, and ADR 0009 stands. `/onboard` caps stack
+  principles at six lines. Two regression cases cover the pack block and the budget. Spec
+  [0005](specs/0005-python-pack-and-constitution-budget/spec.md).
+
 ## 2026-10-14 - Onboarding that matches the environment and the template's rules
 
 - `lint-docs` no longer warns about an open question written as a `<!-- TODO: question -->`

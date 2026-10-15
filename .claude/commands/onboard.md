@@ -200,7 +200,8 @@ Then update:
 
 - `AGENTS.md`: fill the `<!-- onboard:project -->`, `<!-- onboard:principles -->`,
   `<!-- onboard:code-map -->` and `<!-- onboard:commands -->` blocks from the decisions. Keep the
-  file under 200 lines. Long stack conventions go into `.claude/rules/`, not here.
+  file under 200 lines, and below the linter's warning at 170. Write the stack principles in at
+  most six lines in total; long stack conventions go into `.claude/rules/`, not here.
 - `docs/architecture/overview.md`: components, request path, boundaries, links to the ADRs.
 - `docs/ops/environments.md`: environments and where secrets live.
 - `.claude/claude-security-guidance.md`: replace the stub with this project's rules, drawn from the

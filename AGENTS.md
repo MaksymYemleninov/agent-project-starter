@@ -3,8 +3,7 @@
 Constitution and repository map for every coding agent working here.
 This file is the single source of truth for agent behavior. `CLAUDE.md` is a shim that imports it.
 
-> Status: TEMPLATE. Sections marked `<!-- onboard -->` are rewritten by `/onboard` from the
-> answers you give and the ADRs it creates. Do not fill them by hand before onboarding.
+> Status: TEMPLATE. `/onboard` rewrites the `<!-- onboard -->` sections; do not fill them by hand.
 
 ## 1. Project
 
@@ -56,27 +55,18 @@ Stack-specific principles are appended here by `/onboard` from the stack ADRs.
 
 | Path | What lives there |
 |---|---|
-| `AGENTS.md` | This constitution. Keep under 200 lines. |
-| `CLAUDE.md` | Claude Code shim, imports `AGENTS.md`. Do not duplicate rules into it. |
+| `AGENTS.md`, `CLAUDE.md` | This constitution, kept under 200 lines; `CLAUDE.md` is the Claude Code shim that imports it. Do not duplicate rules into the shim. |
 | `.claude/rules/` | Path-scoped rules. Each needs a `paths` glob, or it loads every session. |
 | `.claude/skills/` | Repeatable procedures. Long instructions belong here, not in this file. |
-| `.claude/agents/` | Subagents: review, research, tests, and the infra architect, engineer, reviewer. Each is held to its lane by `agent-scope.mjs`. |
-| `.claude/commands/` | Slash commands: `/onboard`, `/adr`, `/spec`, `/ship`, `/lint`, `/harden`, `/infra`, `/repair`, `/security`, `/design`. |
+| `.claude/agents/`, `.claude/commands/` | Subagents (review, research, tests, the infra architect, engineer, reviewer), each held to its lane by `agent-scope.mjs`; slash commands: `/onboard`, `/adr`, `/spec`, `/ship`, `/lint`, `/harden`, `/infra`, `/repair`, `/security`, `/design`. |
 | `.claude/hooks/` | Mechanical reminders fired by Claude Code events, plus the secret and apply guard. |
-| `.claude/gates.json` | Tuning for the gates: source, manifest, infra and secret paths, thresholds, agent scopes. |
-| `.claude/onboarding.json` | `/onboard` checkpoint, so a dead session resumes instead of restarting. |
-| `docs/INDEX.md` | Map of every document. Entry point for humans and agents. |
-| `docs/log.md` | Chronological journal of decisions and notable changes. |
-| `docs/idea.md` | Raw project idea. The input to `/onboard`. Never rewritten. |
-| `docs/product/` | vision, scope, non-goals, personas. |
-| `docs/specs/` | One directory per feature: `spec.md`, `plan.md`, `tasks.md`. |
-| `docs/decisions/` | ADRs, numbered, append-only. Superseded, never deleted. |
-| `docs/architecture/` | overview, data model, integrations. |
-| `docs/ops/` | runbook, environments. |
-| `docs/security/` | threat model and dated audit reports. |
+| `.claude/gates.json`, `.claude/onboarding.json` | Gate tuning (paths, thresholds, agent scopes); the `/onboard` checkpoint, so a dead session resumes. |
+| `docs/INDEX.md`, `docs/log.md` | Map of every document, the entry point; the journal of decisions and notable changes. |
+| `docs/idea.md`, `docs/product/` | The raw idea, the input to `/onboard`, never rewritten; vision, scope, non-goals, personas. |
+| `docs/specs/`, `docs/decisions/` | One directory per feature (`spec.md`, `plan.md`, `tasks.md`); ADRs, numbered, append-only, superseded never deleted. |
+| `docs/architecture/`, `docs/ops/`, `docs/security/` | overview, data model, integrations; runbook, environments; threat model and dated audit reports. |
 | `docs/design/`, `design/` | the approved design system; tokens and HTML prototypes. UI is built to it. |
-| `infra/` | Infrastructure code, when the project has any. Built and changed through `/infra`. |
-| `scripts/` | Repo tooling. `lint-docs.mjs` and `check-adr-drift.mjs` run in CI. |
+| `infra/`, `scripts/` | Infrastructure code, when the project has any, built and changed through `/infra`; repo tooling (`lint-docs.mjs` and `check-adr-drift.mjs` run in CI). |
 
 <!-- onboard:code-map -->
 Source code layout is added here by `/onboard` once the stack is chosen.
@@ -90,23 +80,17 @@ Source code layout is added here by `/onboard` once the stack is chosen.
 | Lint documentation | `npm run lint:docs` |
 | Check ADR drift | `npm run check:adr` |
 | Check docs for the change | `npm run check:docs` |
-| Install | TBD after onboarding |
-| Build | TBD after onboarding |
-| Test | TBD after onboarding |
-| Lint code | TBD after onboarding |
-| Run locally | TBD after onboarding |
+| Install, build, test, lint code, run locally | TBD after onboarding |
 <!-- /onboard:commands -->
 
-Always prefer these over ad-hoc invocations. If a command here is wrong, fix this table in the
-same change.
+Prefer these over ad-hoc invocations; if one is wrong, fix this table in the same change.
 
 ## 5. Conventions
 
-- Branch per change, pull request into `main`. Never commit directly to `main`.
-- Conventional commit subjects: `feat:`, `fix:`, `docs:`, `chore:`, `refactor:`, `test:`.
+- Branch per change, pull request into `main`, never a direct commit to `main`. Conventional
+  commit subjects: `feat:`, `fix:`, `docs:`, `chore:`, `refactor:`, `test:`.
 - Documentation is written in English, in plain prose, without marketing language.
-- Numbered artifacts use zero-padded four-digit ids: `0001`, `0002`.
-- Filenames are kebab-case ASCII.
+- Numbered artifacts use zero-padded four-digit ids (`0001`); filenames are kebab-case ASCII.
 - Every new document gets a line in `docs/INDEX.md` in the same change. CI fails otherwise.
 
 ## 6. Working agreement
@@ -119,10 +103,8 @@ Before a change, size it. Exactly one of:
   environment, a replaced core dependency. ADR and the human's agreement first. Do not do it as a
   side effect of a Tier 1 or 2 change.
 
-Then:
-
-1. Read `docs/INDEX.md`, then the specific spec or ADR that covers the area.
-2. State the plan before editing. Name the files you will touch and the observable end state.
+Then read `docs/INDEX.md` and the spec or ADR that covers the area, and state the plan before
+editing: the files you will touch and the observable end state.
 
 While working:
 
@@ -147,10 +129,10 @@ After:
 
 ## 7. What does not belong in this file
 
-- Long procedures. Those are skills.
-- Rules that apply to one directory or file type. Those are `.claude/rules/*.md`.
-- Hard security guarantees. Those are permissions and hooks in `.claude/settings.json`.
-- Anything the agent can cheaply read from the repository itself.
+- Long procedures (those are skills) and rules for one directory or file type
+  (`.claude/rules/*.md`).
+- Hard security guarantees (permissions and hooks in `.claude/settings.json`), and anything the
+  agent can cheaply read from the repository itself.
 
 ## 8. Escalate to the human when
 
