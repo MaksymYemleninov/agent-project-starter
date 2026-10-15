@@ -16,6 +16,9 @@
         ".claude/skills/security-rulebook/threat-model.md",
         ".claude/skills/writing-adr/SKILL.md",
         ".claude/skills/writing-spec/SKILL.md",
+        ".claude/skills/gates-and-tracks/SKILL.md",
+        ".claude/skills/gates-and-tracks/limits.md",
+        ".claude/skills/gates-and-tracks/lifecycle.md",
         ".claude/commands/adr.md",
         ".claude/commands/assess.md",
         ".claude/commands/harden.md",
@@ -242,6 +245,11 @@
       "path": "docs/decisions/0019-contain-secrets-with-the-sandbox.md"
     },
     {
+      "kind": "adr",
+      "id": "0020",
+      "path": "docs/decisions/0020-write-the-project-readme-instead-of-inheriting-the-templates.md"
+    },
+    {
       "kind": "spec",
       "id": "0001",
       "path": "docs/specs/0001-template-lifecycle"
@@ -265,6 +273,11 @@
       "kind": "spec",
       "id": "0005",
       "path": "docs/specs/0005-python-pack-and-constitution-budget"
+    },
+    {
+      "kind": "spec",
+      "id": "0006",
+      "path": "docs/specs/0006-project-readme"
     }
   ]
 }

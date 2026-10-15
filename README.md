@@ -32,17 +32,8 @@ Test setup and code CI are deliberately **not** part of that foundation. They ar
 feature that needs them, when the shape of the thing is known rather than guessed. `/harden` is the
 checkpoint that requires them.
 
-## Gates are advisory until you say otherwise
-
-A new project starts at `stage: exploration` in `.claude/gates.json`. The gates run, report what
-they find, and block nothing. This is deliberate: a project whose shape changes weekly should not
-have pull requests blocked over a missing decision record about code that may not exist next week.
-
-When the project stops being an experiment, run `/harden`. The gates then hold: a pull request that
-moves architecture, dependencies or the guardrails themselves without recording why will fail.
-
-The one check that runs at every stage is the secret guard, because a leaked credential is not a
-process question.
+During onboarding this README is replaced by one written for your project, so a project keeps its
+own front page. What this file explains about the gates stays available, as a skill.
 
 ## What is in here
 
@@ -61,168 +52,19 @@ process question.
 | Operations | `docs/ops/` | runbook, environments |
 | Infrastructure | `infra/`, `.claude/skills/infra-*` | Optional. IaC built through `/infra`, deleted at onboarding if unused |
 
-## The idea behind the gates
+## What it gives a project
 
-Prose reminders in an instruction file do not survive a long session. An agent reads
-"remember to write an ADR", works for two hours, and ships without one. So the rules that matter
-are not prose:
+- **Design before frontend.** Projects with a UI make their design system and approved HTML prototypes first, and a spec with `ui: true` cannot be approved until they exist. See the [design-system skill](.claude/skills/design-system/SKILL.md).
+- **Code to a standard, enforced by tools.** A short set of principles and one pack per stack (TypeScript, Next.js, Python, Go, NestJS + Nuxt), turned into linter, type-checker and boundary-checker configuration at onboarding. See the [engineering rulebook](.claude/skills/engineering-rulebook/SKILL.md).
+- **Security from the first question.** A threat model, an ASVS level, a `## Security` section in every spec, a read-only security reviewer and secret scanning in CI. See the [security rulebook](.claude/skills/security-rulebook/SKILL.md).
+- **Infrastructure, when the project owns some.** An architect, an engineer and a reviewer that plan and write Terraform or OpenTofu, and never apply it. See the [infra rulebook](.claude/skills/infra-rulebook/SKILL.md).
 
-- a `Stop` hook checks for missing documentation before the session ends,
-- `npm run lint:docs` validates structure, frontmatter, links, orphans and staleness,
-- `npm run check:adr` fails a pull request that changes `docs/architecture/` or dependencies
-  without adding a decision record,
-- `npm run check:docs` fails a pull request whose code arrives without its documentation, in
-  proportion: a new file needs a `docs/log.md` entry, a change across `docs.filesWithoutSpec`
-  files a spec or ADR too, a small edit nothing. The Stop hook applies the same rule locally,
-- escapes are a `No-docs-reason:` or `No-ADR-reason:` line in the pull request description, of at
-  least 20 characters, re-checked when the description is edited. A label is not a reason,
-- `npm run test:gates` tests the gate mechanisms with controlled profiles in a disposable copy of the repository,
-  because every bug found in them so far would otherwise have come back on the next edit.
+## Operating the gates
 
-Reminders are cheap and unreliable. Hooks catch forgetfulness. CI is the only thing that actually
-holds. All three are wired up here.
-
-## Design before frontend
-
-Projects with a UI make their design before building it. `/design` uses Anthropic's
-[`frontend-design`](https://github.com/anthropics/claude-plugins-official/tree/main/plugins/frontend-design)
-skill (enabled as a project plugin) for the aesthetic direction, and the template's
-`design-system` skill for the contract:
-
-- `docs/design/system.md`: brief, direction, principles, token rationale with contrast ratios,
-  component inventory, decisions;
-- `design/tokens.css`: primitive, semantic and component tokens, light and dark;
-- `design/prototypes/*.html`: two or three key screens with real content and every state, reviewed
-  in a browser at mobile and desktop width, approved by the human.
-
-A spec with `ui: true` cannot be approved until the design system is. Components use semantic
-tokens only; `design-reviewer` checks tokens, states, the accessibility floor and fidelity to the
-prototype in `/ship`. Projects without a UI delete the track at onboarding.
-
-## Code to a standard, enforced by tools
-
-`.claude/skills/engineering-rulebook/` holds the standard: a short set of principles (simple first,
-structure by feature, dependencies pointing inward, parse at the edge, errors handled once,
-configuration validated at startup) and one pack per stack, for TypeScript, Next.js, Python, Go, and NestJS + Nuxt on the
-[CleanSlice](https://cleanslice.org) architecture, with its MCP server as optional reference docs.
-Each rule says whether a tool enforces it or review checks it.
-
-Onboarding applies the pack. Tool rules become configuration: the strictest type checking, a
-linter with complexity limits, a formatter, and a boundary checker (dependency-cruiser,
-import-linter, or Go's `internal/` plus depguard) that carries the boundaries from
-`docs/architecture/overview.md`, so crossing one fails the build. Review rules go into
-`.claude/rules/`, and `code-reviewer` checks them. Unused packs are deleted.
-
-## Security from the first question
-
-Security starts at onboarding rather than at the first review:
-
-- **Onboarding** asks what data is sensitive, who the users and roles are, what reaches the system
-  from outside and which rules apply; writes `docs/security/threat-model.md` (assets, entry points,
-  threats, controls, abuse cases); records an OWASP ASVS level (L1, L2, L3) as an ADR; and writes
-  the project's rules for the security plugin into `.claude/claude-security-guidance.md`.
-- **Every approved spec** has a `## Security` section, and its abuse cases are `If ...` criteria, so
-  the controls are tested like any behaviour. The linter rejects an empty one.
-- **Every change** that touches identity, input, data or dependencies gets `security-reviewer` (a
-  read-only agent working from the threat model and the ASVS level) and the built-in
-  `/security-review`, in `/ship`.
-- **Every edit and turn** is watched by Anthropic's
-  [`security-guidance`](https://github.com/anthropics/claude-plugins-official/tree/main/plugins/security-guidance)
-  plugin, enabled for the project in `.claude/settings.json`: pattern warnings, an LLM diff review,
-  an agentic review at commit. It sends diffs to the model and costs tokens per turn; its
-  environment variables turn layers off.
-- **CI** scans the whole history for secrets from the first push. `security.yml.example`
-  (osv-scanner, semgrep) and `dependabot.yml.example` activate with the code.
-- **`/security`** audits the whole project into a dated report; `/harden` will not flip the gates
-  with an open HIGH, a stale threat model or the security workflow off.
-
-The standard behind all of it is `.claude/skills/security-rulebook/`.
-
-## Infrastructure, when the project owns some
-
-Whether a project needs this is decided at onboarding with `infra-architect` advising: managed
-platform or own account, a rough topology and bill, and which foundation choices to record now even
-if nothing is built yet. A project on a managed platform deletes the track. One that keeps it uses
-`/infra` for everything under `infra/`, and can either build now or only lay the foundation (spec,
-plan, accepted ADRs) and build later from it. Small trees (up to five components, two environments)
-run a light pipeline; larger ones the full one:
-
-- **`infra-bootstrap`** turns requirements into an infrastructure spec, has `infra-architect` write
-  the plan with every version resolved from its source and the foundation choices proposed as
-  ADRs, runs `infra-reviewer` on it (two cycles at most), waits for the human's approval, has
-  `infra-engineer` build it in dependency-ordered batches with a `plan` after every component, then
-  reviews the code the same way.
-- **`infra-change`** sizes a change first. A version bump goes to the engineer alone; a new
-  component gets a spec, a change analysis and approval; a new environment or a moved foundation is
-  sent back to an ADR and a bootstrap, not handled on the side.
-- **`infra-rulebook`** is the standard all three agents plan, write and review against: Terraform
-  or OpenTofu, optionally Terragrunt, remote state, one state per environment, versions resolved
-  and pinned, tags for anything that deviates. It ships generic with a worked AWS baseline;
-  replace the naming section and link your ADRs once they exist.
-
-It uses the template's own documents: the plan is the spec's `plan.md`, the engineer's journal
-and resume point is its `tasks.md`, review cycles go into a `review.md` beside them. There is no
-second decision system.
-
-**Agents never apply.** `apply`, `destroy`, `import`, `refresh`, taint and state moves are refused
-for every agent at every stage by the `pre-bash` hook, the same way secret reads are, including
-behind `cd ... &&` or `mise exec --`. The engineer ends with a punch list for the human: what to
-fill in, what to apply in which order, and every destroy or replace any plan showed.
-
-## Agents stay in their lane
-
-`tools:` says which tools an agent may call, not what it may do with them. Every agent that can
-write or run commands carries a hook in its frontmatter that checks each call against its profile
-in `agentScopes` in `.claude/gates.json`: which paths it may write, which commands it may run. The
-reviewers cannot edit what they review; the architect writes plans and proposed ADRs, not code.
-A missing profile refuses everything, and the linter fails if an agent names one that does not
-exist.
-
-## Things that must not quietly come back
-
-Most gates check that something is written down. Four check that it stays right:
-
-- **Markers.** `markers` in `.claude/gates.json` lists past fixes as a file and a string that must
-  stay in it, with the reason. An agent that "simplifies" the fix away fails lint with that reason.
-  Add one whenever you fix a bug that looks like needless complexity.
-- **Warning ratchet.** `/harden` records the warning count in `.claude/lint-baseline.json`. From then
-  on it may fall and not rise; `npm run lint:docs -- --update-baseline` lowers it after a cleanup
-  and never raises it.
-- **ADR compliance.** `code-reviewer` checks the diff against accepted decisions, not only for new
-  ones missing, and the linter rejects supersede chains that loop.
-- **Compaction.** After a context compaction the start hook puts the branch, the uncommitted files
-  and the tasks marked `doing` back in front of the agent.
-
-## Repairing a failing test
-
-`/repair` (or `npm run repair -- --test "<command>" --test-file <path>`) runs headless `claude -p`
-attempts with the limits enforced by the script rather than asked of the agent: a total dollar
-budget, a turn cap, edits only inside `sourcePaths`, Bash only for the test command. After every
-attempt the script checks the test files' hashes and every changed path, and runs the test itself;
-the test's exit code is the only judge. It refuses a dirty tree and a test that already passes, and
-without `--confirm` it only prints the plan.
-
-## Path-scoped rules
-
-`.claude/rules/*.md` is what keeps the constitution under 200 lines. A rule that applies to one
-directory or one file type goes here instead of `AGENTS.md`, with a `paths` glob in its
-frontmatter:
-
-```markdown
----
-description: one line, what this covers
-paths:
-  - "src/api/**/*.ts"
----
-
-- All API endpoints validate input at the boundary.
-```
-
-Rules with `paths` load only when Claude touches a matching file. A rule **without** `paths` loads
-into every session and costs context every time, so `npm run lint:docs` warns about it. That is a
-mistake worth catching: it is invisible at runtime and it compounds.
-
-`/onboard` replaces the placeholder rules with real ones for the chosen stack and deletes the rest.
+How the documentation gates, hooks, track ownership, agent scopes and the repair loop work, and
+what they do not cover, is in the [gates-and-tracks skill](.claude/skills/gates-and-tracks/SKILL.md).
+Gates only report until you run `/harden`. Read its [known limits](.claude/skills/gates-and-tracks/limits.md)
+before trusting a guardrail.
 
 ## Commands
 
@@ -239,79 +81,6 @@ mistake worth catching: it is invisible at runtime and it compounds.
 | `/repair` | Make one failing test pass in a budget-capped headless loop that cannot touch the test |
 | `/security` | Whole-project security audit: threat model against the code, scanners, reviewer, dated report |
 | `/design` | Design system before frontend work: direction, tokens, HTML prototypes approved in a browser |
-
-## Known limits
-
-Worth stating plainly, because a guardrail you trust more than it deserves is worse than none.
-
-- **The permission layer is not a security boundary.** `permissions.deny` on `Read(./.env)` only
-  stops the Read tool and the file commands Claude Code recognises. `grep -r KEY .` names no file,
-  and `grep` and `find` are built-in read-only commands that run without a prompt whatever the
-  allow list says. So the project enables Claude Code's sandbox (`sandbox` in
-  `.claude/settings.json`): shell commands cannot read the project's secret files or
-  `~/.aws`, `~/.config/gcloud`, `~/.azure` and `~/.kube`, at the operating-system level.
-  `autoAllowBashIfSandboxed` is off, so the sandbox adds that boundary without removing a single
-  permission prompt. The `PreToolUse` hook stays as the readable second line, and it parses
-  commands so that prose and loaders (`--env-file .env`) do not trip it. On Linux and WSL2 the
-  sandbox needs `bubblewrap` and `socat`; without them Claude Code warns and runs unsandboxed.
-  Run `/sandbox` in the first session to see that it is active. `~/.ssh` is left readable so
-  `git push` over SSH works. Still: no production credentials on the machine.
-- **Hooks are reminders with teeth, not enforcement.** The Stop hook blocks once per session and
-  then stands aside by design, because a hook that can block forever is a hook someone deletes.
-  CI is the only gate that actually holds.
-- **The ADR gate checks substance, not judgement.** It enforces a minimum: a real Context section,
-  at least two options, a non-empty negative consequence, no leftover template placeholders. It
-  cannot tell whether the reasoning is any good, and a determined author can pad past every
-  threshold. That part is still review.
-- **`/onboard` resumes, but does not replay.** `.claude/onboarding.json` records the phase reached
-  and anything agreed but not yet written, so a session that dies mid-onboarding continues instead
-  of starting over. It does not capture the conversation, so a resumed session may re-ask a
-  question whose answer was never written down.
-- **Agent scopes and the apply guard are a tokenizer, not a shell.** They read through quotes,
-  subshells, `env`, `timeout`, `aws-vault` and `sh -c`, but a command built to evade them (an
-  alias, a script file) will. Frontmatter hooks are a Claude Code feature; another runtime reading
-  these agents gets the prompts without the enforcement.
-- **`/repair` treats the test as the specification.** A wrong or flaky test gets code bent to fit
-  it. It has been tested against a fake `claude`, not yet against the real CLI.
-- **The infra track is unproven end to end.** The hooks are tested; the agents and skills are
-  prompts that have not yet run a real bootstrap. Treat the first one as the test.
-- **The gate defaults assume a JavaScript layout.** `sourcePaths` in `.claude/gates.json` lists
-  `src/`, `app/`, `lib/` and friends. For a Python or Go project those match nothing and the Stop
-  hook quietly stops noticing source changes, so `/onboard` rewrites them in phase 5. If you skip
-  onboarding, edit that file first.
-
-## Template ownership and lifecycle checks
-
-`.claude/tracks.json` assigns every agent, skill file, command, rule, scope profile, plugin and
-workflow to `core` or one optional track. `lint:docs` checks completeness, duplicates, enabled
-items that are missing and disabled items that remain. Activating a `.yml.example` workflow keeps
-its ownership. Register new project tooling in the manifest in the same change.
-
-Onboarding and `npm run test:derived` use `scripts/adapt-template.mjs`. Its default is a preview;
-`--confirm` applies the reviewed local cleanup. `--disable infra,design` removes owned items;
-`--reset-records` removes exactly the registered template ADRs and specs, installs the inherited
-record and resets the template log. It refuses completed onboarding, invalid paths and symlinks.
-
-`npm run test:derived` creates a disposable project, disables optional tracks, replaces fixture
-placeholders and runs `npm run check` at exploration and building, including a warning baseline.
-It verifies the mechanical portion of hardening, not deployments, scanners or human approvals.
-`npm run test:regressions` exercises the defects fixed during the template lifecycle review.
-Neither command spawns a paid agent. CI runs both separately from `check` to avoid recursion.
-
-Deleted ADRs never count as coverage. Deleting a project ADR is a separate violation even with
-another ADR or an escape reason. Only exact template ADR paths registered in the comparison-base
-manifest can be cleaned up before onboarding completes. Exploration reports violations without
-blocking; building blocks them. Supersede project records rather than deleting them.
-
-`repair` exits 3 for a missing/non-executable test runner, command-not-found output, timeout or
-signal termination, before generating a repair plan or starting an agent.
-
-## Tuning
-
-`.claude/gates.json` holds everything the gates argue about: which paths count as source, which
-files are dependency manifests, which are guardrails, how many source files may change before a
-spec is expected, and which paths are treated as secret-bearing. Changing it is itself a guardrail
-change, so the ADR gate asks for a record.
 
 ## Scope of this template
 

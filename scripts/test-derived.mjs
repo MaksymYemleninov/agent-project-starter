@@ -65,6 +65,9 @@ try {
   console.log(run('npm', ['run', 'check']));
   console.log('PASS derived project at exploration');
   commit(); // Model the onboarding merge before hardening on a subsequent branch.
+  // Phase 7 replaces the template's README from the stub and deletes the stub (ADR 0020).
+  write('README.md', '# Lifecycle fixture\n\nA mechanical lifecycle fixture. Documentation starts at docs/INDEX.md.\n');
+  rmSync(join(fixture, 'docs/_project-readme.md'), { force: true });
   json('.claude/onboarding.json', { status: 'completed', phase: 7, completedPhases: [1, 2, 3, 4, 5, 6, 7], agreedButNotWritten: [] });
   json('.claude/gates.json', { ...gates, stage: 'building' });
   commit();

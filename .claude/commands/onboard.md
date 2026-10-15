@@ -224,7 +224,8 @@ Then update:
   needed. Keep only the selected stack packs (`typescript`, `nextjs`, `python`, `go`, `nestjs-nuxt`).
   Fill retained placeholder skills from approved decisions. The adapter removes owned files,
   profiles and plugins and Markdown links to removed packs; review remaining prose references
-  in README, AGENTS and commands and adapt them to the selected tracks.
+  in `AGENTS.md` and the commands and adapt them to the selected tracks. The README is not
+  adapted: phase 7 replaces it.
   When infra is kept, write the IaC ADRs into the rulebook's Project decisions; write no IaC yet.
 - `agentScopes` in `.claude/gates.json`: point `test-writer`'s `write` globs at this stack's test
   layout, and the `bash` lists of `code-reviewer` and `test-writer` at its real test and lint
@@ -285,6 +286,13 @@ summary is not evidence.
   questions listed. Write its `plan.md` and `tasks.md` now too, each with `status: draft`: the one
   exception to "spec approved before plan" in `writing-spec`, which ends when the human approves
   the spec and the plan is revised against it.
+- Replace `README.md` with the project's own, written from `docs/_project-readme.md` (the
+  template's README describes the template and is not kept; what it explained about the gates is
+  in `.claude/skills/gates-and-tracks/`). Do it now, after phase 6, so it can say what runs. Take
+  every sentence from a document that already exists, list only the commands phase 6 ran, write
+  `<!-- TODO: question -->` where a fact is not known, mention no disabled track, keep it under 60
+  lines, then delete the stub. `npm run lint:docs` fails a completed onboarding whose README
+  still starts with the template's title.
 - Update `docs/INDEX.md` so every new document is listed.
 - Add the onboarding entry to `docs/log.md`: 3 to 6 bullets.
 - Run `npm run check` and `npm run test:derived` and fix what they report.

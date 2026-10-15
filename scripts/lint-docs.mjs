@@ -429,6 +429,17 @@ for (const [r, doc] of docs) {
   }
 }
 
+// The root README is the front page and sits outside docs/, so it is checked on its own. Links
+// inside code fences are examples, not links.
+if (existsSync(join(ROOT, 'README.md'))) {
+  const readme = read(join(ROOT, 'README.md'), 'utf8').replace(/^```[\s\S]*?^```/gm, '');
+  for (const [, link] of readme.matchAll(/\[[^\]]*\]\(([^)]+)\)/g)) {
+    if (/^(https?:|mailto:|#)/.test(link)) continue;
+    const clean = decodeURI(link.split('#')[0]).trim();
+    if (clean && !existsSync(resolve(ROOT, clean))) err('README.md', `broken link to \`${link}\``);
+  }
+}
+
 // Discoverability: every document must be reachable from docs/INDEX.md.
 const index = docs.get('docs/INDEX.md');
 if (index) {
@@ -597,6 +608,14 @@ if (existsSync(join(ROOT, '.claude/onboarding.json'))) {
       }
       if (agents.includes('<!-- onboard:')) {
         warn('AGENTS.md', 'still has onboarding placeholder markers; remove them once filled');
+      }
+      // The front page belongs to the project once onboarding is done (ADR 0020).
+      const readme = existsSync(join(ROOT, 'README.md')) ? read(join(ROOT, 'README.md')) : '';
+      if (readme.match(/^#\s+(.*)$/m)?.[1]?.trim() === 'agent-project-starter') {
+        err('README.md', 'onboarding completed but README.md is still the template\'s. Phase 7 replaces it, from docs/_project-readme.md.');
+      }
+      if (existsSync(join(ROOT, 'docs/_project-readme.md'))) {
+        warn('docs/_project-readme.md', 'onboarding completed but the README stub is still here. Delete it once README.md is written.');
       }
       if (!existsSync(join(ROOT, 'docs/security/threat-model.md'))) {
         err(f, 'onboarding is marked complete but `docs/security/threat-model.md` does not exist. Phase 3 writes it.');
