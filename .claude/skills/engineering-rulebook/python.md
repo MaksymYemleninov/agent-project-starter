@@ -70,7 +70,57 @@ repo` still allows `api` and `service` to import `repo`. Use these instead:
 | feature order | `layers` over the feature packages, when the overview orders them | lower features do not import higher ones |
 
 The generator reads the feature list and never names a feature itself. Resolve the contract
-options against the import-linter version you pin.
+options against the import-linter version you pin. `acyclic_siblings` needs import-linter 2.6 or
+later, and wildcards in `forbidden` contracts need 2.1 or later. Resolve and pin the current
+release when you configure; do not copy a version from here.
+
+### Starter configuration
+
+A starting point for `pyproject.toml`, with `myapp` standing for the package under `src/` and the
+feature names for the ones in the overview. The option names are from import-linter's documentation
+for these contract types.
+
+```toml
+[tool.importlinter]
+root_package = "myapp"
+include_external_packages = true   # required for any contract that names an external package
+
+[[tool.importlinter.contracts]]
+name = "No cycles between features or inside one"
+type = "acyclic_siblings"
+ancestors = ["myapp", "myapp.*"]
+
+[[tool.importlinter.contracts]]
+name = "The edge and the domain never import an adapter"
+type = "forbidden"
+source_modules = ["myapp.*.api", "myapp.*.service"]
+forbidden_modules = ["myapp.*.repo"]
+
+[[tool.importlinter.contracts]]
+name = "Only the edge imports the web framework"
+type = "forbidden"
+source_modules = ["myapp.*.service", "myapp.*.repo", "myapp.*.models"]
+forbidden_modules = ["fastapi"]
+
+[[tool.importlinter.contracts]]
+name = "Features meet at their package (generated, one per feature)"
+type = "forbidden"
+source_modules = ["myapp.orders", "myapp.accounts"]   # every feature except billing
+forbidden_modules = ["myapp.billing.*"]
+
+[[tool.importlinter.contracts]]
+name = "Feature order, when the overview orders the features"
+type = "layers"
+layers = ["myapp.orders", "myapp.billing"]   # higher first
+```
+
+A `forbidden` contract that names an external package needs `include_external_packages = true`
+at the top level, and lists the package's root only: `fastapi`, not `fastapi.routing`. Without
+the setting the contract cannot see external imports. Swap `fastapi` for the framework in the
+stack ADR.
+
+Do not edit this block into the project's file blindly: run `lint-imports` and prove each contract
+red once, as above.
 
 A `layers` contract already fails when a listed layer is missing. For the other contracts, the
 step that runs `lint-imports` first asserts that every module a contract names imports, and fails
@@ -80,8 +130,23 @@ It does not see what the import graph cannot: an adapter passed in at runtime, i
 functions (`importlib`, local `import` under a condition), or I/O written straight into
 `service.py`. Those stay review.
 
-Pack changes: 2026-09-24, boundary rules added. A project onboarded earlier can compare its
-import-linter contracts with this section.
+Pack changes: 2026-09-24, boundary rules added; 2026-10-15, starter configuration and the
+external-package setting added. A project onboarded earlier can compare its import-linter
+contracts with this section.
+
+## macOS: an editable install that does not import
+
+Symptom: `uv sync` succeeds, the package is installed in editable mode, and `import myapp` still
+fails. CPython skips `.pth` files that are hidden ([gh-113659](https://github.com/python/cpython/issues/113659)),
+and editable installs rely on a `.pth` file in `.venv`. On macOS a file can carry the `hidden`
+flag; the onboarding that found this saw it on files in a uv-created `.venv`. The cause of the
+flag was not established, and the release that first shipped the skip was not confirmed.
+
+Check: `ls -lO .venv/lib/python*/site-packages/*.pth` lists `hidden` among the flags.
+
+If it does: `chflags nohidden` on those files is the likely fix (not verified by the template).
+The alternative is an environment directory without a leading dot, set with
+`UV_PROJECT_ENVIRONMENT`. Record which one the project uses in the stack ADR.
 
 ## Commands to put in AGENTS.md
 

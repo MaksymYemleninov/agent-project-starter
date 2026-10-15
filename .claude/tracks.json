@@ -260,6 +260,11 @@
       "kind": "spec",
       "id": "0004",
       "path": "docs/specs/0004-onboard-coherence"
+    },
+    {
+      "kind": "spec",
+      "id": "0005",
+      "path": "docs/specs/0005-python-pack-and-constitution-budget"
     }
   ]
 }

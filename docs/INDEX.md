@@ -30,6 +30,9 @@ One directory per feature under `specs/`, numbered. Each holds `spec.md` (what a
 - [0004 - Onboarding that matches the environment](specs/0004-onboard-coherence/spec.md) - done
 - [0004 plan](specs/0004-onboard-coherence/plan.md)
 - [0004 tasks](specs/0004-onboard-coherence/tasks.md)
+- [0005 - Python pack and constitution budget](specs/0005-python-pack-and-constitution-budget/spec.md) - done
+- [0005 plan](specs/0005-python-pack-and-constitution-budget/plan.md)
+- [0005 tasks](specs/0005-python-pack-and-constitution-budget/tasks.md)
 <!-- /specs:list -->
 
 ## Decisions

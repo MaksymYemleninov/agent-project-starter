@@ -309,6 +309,48 @@ test('onboarding command keeps the statements that match the environment and the
   assert.match(read('.claude/skills/writing-spec/SKILL.md') ?? 'phase 7', /phase 7/);
 });
 
+// Spec 0005. The contract types and options below are import-linter's, as its documentation lists
+// them on 2026-10-15; extend the list when the pack adopts another type.
+test('python pack ships a starter import-linter configuration that names only known contract types', (dir) => {
+  const file = join(dir, '.claude/skills/engineering-rulebook/python.md');
+  if (!existsSync(file)) return;
+  const pack = readFileSync(file, 'utf8');
+  const toml = pack.match(/```toml\n([\s\S]*?)```/)?.[1];
+  assert.ok(toml, 'the pack has a toml starter block');
+  const [top, ...contracts] = toml.split('[[tool.importlinter.contracts]]');
+  assert.match(top, /^\s*root_package\s*=\s*"(\w+)"/m);
+  const root = top.match(/^\s*root_package\s*=\s*"(\w+)"/m)[1];
+  const known = new Set(['forbidden', 'layers', 'independence', 'protected', 'acyclic_siblings']);
+  const types = contracts.map((c) => c.match(/^\s*type\s*=\s*"(\w+)"/m)?.[1]);
+  for (const t of types) assert.ok(known.has(t), `unknown contract type: ${t}`);
+  for (const t of ['acyclic_siblings', 'forbidden', 'layers']) assert.ok(types.includes(t), `a ${t} contract is shown`);
+  for (const c of contracts) {
+    const forbidden = c.match(/^\s*forbidden_modules\s*=\s*\[([^\]]*)\]/m)?.[1] ?? '';
+    const external = [...forbidden.matchAll(/"([^"]+)"/g)].map((m) => m[1]).filter((m) => m !== root && !m.startsWith(`${root}.`));
+    if (external.length) {
+      assert.match(top, /^\s*include_external_packages\s*=\s*true/m, `external ${external} needs include_external_packages`);
+      for (const e of external) assert.ok(!e.includes('.'), `${e}: only a root-level external package can be forbidden`);
+    }
+  }
+  assert.match(pack, /import-linter 2\.6 or\s+later/);
+  assert.match(pack, /2\.1 or later/);
+  assert.doesNotMatch(pack, /import-linter\s*(?:==|>=|~=|\^)\s*\d/);
+  assert.match(pack, /ls -lO/); assert.match(pack, /not verified/);
+});
+test('the constitution stays within its budget and keeps its anchors', (dir) => {
+  const file = join(dir, 'AGENTS.md');
+  const agents = readFileSync(file, 'utf8');
+  if (!agents.includes('Status: TEMPLATE')) return; // an onboarded project owns its size
+  assert.ok(agents.split('\n').length <= 145, `AGENTS.md has ${agents.split('\n').length} lines, budget is 145`);
+  for (let n = 1; n <= 8; n++) assert.match(agents, new RegExp(`^## ${n}\\. `, 'm'));
+  for (let n = 1; n <= 8; n++) assert.match(agents, new RegExp(`^${n}\\. \\*\\*`, 'm'));
+  for (const block of ['project', 'principles', 'code-map', 'commands']) {
+    assert.ok(agents.includes(`<!-- onboard:${block} -->`) && agents.includes(`<!-- /onboard:${block} -->`), block);
+  }
+  const onboard = join(dir, '.claude/commands/onboard.md');
+  if (existsSync(onboard)) assert.match(readFileSync(onboard, 'utf8'), /at\s+most six lines in total/);
+});
+
 // A real subprocess timeout proves the runner reports an environment failure without waiting
 // for repair's production ten-minute timeout. Signal/launch branches also have deterministic inputs.
 try {
