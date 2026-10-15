@@ -51,7 +51,8 @@ export function adaptTemplate(root, { disable = [], resetRecords = false, confir
   // Remove Markdown links to disabled packs, not arbitrary prose or project documents.
   const removed = new Set(remove);
   const edited = new Map();
-  for (const file of [...walkFiles(root, '.claude/skills'), ...walkFiles(root, 'docs')]) {
+  const readme = existsSync(join(root, 'README.md')) ? ['README.md'] : [];
+  for (const file of [...walkFiles(root, '.claude/skills'), ...walkFiles(root, 'docs'), ...readme]) {
     if (removed.has(file) || !file.endsWith('.md') || (resetRecords && file === 'docs/log.md')) continue;
     const abs = safePath(root, file);
     const before = readFileSync(abs, 'utf8');

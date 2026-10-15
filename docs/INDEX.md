@@ -33,6 +33,9 @@ One directory per feature under `specs/`, numbered. Each holds `spec.md` (what a
 - [0005 - Python pack and constitution budget](specs/0005-python-pack-and-constitution-budget/spec.md) - done
 - [0005 plan](specs/0005-python-pack-and-constitution-budget/plan.md)
 - [0005 tasks](specs/0005-python-pack-and-constitution-budget/tasks.md)
+- [0006 - A README that belongs to the project](specs/0006-project-readme/spec.md) - done
+- [0006 plan](specs/0006-project-readme/plan.md)
+- [0006 tasks](specs/0006-project-readme/tasks.md)
 <!-- /specs:list -->
 
 ## Decisions
@@ -64,6 +67,7 @@ Architecture decision records. Append-only: a wrong decision is superseded, neve
 - [0017 - Add a NestJS and Nuxt stack pack built on CleanSlice](decisions/0017-nestjs-nuxt-pack-on-cleanslice.md) - superseded
 - [0018 - Keep the NestJS and Nuxt pack independent of CleanSlice](decisions/0018-keep-the-nestjs-nuxt-pack-independent-of-cleanslice.md) - accepted
 - [0019 - Contain secrets with the sandbox, and parse commands in the secret guard](decisions/0019-contain-secrets-with-the-sandbox.md) - accepted
+- [0020 - Write the project's README instead of inheriting the template's](decisions/0020-write-the-project-readme-instead-of-inheriting-the-templates.md) - accepted
 <!-- /decisions:list -->
 
 ## Architecture

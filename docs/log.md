@@ -6,6 +6,31 @@ the actual content.
 
 Newest entry on top.
 
+## 2026-10-15 - README that belongs to the project (spec 0006, ADR 0020)
+
+- New skill `gates-and-tracks` (`SKILL.md`, `limits.md`, `lifecycle.md`) holds nine README
+  sections moved without rewriting (checked identical to the original before the cut): the
+  advisory stage, the idea behind the gates, what must not quietly come back, tuning, known
+  limits, track ownership and the adapter, agent scopes, repair, path-scoped rules.
+- The template `README.md` goes from 320 to 89 lines: intro, Quick start, layer table, commands and
+  scope stay, the four capability sections become one-line bullets with links, and a section links
+  the skill. `docs/_project-readme.md` is the stub `/onboard` phase 7 fills and deletes.
+- `lint-docs` fails a completed onboarding whose README still has the template's title, warns on a
+  leftover stub, and checks relative links in the root README outside code fences. The adapter's
+  link cleanup now covers `README.md`, so the link check holds when tracks are disabled.
+- Phase 5 no longer adapts the README; phase 7 replaces it. 5 regression cases. Not exercised: a
+  real onboarding writing the README from the stub, which the next one will show.
+
+## 2026-10-15 - The project's README is written, not inherited
+
+- [ADR 0020](decisions/0020-write-the-project-readme-instead-of-inheriting-the-templates.md),
+  accepted: onboarding phase 7 replaces the template's `README.md` with one written from a stub
+  (`docs/_project-readme.md`), and the template's operating knowledge moves to a core skill the
+  template README links to. Nothing is implemented yet.
+- Spec [0006](specs/0006-project-readme/spec.md) (draft) maps each README section to its
+  destination and lists the checks. Not decided here: how sections tied to an optional track are
+  cut (separate ADR).
+
 ## 2026-10-15 - Python pack starter configuration and a leaner constitution
 
 - `python.md` gains a starter `[tool.importlinter]` block (one contract per boundary row, plus

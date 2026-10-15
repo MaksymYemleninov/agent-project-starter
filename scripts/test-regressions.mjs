@@ -351,6 +351,74 @@ test('the constitution stays within its budget and keeps its anchors', (dir) => 
   if (existsSync(onboard)) assert.match(readFileSync(onboard, 'utf8'), /at\s+most six lines in total/);
 });
 
+// Spec 0006 (ADR 0020): the README belongs to the project, the operating knowledge to a skill.
+const headings = (text) => [...text.matchAll(/^## (.+)$/gm)].map((m) => m[1].trim());
+test('operating knowledge lives in the skill, once, and the template README stays short', (dir) => {
+  const skillDir = join(dir, '.claude/skills/gates-and-tracks');
+  if (!existsSync(skillDir)) return;
+  const skill = ['SKILL.md', 'limits.md', 'lifecycle.md'].map((f) => readFileSync(join(skillDir, f), 'utf8')).join('\n');
+  const readme = readFileSync(join(dir, 'README.md'), 'utf8');
+  if (!/^# agent-project-starter$/m.test(readme)) return; // a project owns its README
+  const moved = ['Gates are advisory until you say otherwise', 'The idea behind the gates', 'Things that must not quietly come back',
+    'Tuning', 'Known limits', 'Template ownership and lifecycle checks', 'Agents stay in their lane', 'Repairing a failing test', 'Path-scoped rules'];
+  for (const h of moved) {
+    assert.ok(headings(skill).includes(h), `skill has "${h}"`);
+    assert.ok(!headings(readme).includes(h), `README no longer has "${h}"`);
+  }
+  assert.ok(readme.split('\n').length <= 140, `README has ${readme.split('\n').length} lines, budget is 140`);
+  assert.match(readme, /\(\.claude\/skills\/gates-and-tracks\/SKILL\.md\)/);
+  assert.match(skill, /^description: .*gates.*tracks/m);
+});
+test('the project README stub keeps its shape', (dir) => {
+  const file = join(dir, 'docs/_project-readme.md');
+  if (!existsSync(file)) return;
+  const stub = readFileSync(file, 'utf8');
+  assert.ok(stub.split('\n').length <= 60);
+  assert.deepEqual(headings(stub), ['Status', 'Run it', 'Layout', 'Documentation', 'Working with agents', 'Conventions']);
+  assert.match(stub, /^# <project name>$/m);
+  assert.match(stub, /Every sentence comes from a document that already exists/);
+});
+test('lint holds the README to the project after onboarding, and checks its links', (dir) => {
+  const out = (r) => r.stdout + r.stderr;
+  const readme = join(dir, 'README.md');
+  const original = readFileSync(readme, 'utf8');
+  if (!/^# agent-project-starter$/m.test(original) || !existsSync(join(dir, 'docs/_project-readme.md'))) return;
+  json(dir, '.claude/onboarding.json', (s) => ({ ...s, status: 'completed' }));
+  const done = lint(dir);
+  expect(done, 1); assert.match(out(done), /README\.md: onboarding completed but README\.md is still the template's/);
+  assert.match(out(done), /_project-readme\.md: onboarding completed but the README stub is still here/);
+  writeFileSync(readme, original.replace(/^# agent-project-starter$/m, '# Acme'));
+  assert.doesNotMatch(out(lint(dir)), /still the template's/);
+  json(dir, '.claude/onboarding.json', (s) => ({ ...s, status: 'not-started' }));
+  writeFileSync(readme, original + '\n```md\n[example](docs/not-there.md)\n```\n');
+  assert.doesNotMatch(out(lint(dir)), /README\.md: broken link/);
+  writeFileSync(readme, original + '\n[gone](docs/not-there.md)\n');
+  const broken = lint(dir); expect(broken, 1); assert.match(out(broken), /README\.md: broken link to `docs\/not-there\.md`/);
+});
+test('adapter drops README lines that link a removed file', (dir) => {
+  const target = '.claude/skills/fixture-pack/guide.md';
+  mkdirSync(dirname(join(dir, target)), { recursive: true }); writeFileSync(join(dir, target), '# Guide\n');
+  json(dir, '.claude/tracks.json', (m) => { m.tracks.fixture = { enabled: true, files: [target], profiles: [], plugins: [] }; return m; });
+  const readme = join(dir, 'README.md');
+  writeFileSync(readme, readFileSync(readme, 'utf8') + '\n- **Fixture.** A bullet. See the [guide](.claude/skills/fixture-pack/guide.md).\n- **Kept.** Stays.\n');
+  expect(run(dir, 'node', ['scripts/adapt-template.mjs', '--disable', 'fixture', '--confirm']), 0);
+  const after = readFileSync(readme, 'utf8');
+  assert.doesNotMatch(after, /Fixture\.\*\*/); assert.match(after, /\*\*Kept\.\*\*/);
+  assert.equal(lint(dir).status, 0);
+});
+test('onboarding replaces the README in phase 7 and no longer adapts it in phase 5', (dir) => {
+  const file = join(dir, '.claude/commands/onboard.md');
+  if (!existsSync(file)) return;
+  const onboard = readFileSync(file, 'utf8');
+  const phase5 = onboard.slice(onboard.indexOf('## Phase 5'), onboard.indexOf('## Phase 6'));
+  const phase7 = onboard.slice(onboard.indexOf('## Phase 7'), onboard.indexOf('## Rules for this command'));
+  assert.doesNotMatch(phase5, /in README, AGENTS and commands/);
+  assert.match(phase5, /The README is not\s+adapted: phase 7 replaces it/);
+  assert.match(phase7, /Replace `README\.md` with the project's own, written from `docs\/_project-readme\.md`/);
+  assert.match(phase7, /list only the commands phase 6 ran/);
+  assert.match(phase7, /then delete the stub/);
+});
+
 // A real subprocess timeout proves the runner reports an environment failure without waiting
 // for repair's production ten-minute timeout. Signal/launch branches also have deterministic inputs.
 try {
