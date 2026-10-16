@@ -36,6 +36,14 @@ try {
   assert.ok(existsSync(join(fixture, '.claude/skills/engineering-rulebook/SKILL.md')));
   if (manifest.tracks.typescript?.enabled) assert.ok(existsSync(join(fixture, '.claude/skills/engineering-rulebook/typescript.md')));
 
+  if (resetRecords) {
+    // Spec 0007: the text of the disabled tracks went with them.
+    const read = (file) => readFileSync(join(fixture, file), 'utf8');
+    for (const gone of ['infra-reviewer', 'design-reviewer']) assert.ok(!read('.claude/commands/harden.md').includes(gone), `harden.md still names ${gone}`);
+    for (const gone of ['/infra', 'design-reviewer']) assert.ok(!read('AGENTS.md').includes(gone), `AGENTS.md still names ${gone}`);
+    assert.ok(!read('docs/INDEX.md').includes('## Design'), 'docs/INDEX.md still has the Design section');
+  }
+
   for (const file of walkFiles(fixture, 'docs').filter((f) => f.endsWith('.md') && !f.includes('/_'))) {
     const text = readFileSync(join(fixture, file), 'utf8');
     write(file, text.replace(/^status: template$/m, 'status: draft'));

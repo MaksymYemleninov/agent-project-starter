@@ -67,3 +67,29 @@ into every session and costs context every time, so `npm run lint:docs` warns ab
 mistake worth catching: it is invisible at runtime and it compounds.
 
 `/onboard` replaces the placeholder rules with real ones for the chosen stack and deletes the rest.
+
+## Track markers
+
+Text that is true only when an optional track is kept is marked, so disabling the track cuts it
+with the track's files ([ADR 0021](../../../docs/decisions/0021-mark-optional-track-text-and-cut-it-with-the-track.md)).
+Two forms:
+
+```markdown
+<!-- track:infra -->
+Any paragraph, list item or whole section, between two marker lines that each stand alone.
+<!-- /track:infra -->
+
+| a table row | its cells | <!-- track:infra -->
+```
+
+- `--disable infra` cuts both forms for `infra`, marker lines included; a kept track keeps its
+  markers and text, so it can still be dropped later. The preview prints every file it would edit.
+- Blocks do not nest, must close, and name a track from `.claude/tracks.json` other than `core`.
+  Markers inside fenced code blocks are examples and are ignored.
+- The adapter cuts in `AGENTS.md`, the commands, agents, rules and skills, `docs/` and the README. It
+  does not touch decisions, specs or the log, nor `/onboard`, which names every track as its job.
+- `AGENTS.md` section 2 never holds a marker.
+- While a track is disabled, `npm run lint:docs` fails for each line that names one of its assets
+  (skill directory, agent, command, workflow, scope profile) outside a marker, a code block or a
+  Markdown link. A line that only shares a word with an asset ends with
+  `<!-- track-ok: reason of at least ten characters -->`.

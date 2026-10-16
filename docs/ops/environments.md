@@ -12,6 +12,7 @@ last_verified: 2026-09-18
 | local | development | http://localhost:PORT | working tree | anyone |
 | TBD | TBD | TBD | TBD | TBD |
 
+<!-- track:infra -->
 ## Infrastructure
 
 Only when the project owns infrastructure code; delete this section otherwise. Filled by
@@ -21,6 +22,7 @@ Only when the project owns infrastructure code; delete this section otherwise. F
 - State backend, encryption and locking: TBD.
 - Who runs `apply`, and from where: TBD. Never an agent.
 - Cloud accounts or projects per environment: TBD.
+<!-- /track:infra -->
 
 ## Configuration
 

@@ -56,17 +56,17 @@ Stack-specific principles are appended here by `/onboard` from the stack ADRs.
 | Path | What lives there |
 |---|---|
 | `AGENTS.md`, `CLAUDE.md` | This constitution, kept under 200 lines; `CLAUDE.md` is the Claude Code shim that imports it. Do not duplicate rules into the shim. |
-| `.claude/rules/` | Path-scoped rules. Each needs a `paths` glob, or it loads every session. |
-| `.claude/skills/` | Repeatable procedures. Long instructions belong here, not in this file. |
-| `.claude/agents/`, `.claude/commands/` | Subagents (review, research, tests, the infra architect, engineer, reviewer), each held to its lane by `agent-scope.mjs`; slash commands: `/onboard`, `/adr`, `/spec`, `/ship`, `/lint`, `/harden`, `/infra`, `/repair`, `/security`, `/design`. |
+| `.claude/rules/`, `.claude/skills/` | Path-scoped rules, each with a `paths` glob or it loads every session; repeatable procedures, where long instructions belong. |
+| `.claude/agents/`, `.claude/commands/` | Subagents, each held to its lane by `agent-scope.mjs`; slash commands: `/onboard`, `/adr`, `/spec`, `/ship`, `/lint`, `/harden`, `/repair`, `/security`. |
 | `.claude/hooks/` | Mechanical reminders fired by Claude Code events, plus the secret and apply guard. |
 | `.claude/gates.json`, `.claude/onboarding.json` | Gate tuning (paths, thresholds, agent scopes); the `/onboard` checkpoint, so a dead session resumes. |
 | `docs/INDEX.md`, `docs/log.md` | Map of every document, the entry point; the journal of decisions and notable changes. |
 | `docs/idea.md`, `docs/product/` | The raw idea, the input to `/onboard`, never rewritten; vision, scope, non-goals, personas. |
 | `docs/specs/`, `docs/decisions/` | One directory per feature (`spec.md`, `plan.md`, `tasks.md`); ADRs, numbered, append-only, superseded never deleted. |
 | `docs/architecture/`, `docs/ops/`, `docs/security/` | overview, data model, integrations; runbook, environments; threat model and dated audit reports. |
-| `docs/design/`, `design/` | the approved design system; tokens and HTML prototypes. UI is built to it. |
-| `infra/`, `scripts/` | Infrastructure code, when the project has any, built and changed through `/infra`; repo tooling (`lint-docs.mjs` and `check-adr-drift.mjs` run in CI). |
+| `docs/design/`, `design/` | The approved design system, written by `/design`; tokens and HTML prototypes. UI is built to it. | <!-- track:design -->
+| `infra/` | Infrastructure code, built and changed through `/infra` (and its architect, engineer and reviewer agents). | <!-- track:infra -->
+| `scripts/` | Repo tooling. `lint-docs.mjs` and `check-adr-drift.mjs` run in CI. |
 
 <!-- onboard:code-map -->
 Source code layout is added here by `/onboard` once the stack is chosen.

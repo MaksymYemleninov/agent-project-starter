@@ -419,6 +419,81 @@ test('onboarding replaces the README in phase 7 and no longer adapts it in phase
   assert.match(phase7, /then delete the stub/);
 });
 
+// Spec 0007 (ADR 0021): optional-track text is marked, and cut with the track.
+const text = (dir, file) => readFileSync(join(dir, file), 'utf8');
+const addTrack = (dir, name, extra = {}) => json(dir, '.claude/tracks.json', (m) => {
+  m.tracks[name] = { enabled: true, files: [], profiles: [], plugins: [], ...extra }; return m;
+});
+test('adapter cuts the marked text of a disabled track and keeps a kept track as it is', (dir) => {
+  addTrack(dir, 'cutme'); addTrack(dir, 'keepme');
+  const readme = join(dir, 'README.md'); const decision = join(dir, 'docs/decisions/0000-record-architecture-decisions.md');
+  writeFileSync(readme, text(dir, 'README.md') + [
+    '', 'Before.', '<!-- track:cutme -->', 'Block one.', '```md', '<!-- /track:cutme -->', 'in a fence, still cut', '```', '<!-- /track:cutme -->',
+    'Middle.', '| row | cells | <!-- track:cutme -->', '<!-- track:keepme -->', 'Kept block.', '<!-- /track:keepme -->', 'After.',
+    '```md', '<!-- track:cutme -->', 'an example, not a marker', '```', ''].join('\n'));
+  writeFileSync(decision, text(dir, 'docs/decisions/0000-record-architecture-decisions.md') + '\n<!-- track:cutme -->\nhistory\n<!-- /track:cutme -->\n');
+  const preview = run(dir, 'node', ['scripts/adapt-template.mjs', '--disable', 'cutme']);
+  expect(preview, 0); assert.ok(JSON.parse(preview.stdout).update.includes('README.md'));
+  expect(run(dir, 'node', ['scripts/adapt-template.mjs', '--disable', 'cutme', '--confirm']), 0);
+  const after = text(dir, 'README.md');
+  assert.match(after, /Before\.\nMiddle\.\n<!-- track:keepme -->\nKept block\.\n<!-- \/track:keepme -->\nAfter\./);
+  assert.doesNotMatch(after, /Block one|still cut|\| row \|/);
+  assert.match(after, /an example, not a marker/);
+  assert.match(text(dir, 'docs/decisions/0000-record-architecture-decisions.md'), /<!-- track:cutme -->\nhistory/);
+});
+test('lint rejects a marker that breaks the grammar, and a marker inside section 2', (dir) => {
+  const out = (r) => r.stdout + r.stderr;
+  addTrack(dir, 'known');
+  const readme = join(dir, 'README.md'); const original = text(dir, 'README.md');
+  const check = (add, pattern) => { writeFileSync(readme, original + add); const r = lint(dir); expect(r, 1); assert.match(out(r), pattern); };
+  check('\n<!-- track:known -->\nnever closed\n', /README\.md: line \d+: block `known` is never closed/);
+  check('\n<!-- /track:known -->\n', /closing marker for `known` has no opening marker/);
+  check('\n<!-- track:known -->\n<!-- track:known -->\n<!-- /track:known -->\n<!-- /track:known -->\n', /blocks do not nest/);
+  check('\ntext <!-- track:nothere -->\n', /marker names `nothere`, which is not an optional track/);
+  check('\n<!-- track:core -->\nx\n<!-- /track:core -->\n', /marker names `core`/);
+  writeFileSync(readme, original + '\n```md\n<!-- track:nothere -->\n```\n'); assert.doesNotMatch(out(lint(dir)), /nothere/);
+  writeFileSync(readme, original);
+  const agents = join(dir, 'AGENTS.md');
+  if (!/^## 2\. /m.test(text(dir, 'AGENTS.md')) || !text(dir, 'AGENTS.md').includes('## 3. Repository map')) return;
+  writeFileSync(agents, text(dir, 'AGENTS.md').replace('## 3. Repository map', '<!-- track:known -->\nx\n<!-- /track:known -->\n\n## 3. Repository map'));
+  const principle = lint(dir); expect(principle, 1); assert.match(out(principle), /AGENTS\.md: line \d+: a track marker inside section 2/);
+});
+test('lint names a disabled track\'s assets left outside a marker', (dir) => {
+  const out = (r) => r.stdout + r.stderr;
+  addTrack(dir, 'gone', { enabled: false, files: ['.claude/skills/gone-skill/SKILL.md', '.claude/commands/gone.md'], profiles: ['gone-reviewer'] });
+  const readme = join(dir, 'README.md'); const original = text(dir, 'README.md');
+  const check = (add, status, pattern) => { writeFileSync(readme, original + add); const r = lint(dir); expect(r, status); if (pattern) assert.match(out(r), pattern); };
+  check('\nSee gone-skill for details.\n', 1, /README\.md: line \d+ names `gone-skill` of the disabled track `gone` outside a marker/);
+  check('\nRun /gone first.\n', 1, /names `\/gone`/);
+  check('\nThe gone-reviewer agrees.\n', 1, /names `gone-reviewer`/);
+  check('\nA line about gone-skill. <!-- track-ok: shares a word with a skill -->\n', 0);
+  check('\nA line about gone-skill. <!-- track-ok: short -->\n', 1, /names `gone-skill`/);
+  check('\n<!-- track:gone -->\nSee gone-skill and /gone.\n<!-- /track:gone -->\n', 0);
+  check('\nSee gone-skill. <!-- track:gone -->\n', 0);
+  check('\n```md\ngone-skill\n```\n', 0);
+  check('\nThe path docs/gone/ and the word gone-skilled are not assets.\n', 0);
+});
+for (const [track, absent, present] of [
+  ['infra', ['infra-reviewer', 'infra-change', '`/infra`', 'checkov', 'Never an agent', 'The infra track is unproven'], ['design-reviewer', '## Design']],
+  ['design', ['design-reviewer', '`/design`', 'Design tokens drive', 'design tokens from'], ['infra-reviewer', '## Infrastructure']],
+]) {
+  test(`disabling ${track} leaves no mention of it and keeps the other track's text`, (dir) => {
+    if (!existsSync(join(dir, `.claude/skills/${track === 'infra' ? 'infra-bootstrap' : 'design-system'}/SKILL.md`))) return;
+    const files = ['AGENTS.md', 'README.md', '.claude/commands/harden.md', '.claude/commands/ship.md', 'docs/INDEX.md', 'docs/ops/environments.md',
+      '.claude/skills/security-rulebook/scanners.md', '.claude/skills/engineering-rulebook/nextjs.md', '.claude/skills/engineering-rulebook/nestjs-nuxt.md',
+      '.claude/skills/gates-and-tracks/limits.md'].filter((f) => existsSync(join(dir, f)));
+    expect(run(dir, 'node', ['scripts/adapt-template.mjs', '--disable', track, '--confirm']), 0);
+    const all = files.map((f) => text(dir, f)).join('\n');
+    for (const gone of absent) assert.ok(!all.includes(gone), `"${gone}" is gone with ${track}`);
+    for (const kept of present) assert.ok(all.includes(kept), `"${kept}" stays with the other track`);
+    assert.ok(all.includes('<!-- track:'), 'the other track keeps its markers');
+    const agents = text(dir, 'AGENTS.md');
+    assert.ok(agents.split('\n').length <= 145);
+    for (let n = 1; n <= 8; n++) assert.match(agents, new RegExp(`^${n}\\. \\*\\*`, 'm'));
+    expect(lint(dir), 0);
+  });
+}
+
 // A real subprocess timeout proves the runner reports an environment failure without waiting
 // for repair's production ten-minute timeout. Signal/launch branches also have deterministic inputs.
 try {

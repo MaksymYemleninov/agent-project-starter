@@ -9,7 +9,7 @@ reported under "Not checked", never silently skipped.
 | Secrets in the tree and history | gitleaks | `gitleaks git --redact` (history) or `gitleaks dir --redact` (tree) | `ci.yml`, always |
 | Known-vulnerable dependencies, any ecosystem | osv-scanner | `osv-scanner scan source -r .` | `security.yml` |
 | Static analysis (SAST) | semgrep | `semgrep scan --config p/default --metrics=off --error` | `security.yml` |
-| Infrastructure as code | checkov | `checkov -d infra` | `infra.yml` |
+| Infrastructure as code | checkov | `checkov -d infra` | `infra.yml` | <!-- track:infra -->
 | Containers and images | trivy | `trivy fs .` / `trivy image <image>` | `security.yml` when there is a Dockerfile |
 
 Ecosystem-native audits, useful locally because they understand the package manager exactly:

@@ -75,9 +75,11 @@ component reaches server code is not a path question; `server-only` catches it a
 
 ## UI
 
+<!-- track:design -->
 - Components use the design tokens from `design/tokens.css` (via the Tailwind theme or CSS
   variables) and the primitives in `components/ui/`, never hardcoded colours, sizes or fonts. With
   Tailwind, no arbitrary values. See `.claude/skills/design-system/`. *Lint + design-reviewer.*
+<!-- /track:design -->
 - Every data-driven view has loading, empty and error states (`loading.tsx`, `error.tsx`, explicit
   empty UI). *Reviewed.*
 - Images through `next/image`, fonts through `next/font`, links through `next/link`. *Lint

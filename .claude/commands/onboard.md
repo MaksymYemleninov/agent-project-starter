@@ -223,8 +223,10 @@ Then update:
   Disable `api` when there is no API contract and `operations` when no operating procedure is
   needed. Keep only the selected stack packs (`typescript`, `nextjs`, `python`, `go`, `nestjs-nuxt`).
   Fill retained placeholder skills from approved decisions. The adapter removes owned files,
-  profiles and plugins and Markdown links to removed packs; review remaining prose references
-  in `AGENTS.md` and the commands and adapt them to the selected tracks. The README is not
+  profiles and plugins, Markdown links to removed packs, and every block or line marked
+  `<!-- track:NAME -->` for a disabled track (the preview lists the files it will edit). Review by
+  hand only prose that is not marked, in `AGENTS.md` and the commands, and adapt it to the selected
+  tracks; `npm run lint:docs` names what a disabled track left behind. The README is not
   adapted: phase 7 replaces it.
   When infra is kept, write the IaC ADRs into the rulebook's Project decisions; write no IaC yet.
 - `agentScopes` in `.claude/gates.json`: point `test-writer`'s `write` globs at this stack's test

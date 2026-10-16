@@ -6,6 +6,32 @@ the actual content.
 
 Newest entry on top.
 
+## 2026-10-15 - Track markers (spec 0007, ADR 0021)
+
+- `scripts/track-markers.mjs`: `<!-- track:NAME -->` blocks and one-line markers. The adapter cuts
+  the text of a disabled track, markers included, and leaves a kept track's markers; it now also
+  scans `AGENTS.md`, the commands, agents and rules, and never touches decisions, specs, the log or
+  `/onboard`. The linter checks the grammar, rejects markers in `AGENTS.md` section 2, and fails on
+  names of a disabled track's assets left outside a marker (escape: `<!-- track-ok: reason -->`).
+- Marked or reworded: `harden.md` (two track sections, steps renumbered), `ship.md`, the scanner
+  table, `environments.md`, the Design section of `docs/INDEX.md`, the two design rules in the
+  Next.js and NestJS + Nuxt packs, `infra-setup`, `limits.md`, rows of `AGENTS.md` and the README.
+  The detector found two places the manual count had missed: `infra-setup` and two `AGENTS.md` rows.
+- Rule `.claude/rules/track-markers.md`; grammar in `lifecycle.md`; `/onboard` phase 5 says the
+  adapter cuts marked text. 4 new regression cases, and `test:derived` asserts the cuts.
+- Not exercised: a real onboarding that drops a track. Whether the text left after a cut reads well
+  is review.
+
+## 2026-10-15 - Mark optional-track text and cut it with the track
+
+- [ADR 0021](decisions/0021-mark-optional-track-text-and-cut-it-with-the-track.md), proposed:
+  accepted: `<!-- track:NAME -->` markers (a block, or one line ending with the marker) that the
+  adapter cuts when the track is disabled, plus a lint check for names of disabled tracks left
+  outside a marker. Spec 0007 (draft) carries the grammar and the checks; nothing is implemented.
+- The measurement behind it: only `infra` and `design` leave prose behind, about a dozen places in
+  eight files, most already worded conditionally, so the harm is references to files that no longer
+  exist rather than false statements.
+
 ## 2026-10-15 - README that belongs to the project (spec 0006, ADR 0020)
 
 - New skill `gates-and-tracks` (`SKILL.md`, `limits.md`, `lifecycle.md`) holds nine README
