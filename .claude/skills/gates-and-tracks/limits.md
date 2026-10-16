@@ -35,8 +35,10 @@ Worth stating plainly, because a guardrail you trust more than it deserves is wo
   these agents gets the prompts without the enforcement.
 - **`/repair` treats the test as the specification.** A wrong or flaky test gets code bent to fit
   it. It has been tested against a fake `claude`, not yet against the real CLI.
+<!-- track:infra -->
 - **The infra track is unproven end to end.** The hooks are tested; the agents and skills are
   prompts that have not yet run a real bootstrap. Treat the first one as the test.
+<!-- /track:infra -->
 - **The gate defaults assume a JavaScript layout.** `sourcePaths` in `.claude/gates.json` lists
   `src/`, `app/`, `lib/` and friends. For a Python or Go project those match nothing and the Stop
   hook quietly stops noticing source changes, so `/onboard` rewrites them in phase 5. If you skip

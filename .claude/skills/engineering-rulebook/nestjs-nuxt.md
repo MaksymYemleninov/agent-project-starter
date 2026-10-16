@@ -137,8 +137,10 @@ may hold one slice of the same name (`user/user/`).
 - **Nuxt auto-imports.** Vue APIs, composables, components and stores are not imported by hand;
   the generated SDK is imported from `#api`. This replaces the import rules of `typescript.md`
   ("no default exports", greppable imports) for all of `app/`, not only `app/slices/`. *Reviewed.*
-- **Design tokens drive Tailwind.** When the design track is kept, `design/tokens.css` feeds the
-  Tailwind theme and shadcn-vue components use semantic tokens only (`design-system` skill).
+<!-- track:design -->
+- **Design tokens drive Tailwind.** `design/tokens.css` feeds the Tailwind theme and shadcn-vue
+  components use semantic tokens only (`design-system` skill).
+<!-- /track:design -->
 
 ## Rules
 

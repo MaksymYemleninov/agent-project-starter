@@ -29,6 +29,7 @@
         ".claude/commands/ship.md",
         ".claude/commands/spec.md",
         ".claude/rules/agent-config.md",
+        ".claude/rules/track-markers.md",
         ".claude/rules/documentation.md",
         ".claude/rules/source.md",
         ".github/workflows/ci.yml",
@@ -250,6 +251,11 @@
       "path": "docs/decisions/0020-write-the-project-readme-instead-of-inheriting-the-templates.md"
     },
     {
+      "kind": "adr",
+      "id": "0021",
+      "path": "docs/decisions/0021-mark-optional-track-text-and-cut-it-with-the-track.md"
+    },
+    {
       "kind": "spec",
       "id": "0001",
       "path": "docs/specs/0001-template-lifecycle"
@@ -278,6 +284,11 @@
       "kind": "spec",
       "id": "0006",
       "path": "docs/specs/0006-project-readme"
+    },
+    {
+      "kind": "spec",
+      "id": "0007",
+      "path": "docs/specs/0007-track-markers"
     }
   ]
 }

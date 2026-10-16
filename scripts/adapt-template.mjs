@@ -3,6 +3,7 @@ import { existsSync, readFileSync, writeFileSync, rmSync, openSync, closeSync, a
 import { join, relative, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readJson, validateTracks, safePath, actualFiles, walkFiles } from './tracks.mjs';
+import { cutMarkers, isHistory, markerFiles, NAMES_EXEMPT } from './track-markers.mjs';
 
 /** Replace the inherited-tooling stub entry (two lines) with ADR 0001, placed after 0000. */
 function inheritedAdrInIndex(index) {
@@ -51,12 +52,17 @@ export function adaptTemplate(root, { disable = [], resetRecords = false, confir
   // Remove Markdown links to disabled packs, not arbitrary prose or project documents.
   const removed = new Set(remove);
   const edited = new Map();
+  // The text of a disabled track goes with its files (ADR 0021); Markdown links to removed files go
+  // line by line. Both apply to the same set of files, and cutting comes first.
+  const disabledTracks = new Set(Object.entries(manifest.tracks).filter(([name, track]) => name !== 'core' && !track.enabled).map(([name]) => name));
   const readme = existsSync(join(root, 'README.md')) ? ['README.md'] : [];
-  for (const file of [...walkFiles(root, '.claude/skills'), ...walkFiles(root, 'docs'), ...readme]) {
+  const scanned = new Set([...walkFiles(root, '.claude/skills'), ...walkFiles(root, 'docs'), ...readme, ...markerFiles(root)]);
+  for (const file of scanned) {
     if (removed.has(file) || !file.endsWith('.md') || (resetRecords && file === 'docs/log.md')) continue;
     const abs = safePath(root, file);
     const before = readFileSync(abs, 'utf8');
-    const after = before.split('\n').filter((line) => {
+    const cut = isHistory(file) || NAMES_EXEMPT.has(file) || !disabledTracks.size ? before : cutMarkers(before, disabledTracks);
+    const after = cut.split('\n').filter((line) => {
       const links = [...line.matchAll(/\[[^\]]*\]\(([^)]+)\)/g)];
       return !links.some((m) => {
         if (/^(?:[a-z][a-z0-9+.-]*:|#)/i.test(m[1])) return false;

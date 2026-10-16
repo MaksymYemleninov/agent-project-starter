@@ -12,6 +12,7 @@ import { join, relative, dirname, resolve, basename } from 'node:path';
 import { loadGates, stage, blocking, STAGES, globToRegExp } from './changed-files.mjs';
 
 import { validateTracks } from './tracks.mjs';
+import { markerFiles, scanMarkers, leftovers, trackAssets, NAMES_EXEMPT } from './track-markers.mjs';
 
 const args = process.argv.slice(2);
 const UPDATE_BASELINE = args.includes('--update-baseline');
@@ -815,6 +816,36 @@ const BASELINE = join(ROOT, '.claude/lint-baseline.json');
 }
 
 for (const message of validateTracks(ROOT)) err('.claude/tracks.json', message);
+
+/* ---------------------------------------------------- 8c. optional-track markers */
+
+// Text that is true only for an optional track is marked, so the adapter can cut it with the track
+// (ADR 0021, spec 0007). The grammar is checked always; leftovers only for a disabled track.
+let trackManifest = null;
+try { trackManifest = JSON.parse(read(join(ROOT, '.claude/tracks.json'), 'utf8')); } catch { /* validateTracks reports it */ }
+if (trackManifest?.tracks) {
+  const known = new Set(Object.keys(trackManifest.tracks).filter((n) => n !== 'core'));
+  const disabled = Object.fromEntries(Object.entries(trackAssets(trackManifest)).filter(([n]) => trackManifest.tracks[n].enabled === false));
+  const owned = new Set(Object.keys(disabled).flatMap((n) => trackManifest.tracks[n].files));
+  for (const file of markerFiles(ROOT)) {
+    const text = read(join(ROOT, file), 'utf8');
+    const { items, problems } = scanMarkers(text, known);
+    for (const p of problems) err(file, `line ${p.line}: ${p.msg}`);
+    if (file === 'AGENTS.md') {
+      const lines = text.split('\n');
+      const from = lines.findIndex((l) => /^## 2\. /.test(l)) + 1;
+      const to = lines.findIndex((l) => /^## 3\. /.test(l)) + 1;
+      for (const item of items) {
+        if (from && to && item.line > from && item.line < to) err(file, `line ${item.line}: a track marker inside section 2; the principles are never track-specific`);
+      }
+    }
+    if (Object.keys(disabled).length && !NAMES_EXEMPT.has(file) && !owned.has(file)) {
+      for (const l of leftovers(text, disabled)) {
+        err(file, `line ${l.line} names \`${l.name}\` of the disabled track \`${l.track}\` outside a marker. Wrap it in \`<!-- track:${l.track} -->\` markers, or end the line with \`<!-- track-ok: reason -->\`.`);
+      }
+    }
+  }
+}
 
 /* ---------------------------------------------------------------- 9. report */
 

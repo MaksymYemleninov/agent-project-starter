@@ -38,11 +38,16 @@ Run each and fix what it reports. Do not proceed past a failure.
 
 ## 4. Review
 
-For anything past Tier 1, run the `code-reviewer` subagent on the diff. Infrastructure code is
-reviewed by `infra-reviewer` when `infra-change` calls for it (three or more components), not
-twice here. Any verdict other than `READY - no findings` means fix and run it a second
-time, handing it its first report. After the second cycle, stop iterating: whatever remains goes
-into the PR description for the human, with the reviewer's words.
+For anything past Tier 1, run the `code-reviewer` subagent on the diff. Any verdict other than
+`READY - no findings` means fix and run it a second time, handing it its first report. After the
+second cycle, stop iterating: whatever remains goes into the PR description for the human, with
+the reviewer's words.
+
+<!-- track:infra -->
+Infrastructure code is reviewed by `infra-reviewer` when `infra-change` calls for it (three or
+more components), not twice here.
+<!-- /track:infra -->
+
 
 Security review runs separately, with a clean context, for Tier 2 and up and for any change that
 touches authentication, authorization, input handling, personal data, secrets, dependencies or
@@ -55,9 +60,12 @@ infrastructure exposure, whatever its tier:
 If the change adds an entry point, data store, role or integration, `docs/security/threat-model.md`
 changes in the same pull request.
 
+<!-- track:design -->
 A change to the interface (a spec with `ui: true`, or any component or style file) also gets the
 `design-reviewer` subagent, same two-cycle rule: tokens instead of hardcoded values, every state
 designed, the accessibility floor, and fidelity to the prototype.
+<!-- /track:design -->
+
 
 ## 5. Rule gaps
 
