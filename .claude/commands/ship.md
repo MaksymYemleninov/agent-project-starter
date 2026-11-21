@@ -66,6 +66,13 @@ A change to the interface (a spec with `ui: true`, or any component or style fil
 designed, the accessibility floor, and fidelity to the prototype.
 <!-- /track:design -->
 
+<!-- track:preprod -->
+A change that ships game or creative content (a spec with `content: true`) is checked against the
+chosen style frame in `docs/preprod/art-direction.md` and its entry in `docs/preprod/content.md`; a
+difference is fixed or recorded there as a dated decision. In blind mode the pull request title,
+description and your report say what changed in neutral terms only, with no plot or level content.
+<!-- /track:preprod -->
+
 
 ## 5. Rule gaps
 

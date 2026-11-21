@@ -86,6 +86,16 @@
         "frontend-design@claude-plugins-official"
       ]
     },
+    "preprod": {
+      "enabled": true,
+      "files": [
+        ".claude/skills/preproduction/SKILL.md",
+        ".claude/skills/preproduction/formats.md",
+        ".claude/commands/preprod.md"
+      ],
+      "profiles": [],
+      "plugins": []
+    },
     "api": {
       "enabled": true,
       "files": [
@@ -256,6 +266,11 @@
       "path": "docs/decisions/0021-mark-optional-track-text-and-cut-it-with-the-track.md"
     },
     {
+      "kind": "adr",
+      "id": "0022",
+      "path": "docs/decisions/0022-preproduction-before-production-for-creative-products.md"
+    },
+    {
       "kind": "spec",
       "id": "0001",
       "path": "docs/specs/0001-template-lifecycle"
@@ -289,6 +304,11 @@
       "kind": "spec",
       "id": "0007",
       "path": "docs/specs/0007-track-markers"
+    },
+    {
+      "kind": "spec",
+      "id": "0008",
+      "path": "docs/specs/0008-preproduction-track"
     }
   ]
 }

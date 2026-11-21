@@ -476,14 +476,16 @@ test('lint names a disabled track\'s assets left outside a marker', (dir) => {
 for (const [track, absent, present] of [
   ['infra', ['infra-reviewer', 'infra-change', '`/infra`', 'checkov', 'Never an agent', 'The infra track is unproven'], ['design-reviewer', '## Design']],
   ['design', ['design-reviewer', '`/design`', 'Design tokens drive', 'design tokens from'], ['infra-reviewer', '## Infrastructure']],
+  ['preprod', ['`/preprod`', 'preproduction skill', '## Preproduction', 'docs/playtests/', 'game or creative product'], ['design-reviewer', '## Design', 'infra-reviewer']],
 ]) {
   test(`disabling ${track} leaves no mention of it and keeps the other track's text`, (dir) => {
-    if (!existsSync(join(dir, `.claude/skills/${track === 'infra' ? 'infra-bootstrap' : 'design-system'}/SKILL.md`))) return;
-    const files = ['AGENTS.md', 'README.md', '.claude/commands/harden.md', '.claude/commands/ship.md', 'docs/INDEX.md', 'docs/ops/environments.md',
+    if (!existsSync(join(dir, `.claude/skills/${{ infra: 'infra-bootstrap', design: 'design-system', preprod: 'preproduction' }[track]}/SKILL.md`))) return;
+    const files = ['AGENTS.md', 'README.md', '.claude/commands/harden.md', '.claude/commands/ship.md', 'docs/INDEX.md',
+      '.claude/commands/assess.md', '.claude/commands/design.md', 'docs/ops/environments.md',
       '.claude/skills/security-rulebook/scanners.md', '.claude/skills/engineering-rulebook/nextjs.md', '.claude/skills/engineering-rulebook/nestjs-nuxt.md',
       '.claude/skills/gates-and-tracks/limits.md'].filter((f) => existsSync(join(dir, f)));
     expect(run(dir, 'node', ['scripts/adapt-template.mjs', '--disable', track, '--confirm']), 0);
-    const all = files.map((f) => text(dir, f)).join('\n');
+    const all = files.filter((f) => existsSync(join(dir, f))).map((f) => text(dir, f)).join('\n');
     for (const gone of absent) assert.ok(!all.includes(gone), `"${gone}" is gone with ${track}`);
     for (const kept of present) assert.ok(all.includes(kept), `"${kept}" stays with the other track`);
     assert.ok(all.includes('<!-- track:'), 'the other track keeps its markers');

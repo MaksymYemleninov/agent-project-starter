@@ -376,6 +376,26 @@ for (const entry of existsSync(join(DOCS, 'specs')) ? readdirSync(join(DOCS, 'sp
     }
   }
 
+  // Production content of a game or creative product is built on an approved look and a loop that
+  // was fun in grey boxes (ADR 0022). Neither exists before /preprod has run its stages.
+  if (String(fm.content) === 'true' && ['approved', 'in-progress', 'done'].includes(fm.status)) {
+    const artPath = join(DOCS, 'preprod/art-direction.md');
+    const art = existsSync(artPath) ? frontmatter(read(artPath)) : null;
+    if (!art) {
+      err(specPath, 'ships content (`content: true`) but there is no `docs/preprod/art-direction.md`. Run /preprod before approving it.');
+    } else if (art.status !== 'stable') {
+      err(specPath, `ships content but the art direction is \`${art.status}\`, not approved. Finish its style frames first.`);
+    }
+    const playtests = walk(join(DOCS, 'playtests')).filter((f) => f.endsWith('.md') && !basename(f).startsWith('_'));
+    const fun = playtests.some((f) => {
+      const p = frontmatter(read(f)) ?? {};
+      return p.status === 'stable' && p.verdict === 'fun';
+    });
+    if (!fun) {
+      err(specPath, 'ships content but no playtest in `docs/playtests/` is approved (`status: stable`) with `verdict: fun`. Playtest the greybox first.');
+    }
+  }
+
   if (['in-progress', 'done'].includes(fm.status)) {
     if (!existsSync(join(dir, 'plan.md'))) err(specPath, `status is \`${fm.status}\` but there is no plan.md`);
     if (!existsSync(join(dir, 'tasks.md'))) err(specPath, `status is \`${fm.status}\` but there is no tasks.md`);
@@ -401,9 +421,10 @@ function deferredAdr(value) {
 
 for (const [r, doc] of docs) {
   if (!doc.fm || r.startsWith('docs/decisions/') || r.startsWith('docs/specs/')) continue;
-  if (!['product', 'architecture', 'ops', 'security', 'design'].includes(doc.fm.type)) {
-    err(r, `frontmatter \`type: ${doc.fm.type}\` must be product | architecture | ops | security | design`);
+  if (!['product', 'architecture', 'ops', 'security', 'design', 'preprod', 'playtest'].includes(doc.fm.type)) {
+    err(r, `frontmatter \`type: ${doc.fm.type}\` must be product | architecture | ops | security | design | preprod | playtest`);
   }
+  if (doc.fm.type === 'playtest') oneOf(r, doc.fm, 'verdict', ['fun', 'not-yet', 'no']);
   oneOf(r, doc.fm, 'status', OTHER_STATUS);
   if (!isDate(doc.fm.last_verified)) err(r, 'frontmatter `last_verified` must be YYYY-MM-DD');
   else if (doc.fm.status === 'stable' && ageDays(doc.fm.last_verified) > 180) {

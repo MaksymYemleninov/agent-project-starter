@@ -55,6 +55,7 @@ own front page. What this file explains about the gates stays available, as a sk
 ## What it gives a project
 
 - **Design before frontend.** Projects with a UI make their design system and approved HTML prototypes first, and a spec with `ui: true` cannot be approved until they exist. See the [design-system skill](.claude/skills/design-system/SKILL.md). <!-- track:design -->
+- **Preproduction before production, for games and creative products.** Concept and tone (audience age, references, humour), story and world, style frames the human picks, and a greybox playtest of the core loop, all approved before the production stack is chosen; a spec with `content: true` cannot be approved until the style frames and a fun playtest are. A no-spoilers mode lets the human play blind. See the [preproduction skill](.claude/skills/preproduction/SKILL.md). <!-- track:preprod -->
 - **Code to a standard, enforced by tools.** A short set of principles and one pack per stack (TypeScript, Next.js, Python, Go, NestJS + Nuxt), turned into linter, type-checker and boundary-checker configuration at onboarding. See the [engineering rulebook](.claude/skills/engineering-rulebook/SKILL.md).
 - **Security from the first question.** A threat model, an ASVS level, a `## Security` section in every spec, a read-only security reviewer and secret scanning in CI. See the [security rulebook](.claude/skills/security-rulebook/SKILL.md).
 - **Infrastructure, when the project owns some.** An architect, an engineer and a reviewer that plan and write Terraform or OpenTofu, and never apply it. See the [infra rulebook](.claude/skills/infra-rulebook/SKILL.md). <!-- track:infra -->
@@ -81,6 +82,7 @@ before trusting a guardrail.
 | `/repair` | Make one failing test pass in a budget-capped headless loop that cannot touch the test |
 | `/security` | Whole-project security audit: threat model against the code, scanners, reviewer, dated report |
 | `/design` | Design system before frontend work: direction, tokens, HTML prototypes approved in a browser | <!-- track:design -->
+| `/preprod` | Preproduction for a game or creative product: concept and tone, story and world, style frames, greybox playtest, content design | <!-- track:preprod -->
 
 ## Scope of this template
 

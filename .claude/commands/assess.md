@@ -34,6 +34,12 @@ or empty because it does not work.
 - The single riskiest assumption, and the cheapest experiment that would kill it.
 - What it costs to run at ten users and at ten thousand.
 
+<!-- track:preprod -->
+For a game or creative product the riskiest assumption is usually that the core loop is fun, and
+the cheapest experiment is a greybox playtest, which `/preprod` runs before any production code.
+Name the loop and say what a playtest would have to show.
+<!-- /track:preprod -->
+
 ## 5. Decide
 
 One of three, stated plainly with reasoning:

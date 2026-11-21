@@ -7,7 +7,8 @@ argument-hint: "[optional: path to the idea file, defaults to docs/idea.md]"
 
 You are setting up a repository that will be built mostly by agents. Everything you decide here
 becomes the context every future session inherits. Getting it slightly wrong is expensive and
-quiet, so the order below is not negotiable: **you do not write code until phase 6.**
+quiet, so the order below is not negotiable: **you do not write code until phase 6**, apart from
+the throwaway greybox of phase 3a for a game or creative product.
 
 Idea file: `$1` if provided, otherwise `@docs/idea.md`.
 
@@ -107,6 +108,11 @@ Gaps worth closing, in roughly this order, skipping every one the idea file answ
    (public web, webhooks, uploads, third-party logins), and any legal or contractual requirement
    (GDPR, data residency, a customer's security questionnaire). These feed the threat model in
    phase 3 and the verification level in phase 4.
+8. Is it a game, an interactive story, or another product whose look, tone or feel is the product?
+   If yes, it gets preproduction (phase 3a) before any stack is proposed, and two things are asked
+   now: who plays it, with an age range, and whether the human wants to play or watch it blind. In
+   blind mode, keep plot and content out of everything you show the human from here on (the
+   `preproduction` skill, section 4).
 
 Stop asking when the remaining unknowns would not change what you build first. Then summarize the
 answers and get an explicit confirmation before moving on.
@@ -128,6 +134,30 @@ were precise. Do not invent numbers, do not add market language, and where an an
 uncertain, write that it is uncertain rather than smoothing it over.
 
 Leave `docs/idea.md` untouched. It is the historical record.
+
+## Phase 3a - Preproduction (games and creative products only)
+
+Skip this phase when phase 2 found that the product is not a game or creative product; the `preprod`
+track is then disabled in phase 5. Otherwise run `/preprod` now, before any stack is proposed, and
+follow `.claude/skills/preproduction/SKILL.md`:
+
+1. concept and tone: audience with an age range, genre, references, tone of humour;
+2. story and world: overall goal, characters, visual bible, idea bank;
+3. art direction: moodboard and two or three style frames of a key scene, the human picks one;
+4. greybox of the core loop in `preprod/greybox/` and a playtest in `docs/playtests/`, approved by
+   the human who played it;
+5. content design.
+
+**Do not start phase 4** until `docs/preprod/art-direction.md` is `stable` and a playtest in
+`docs/playtests/` is `stable` with `verdict: fun`. A `not-yet` means another greybox iteration; a
+`no` means back to the concept, and possibly to `/assess`. This phase can take several sessions:
+record the stage reached in `.claude/onboarding.json` (`phase: "3a"`, and the stage in
+`agreedButNotWritten` while it is open), and resume from it.
+
+The greybox is the one piece of code before phase 6, and it is throwaway: self-contained, no
+dependency no ADR covers, outside `sourcePaths`, never imported by production code. In phase 4 the
+stack is chosen for the game the approved documents describe (engine, rendering, input, platform),
+not for the greybox.
 
 ## Phase 4 - Propose the stack, as decisions
 
@@ -220,6 +250,7 @@ Then update:
   `node scripts/adapt-template.mjs --disable <comma-separated-track-names>` to preview, then
   `--confirm` for the approved cleanup. Do not maintain a second removal list here.
   Disable `design` when there is no UI and `infra` when the project owns no infrastructure code.
+  Disable `preprod` when phase 3a was skipped (not a game or creative product).
   Disable `api` when there is no API contract and `operations` when no operating procedure is
   needed. Keep only the selected stack packs (`typescript`, `nextjs`, `python`, `go`, `nestjs-nuxt`).
   Fill retained placeholder skills from approved decisions. The adapter removes owned files,
@@ -305,7 +336,9 @@ Finish with a short report: stack chosen, ADRs written, what runs now, what the 
 at first, and the open questions you could not resolve. If the infra track was kept, say that
 infrastructure is the next step and starts with `/infra`, which cuts its own spec. If the project has
 a UI, say that `/design` comes before any frontend work, and that the first spec, if it is a UI
-spec, cannot be approved until the design is. Say explicitly that gates are advisory
+spec, cannot be approved until the design is. If phase 3a ran, say that content specs set
+`content: true` and are held to the approved art direction and playtest, and in blind mode keep the
+report free of plot and content. Say explicitly that gates are advisory
 until they run `/harden`, and name the one condition that should trigger it: the project stops
 being an experiment.
 
