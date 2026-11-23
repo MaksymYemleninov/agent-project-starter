@@ -7,6 +7,7 @@ owner: TBD
 adrs: []
 ui: false        # true when this spec changes the interface; then it needs an approved design
 design: null     # the prototype it implements, e.g. design/prototypes/dashboard.html
+content: false   # true when it ships game or creative content (art, story, levels); then it needs approved style frames and a fun playtest
 ---
 # NNNN - Feature name
 

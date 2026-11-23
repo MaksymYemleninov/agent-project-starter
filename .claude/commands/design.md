@@ -21,6 +21,13 @@ If the `frontend-design` skill is not available (the plugin is not installed or 
 trusted), say so and stop. Designing without it produces exactly the templated look it exists to
 avoid.
 
+<!-- track:preprod -->
+For a game or creative product, `docs/preprod/art-direction.md` (approved by `/preprod`) already
+holds the palette, shape language and tone. It is the brief's first source: the design system covers
+the interface (HUD, menus, settings) in that direction and does not contradict it. If the art
+direction is not `stable` yet, finish it first. In blind mode, build prototypes from neutral content.
+<!-- /track:preprod -->
+
 ## Create
 
 1. **Brief.** From `docs/product/vision.md`, `personas.md`, `scope.md` and the first capability in

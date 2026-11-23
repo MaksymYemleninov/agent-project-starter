@@ -39,6 +39,9 @@ One directory per feature under `specs/`, numbered. Each holds `spec.md` (what a
 - [0007 - Track markers that cut optional text](specs/0007-track-markers/spec.md) - done
 - [0007 plan](specs/0007-track-markers/plan.md)
 - [0007 tasks](specs/0007-track-markers/tasks.md)
+- [0008 - Preproduction track for games and creative products](specs/0008-preproduction-track/spec.md) - done
+- [0008 plan](specs/0008-preproduction-track/plan.md)
+- [0008 tasks](specs/0008-preproduction-track/tasks.md)
 <!-- /specs:list -->
 
 ## Decisions
@@ -72,6 +75,7 @@ Architecture decision records. Append-only: a wrong decision is superseded, neve
 - [0019 - Contain secrets with the sandbox, and parse commands in the secret guard](decisions/0019-contain-secrets-with-the-sandbox.md) - accepted
 - [0020 - Write the project's README instead of inheriting the template's](decisions/0020-write-the-project-readme-instead-of-inheriting-the-templates.md) - accepted
 - [0021 - Mark optional-track text and cut it with the track](decisions/0021-mark-optional-track-text-and-cut-it-with-the-track.md) - accepted
+- [0022 - Run preproduction before production code for games and creative products](decisions/0022-preproduction-before-production-for-creative-products.md) - accepted
 <!-- /decisions:list -->
 
 ## Architecture
@@ -97,6 +101,15 @@ Architecture decision records. Append-only: a wrong decision is superseded, neve
 rationale, component inventory and the prototypes' index. Tokens and prototypes live in `design/`
 at the repository root.
 <!-- /track:design -->
+
+<!-- track:preprod -->
+## Preproduction
+
+For a game or creative product, `/preprod` writes `preprod/concept.md`, `story.md`, `idea-bank.md`,
+`art-direction.md` and `content.md` here, and a playtest per session in `playtests/`, before the
+production stack is chosen. Style frames and the throwaway greybox live in `preprod/` at the
+repository root. Story, idea bank and content carry `spoilers: true`.
+<!-- /track:preprod -->
 
 ## Journal
 

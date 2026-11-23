@@ -473,17 +473,33 @@ test('lint names a disabled track\'s assets left outside a marker', (dir) => {
   check('\n```md\ngone-skill\n```\n', 0);
   check('\nThe path docs/gone/ and the word gone-skilled are not assets.\n', 0);
 });
+// Spec 0008. Preproduction sits between the product documents and the stack, and phase 4 waits for
+// every stage, not only the two the lint gate checks.
+test('onboarding runs preproduction before the stack and holds phase 4 for all five stages', (dir) => {
+  const file = join(dir, '.claude/commands/onboard.md');
+  if (!existsSync(file) || !existsSync(join(dir, '.claude/skills/preproduction/SKILL.md'))) return;
+  const onboard = readFileSync(file, 'utf8');
+  const [p3, p3a, p4] = ['## Phase 3 ', '## Phase 3a', '## Phase 4'].map((h) => onboard.indexOf(h));
+  assert.ok(p3 !== -1 && p3 < p3a && p3a < p4, 'Phase 3a sits between Phase 3 and Phase 4');
+  const phase3a = onboard.slice(p3a, p4);
+  const hold = phase3a.slice(phase3a.indexOf('**Do not start phase 4**'));
+  for (const doc of ['concept.md', 'story.md', 'idea-bank.md', 'art-direction.md', 'content.md', 'players: people', 'verdict: fun']) {
+    assert.ok(hold.includes(doc), `the phase 4 hold names ${doc}`);
+  }
+});
 for (const [track, absent, present] of [
   ['infra', ['infra-reviewer', 'infra-change', '`/infra`', 'checkov', 'Never an agent', 'The infra track is unproven'], ['design-reviewer', '## Design']],
   ['design', ['design-reviewer', '`/design`', 'Design tokens drive', 'design tokens from'], ['infra-reviewer', '## Infrastructure']],
+  ['preprod', ['`/preprod`', 'preproduction skill', '## Preproduction', 'docs/playtests/', 'game or creative product'], ['design-reviewer', '## Design', 'infra-reviewer']],
 ]) {
   test(`disabling ${track} leaves no mention of it and keeps the other track's text`, (dir) => {
-    if (!existsSync(join(dir, `.claude/skills/${track === 'infra' ? 'infra-bootstrap' : 'design-system'}/SKILL.md`))) return;
-    const files = ['AGENTS.md', 'README.md', '.claude/commands/harden.md', '.claude/commands/ship.md', 'docs/INDEX.md', 'docs/ops/environments.md',
+    if (!existsSync(join(dir, `.claude/skills/${{ infra: 'infra-bootstrap', design: 'design-system', preprod: 'preproduction' }[track]}/SKILL.md`))) return;
+    const files = ['AGENTS.md', 'README.md', '.claude/commands/harden.md', '.claude/commands/ship.md', 'docs/INDEX.md',
+      '.claude/commands/assess.md', '.claude/commands/design.md', 'docs/ops/environments.md',
       '.claude/skills/security-rulebook/scanners.md', '.claude/skills/engineering-rulebook/nextjs.md', '.claude/skills/engineering-rulebook/nestjs-nuxt.md',
       '.claude/skills/gates-and-tracks/limits.md'].filter((f) => existsSync(join(dir, f)));
     expect(run(dir, 'node', ['scripts/adapt-template.mjs', '--disable', track, '--confirm']), 0);
-    const all = files.map((f) => text(dir, f)).join('\n');
+    const all = files.filter((f) => existsSync(join(dir, f))).map((f) => text(dir, f)).join('\n');
     for (const gone of absent) assert.ok(!all.includes(gone), `"${gone}" is gone with ${track}`);
     for (const kept of present) assert.ok(all.includes(kept), `"${kept}" stays with the other track`);
     assert.ok(all.includes('<!-- track:'), 'the other track keeps its markers');

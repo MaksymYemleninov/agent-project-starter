@@ -6,6 +6,23 @@ the actual content.
 
 Newest entry on top.
 
+## 2026-11-21 - Preproduction track for games and creative products (spec 0008, ADR 0022)
+
+- [ADR 0022](decisions/0022-preproduction-before-production-for-creative-products.md): optional
+  `preprod` track in `.claude/tracks.json` with `/preprod` and the `preproduction` skill (procedure,
+  document formats, no-spoilers mode).
+- `/onboard`: phase 2 asks whether it is a game or creative product and whether the human plays
+  blind; new phase 3a runs concept, story, art direction, greybox playtest and content design, and
+  holds phase 4 until the art direction and a `fun` playtest are approved.
+- `lint-docs.mjs`: a spec with `content: true` cannot be approved without a stable art direction and
+  a stable playtest with `verdict: fun`; document types `preprod` and `playtest`.
+- Marked text in `/design` (art direction is the interface's brief), `/assess`, `/harden`, `/ship`,
+  `AGENTS.md`, the README and `docs/INDEX.md`; spec template gains `content:`. Gate and regression tests added.
+- Review and first real run (2026-11-23): `/onboard` holds phase 4 until all five stages are
+  stable; playtests record `players: people | bots` and only people can give `fun`; blind mode
+  covers content specs; playtests are exempt from staleness. Regression test for the phase order.
+- Not exercised: a game taken through the track to its first production spec.
+
 ## 2026-10-15 - Track markers (spec 0007, ADR 0021)
 
 - `scripts/track-markers.mjs`: `<!-- track:NAME -->` blocks and one-line markers. The adapter cuts

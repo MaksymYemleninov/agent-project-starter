@@ -12,7 +12,7 @@
 import { execSync, execFileSync } from 'node:child_process';
 import {
   mkdtempSync, rmSync, writeFileSync, readFileSync, appendFileSync, existsSync,
-  mkdirSync, copyFileSync, realpathSync,
+  mkdirSync, copyFileSync, realpathSync, renameSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
@@ -660,6 +660,56 @@ try {
     check('a UI spec passes once the design is approved', out().includes('0004-dashboard'), false);
     rmSync(dir, { recursive: true, force: true });
     rmSync(join(sandbox, 'docs/design'), { recursive: true, force: true });
+    sh('git checkout -- docs/INDEX.md');
+  }
+
+  // A content spec cannot be approved before the style frames and a fun playtest are (ADR 0022).
+  {
+    // A derived game project already has its own preproduction documents: set them aside, since the
+    // linter skips dot-directories, and put them back afterwards.
+    const aside = ['preprod', 'playtests'].filter((d) => existsSync(join(sandbox, 'docs', d)));
+    for (const d of aside) renameSync(join(sandbox, 'docs', d), join(sandbox, 'docs', `.aside-${d}`));
+    const dir = join(sandbox, 'docs/specs/9905-first-level');
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(join(dir, 'plan.md'), '---\ntype: plan\n---\n# plan\n');
+    writeFileSync(join(dir, 'tasks.md'), '---\ntype: tasks\n---\n# tasks\n');
+    writeFileSync(
+      join(dir, 'spec.md'),
+      ['---', 'type: spec', 'id: "9905"', 'status: approved', 'date: 2026-11-21', 'owner: x', 'adrs: []', 'ui: false',
+       'content: true', '---', '# 9905 - First level', '',
+       'Companion documents: [plan](plan.md), [tasks](tasks.md).', '', '## Acceptance criteria', '',
+       '1. When a player reaches the exit, the system shall load the next level.', '', '## Security', '',
+       'Local single-player content; no new entry point, data or role.', '',
+       '## Open questions', '', '- [x] none', ''].join('\n'),
+    );
+    appendFileSync(join(sandbox, 'docs/INDEX.md'), '\n- [First level](specs/9905-first-level/spec.md)\n');
+    const out = () => sh('node scripts/lint-docs.mjs || true');
+    check('a content spec without an art direction cannot be approved', out().includes('there is no `docs/preprod/art-direction.md`'), true);
+    mkdirSync(join(sandbox, 'docs/preprod'), { recursive: true });
+    mkdirSync(join(sandbox, 'docs/playtests'), { recursive: true });
+    const doc = (file, fm) => writeFileSync(join(sandbox, file), `---\n${fm}\nlast_verified: 2026-11-21\n---\n# Fixture\n`);
+    appendFileSync(join(sandbox, 'docs/INDEX.md'), '\n- [Art direction](preprod/art-direction.md)\n- [Playtest](playtests/0001-greybox.md)\n');
+    doc('docs/preprod/art-direction.md', 'type: preprod\nstatus: draft');
+    check('a content spec waits for the style frames to be chosen', out().includes('art direction is `draft`'), true);
+    check('a content spec needs a playtest', out().includes('no playtest in `docs/playtests/` is approved'), true);
+    doc('docs/preprod/art-direction.md', 'type: preprod\nstatus: stable');
+    doc('docs/playtests/0001-greybox.md', 'type: playtest\nstatus: stable\nplayers: people\nverdict: maybe');
+    check('a playtest verdict outside fun | not-yet | no fails', /0001-greybox\.md.*verdict/.test(out()), true);
+    doc('docs/playtests/0001-greybox.md', 'type: playtest\nstatus: stable\nplayers: people\nverdict: not-yet');
+    check('a not-yet playtest does not open production', out().includes('no playtest in `docs/playtests/` is approved'), true);
+    doc('docs/playtests/0001-greybox.md', 'type: playtest\nstatus: draft\nplayers: people\nverdict: fun');
+    check('an unapproved fun playtest does not open production', out().includes('no playtest in `docs/playtests/` is approved'), true);
+    doc('docs/playtests/0001-greybox.md', 'type: playtest\nstatus: stable\nplayers: bots\nverdict: fun');
+    check('bots cannot find a loop fun', /0001-greybox\.md.*bots measure a loop/.test(out()), true);
+    check('a bots playtest does not open production', out().includes('no playtest in `docs/playtests/` is approved'), true);
+    doc('docs/playtests/0001-greybox.md', 'type: playtest\nstatus: stable\nplayers: people\nverdict: fun');
+    const passed = out();
+    check('a content spec passes once style frames and a fun playtest with people are approved',
+      /lint-docs (passed|failed)/.test(passed) && !passed.includes('9905-first-level'), true);
+    rmSync(dir, { recursive: true, force: true });
+    rmSync(join(sandbox, 'docs/preprod'), { recursive: true, force: true });
+    rmSync(join(sandbox, 'docs/playtests'), { recursive: true, force: true });
+    for (const d of aside) renameSync(join(sandbox, 'docs', `.aside-${d}`), join(sandbox, 'docs', d));
     sh('git checkout -- docs/INDEX.md');
   }
 

@@ -42,6 +42,8 @@ try {
     for (const gone of ['infra-reviewer', 'design-reviewer']) assert.ok(!read('.claude/commands/harden.md').includes(gone), `harden.md still names ${gone}`);
     for (const gone of ['/infra', 'design-reviewer']) assert.ok(!read('AGENTS.md').includes(gone), `AGENTS.md still names ${gone}`);
     assert.ok(!read('docs/INDEX.md').includes('## Design'), 'docs/INDEX.md still has the Design section');
+    assert.ok(!read('docs/INDEX.md').includes('## Preproduction'), 'docs/INDEX.md still has the Preproduction section');
+    for (const file of ['AGENTS.md', 'README.md', '.claude/commands/harden.md', '.claude/commands/assess.md']) assert.ok(!read(file).includes('/preprod'), `${file} still names /preprod`);
   }
 
   for (const file of walkFiles(fixture, 'docs').filter((f) => f.endsWith('.md') && !f.includes('/_'))) {

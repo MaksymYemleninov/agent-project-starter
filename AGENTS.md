@@ -65,6 +65,7 @@ Stack-specific principles are appended here by `/onboard` from the stack ADRs.
 | `docs/specs/`, `docs/decisions/` | One directory per feature (`spec.md`, `plan.md`, `tasks.md`); ADRs, numbered, append-only, superseded never deleted. |
 | `docs/architecture/`, `docs/ops/`, `docs/security/` | overview, data model, integrations; runbook, environments; threat model and dated audit reports. |
 | `docs/design/`, `design/` | The approved design system, written by `/design`; tokens and HTML prototypes. UI is built to it. | <!-- track:design -->
+| `docs/preprod/`, `docs/playtests/`, `preprod/` | Game or creative preproduction from `/preprod`: concept, story, art direction, playtests; style frames and the throwaway greybox. Content is built to it. | <!-- track:preprod -->
 | `infra/` | Infrastructure code, built and changed through `/infra` (and its architect, engineer and reviewer agents). | <!-- track:infra -->
 | `scripts/` | Repo tooling. `lint-docs.mjs` and `check-adr-drift.mjs` run in CI. |
 
@@ -129,8 +130,7 @@ After:
 
 ## 7. What does not belong in this file
 
-- Long procedures (those are skills) and rules for one directory or file type
-  (`.claude/rules/*.md`).
+- Long procedures (those are skills) and rules for one directory or file type (`.claude/rules/`).
 - Hard security guarantees (permissions and hooks in `.claude/settings.json`), and anything the
   agent can cheaply read from the repository itself.
 
