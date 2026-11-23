@@ -100,6 +100,7 @@ what happens.
 type: playtest
 status: draft
 last_verified: YYYY-MM-DD
+players: people     # people | bots; only people can give verdict: fun
 verdict: not-yet    # fun | not-yet | no
 build: preprod/greybox/index.html
 ---
@@ -110,6 +111,10 @@ Who played (role and age, not names), how many players, how long, which build.
 
 ## Observed
 What players did, where they laughed, got stuck, stopped or asked to play again. Observed, not hoped.
+
+## Metrics
+Optional. The numbers this loop is judged by, with how they were measured: idle share per player,
+collisions per minute, time to first useful action, deaths per minute.
 
 ## Tuning tried
 ## Verdict

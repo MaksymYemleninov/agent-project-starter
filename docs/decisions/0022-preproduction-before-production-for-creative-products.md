@@ -81,6 +81,11 @@ neutral artefacts; onboarding drops the track for projects that are not games or
   imported, which also means no gate checks it; it is thrown away by convention plus review.
 - The gate checks that the art direction and a playtest are approved, not that production follows
   them. Fidelity to the style frames is review.
+- Like every documentation gate it only reports while the project is in `exploration`, which is
+  exactly when the first content specs are written. Until `/harden` the order rests on `/onboard`
+  holding phase 4 for all five stages, and on the agent.
+- A playtest by bots or a simulation is useful for load and bottlenecks but cannot open production:
+  only `players: people` with `verdict: fun` does.
 - Blind mode moves approvals for story and content from the human to the agent. A bad story can pass
   a self-review the human never sees; the human can end blind mode at any time to read it.
 - Style frames made by an agent without an image model are HTML or SVG compositions. They show

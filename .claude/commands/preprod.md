@@ -19,12 +19,19 @@ in a status, and a stage that is `stable` is not redone unless the human asks fo
 
 ## Before the first stage
 
-Ask, one question at a time, unless `docs/preprod/concept.md` already answers it:
+Find out whether the human will play or watch it blind. Read it from `docs/preprod/concept.md`, or
+from `agreedButNotWritten` in `.claude/onboarding.json` where `/onboard` phase 2 recorded it; ask
+only if neither has it, and before anything else, since every later step depends on it. Blind mode
+is the skill's section 4.
 
-1. Will the human play or watch it blind? If yes, run in blind mode (the skill's section 4) from
-   here on, and record it in `concept.md`. Ask this first: every later answer depends on it.
-2. Who approves each stage. By default the human approves all five; in blind mode the human approves
-   concept, art direction and playtest, and story and content are approved by you.
+Who approves is fixed, not asked: the human approves concept, art direction and playtest, always.
+Story, idea bank and content are approved by the human, or by you in blind mode. A human who says
+"you decide" about style frames or a playtest verdict is told that these two need their own eyes;
+offer a smaller choice instead (two frames instead of three, a five-minute play).
+
+If the human wants the stages drafted in one go and approved together (batch mode), that is fine:
+draft them in order, present them together, and record each approval separately. A later stage
+built on one that changes during approval is reopened, and says so.
 
 ## Stages
 
@@ -40,10 +47,13 @@ the conversation, set `status: stable` with a dated approval line, add the docum
    keeps every idea, including the rejected ones.
 3. **Art direction** → `docs/preprod/art-direction.md`, `preprod/moodboard.md`,
    `preprod/style-frames/`. A moodboard of linked references, then two or three style frames of one
-   key scene. The human picks one; that pick is the approval.
+   key scene. The human picks one; that pick is the approval. Give the human a way to open them that
+   works: plain files that render from `file://`, or one local static server command
+   (`python3 -m http.server --bind 127.0.0.1 --directory preprod`) with the exact URL.
 4. **Greybox and playtest** → `preprod/greybox/`, `docs/playtests/NNNN-slug.md`. The core loop with
-   grey shapes and no art, the human plays it, the playtest records what happened and a verdict.
-   Only `verdict: fun` with `status: stable` lets production start.
+   grey shapes and no art, people play it, the playtest records what happened and a verdict. Bots
+   and simulations may measure it first (`players: bots`), but only a playtest with
+   `players: people`, `verdict: fun` and `status: stable` lets production start.
 5. **Content design** → `docs/preprod/content.md`. Levels, missions or episodes, each built from the
    approved loop and set in the approved world.
 

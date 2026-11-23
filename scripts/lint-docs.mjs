@@ -381,18 +381,20 @@ for (const entry of existsSync(join(DOCS, 'specs')) ? readdirSync(join(DOCS, 'sp
   if (String(fm.content) === 'true' && ['approved', 'in-progress', 'done'].includes(fm.status)) {
     const artPath = join(DOCS, 'preprod/art-direction.md');
     const art = existsSync(artPath) ? frontmatter(read(artPath)) : null;
-    if (!art) {
+    if (!existsSync(artPath)) {
       err(specPath, 'ships content (`content: true`) but there is no `docs/preprod/art-direction.md`. Run /preprod before approving it.');
+    } else if (!art) {
+      err(specPath, 'ships content but `docs/preprod/art-direction.md` has no frontmatter, so its approval cannot be read.');
     } else if (art.status !== 'stable') {
       err(specPath, `ships content but the art direction is \`${art.status}\`, not approved. Finish its style frames first.`);
     }
     const playtests = walk(join(DOCS, 'playtests')).filter((f) => f.endsWith('.md') && !basename(f).startsWith('_'));
     const fun = playtests.some((f) => {
       const p = frontmatter(read(f)) ?? {};
-      return p.status === 'stable' && p.verdict === 'fun';
+      return p.status === 'stable' && p.verdict === 'fun' && p.players === 'people';
     });
     if (!fun) {
-      err(specPath, 'ships content but no playtest in `docs/playtests/` is approved (`status: stable`) with `verdict: fun`. Playtest the greybox first.');
+      err(specPath, 'ships content but no playtest in `docs/playtests/` is approved (`status: stable`) with `players: people` and `verdict: fun`. Playtest the greybox with people first.');
     }
   }
 
@@ -424,10 +426,14 @@ for (const [r, doc] of docs) {
   if (!['product', 'architecture', 'ops', 'security', 'design', 'preprod', 'playtest'].includes(doc.fm.type)) {
     err(r, `frontmatter \`type: ${doc.fm.type}\` must be product | architecture | ops | security | design | preprod | playtest`);
   }
-  if (doc.fm.type === 'playtest') oneOf(r, doc.fm, 'verdict', ['fun', 'not-yet', 'no']);
+  if (doc.fm.type === 'playtest') {
+    oneOf(r, doc.fm, 'verdict', ['fun', 'not-yet', 'no']);
+    oneOf(r, doc.fm, 'players', ['people', 'bots']);
+    if (doc.fm.verdict === 'fun' && doc.fm.players === 'bots') err(r, 'bots measure a loop but cannot find it fun: a `players: bots` playtest cannot have `verdict: fun`');
+  }
   oneOf(r, doc.fm, 'status', OTHER_STATUS);
   if (!isDate(doc.fm.last_verified)) err(r, 'frontmatter `last_verified` must be YYYY-MM-DD');
-  else if (doc.fm.status === 'stable' && ageDays(doc.fm.last_verified) > 180) {
+  else if (doc.fm.status === 'stable' && doc.fm.type !== 'playtest' && ageDays(doc.fm.last_verified) > 180) {
     warn(r, `stable but last verified ${Math.round(ageDays(doc.fm.last_verified))} days ago. Re-read it.`);
   }
   if (doc.fm.status === 'template') {

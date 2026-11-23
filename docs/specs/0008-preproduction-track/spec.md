@@ -69,37 +69,49 @@ Order of work:
 9. The greybox stage shall build the core loop without art or dependencies outside the production
    source paths, and shall record a playtest in `docs/playtests/` that is `stable` only when the
    human has played it and approved the verdict.
-10. While the art direction is not `stable` or no `stable` playtest has the verdict `fun`, `/onboard`
-    shall not start phase 4.
+10. While any of `concept.md`, `story.md`, `idea-bank.md`, `art-direction.md` and `content.md` is
+    not `stable`, or no `stable` playtest has `players: people` and `verdict: fun`, `/onboard` shall
+    not start phase 4.
 
 Gate:
 
 11. If a spec has `content: true` and status `approved`, `in-progress` or `done`, and
     `docs/preprod/art-direction.md` is missing or not `stable`, then the linter shall fail.
 12. If a spec has `content: true` and status `approved`, `in-progress` or `done`, and no document in
-    `docs/playtests/` has `status: stable` and `verdict: fun`, then the linter shall fail.
+    `docs/playtests/` has `status: stable`, `players: people` and `verdict: fun`, then the linter
+    shall fail.
 13. The linter shall accept documents of type `preprod` and `playtest`, and shall fail a playtest
-    whose `verdict` is not `fun`, `not-yet` or `no`.
+    whose `verdict` is not `fun`, `not-yet` or `no`, whose `players` is not `people` or `bots`, or
+    that has `players: bots` with `verdict: fun`.
+14. The linter shall not warn that a stable playtest is stale: playtests are records, not re-verified.
 
 No spoilers:
 
-14. Where the human asked to play or watch blind, the orchestrating agent shall approve the story and
+15. Where the human asked to play or watch blind, the orchestrating agent shall approve the story and
     content stages itself, record that approval as delegated, and show the human only neutral
-    artefacts: style frames without plot, statuses and stage names.
+    artefacts: style frames without plot, statuses and stage names; and content specs, their index
+    and log lines stay neutral during production.
 
 Integration:
 
-15. Where a stable art direction exists, `/design` shall take its palette and tone as the brief for
+16. Where a stable art direction exists, `/design` shall take its palette and tone as the brief for
     the interface and shall not contradict it.
-16. The README and `AGENTS.md` shall mention the track only in text marked `<!-- track:preprod -->`.
+17. The README and `AGENTS.md` shall mention the track only in text marked `<!-- track:preprod -->`.
 
 ## Security
 
-No new entry point, data store, role or integration. The greybox is local and dependency-free;
+No new entry point, data store, role or integration. When characters are real people, their
+distinguishing traits are personal data, possibly about children: the skill keeps them in a
+gitignored local config by default and sends a decision to commit them through an ADR and the
+threat model. The greybox is local and dependency-free;
 moodboard references are links, so no third-party image is copied into the repository. Blind mode
 changes who approves creative content, not access to anything.
 
 ## Open questions
 
+- [x] Does the `content:` field in the spec template stay in projects without the track? Yes, as
+      `ui:` stays without the design track: the marker grammar does not reach YAML frontmatter,
+      and `content: false` is harmless. [OVERRIDE: Goal "keep nothing of it"]
 - [x] Should the gate also require approved story and content design? No: the request names style
-      frames and playtest; the order is enforced by `/onboard` and `/preprod`.
+      frames and playtest; `/onboard` holds phase 4 until all five stages are approved
+      (criterion 10), and a regression test keeps that condition in place.

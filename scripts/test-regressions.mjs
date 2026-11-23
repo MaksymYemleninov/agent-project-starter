@@ -473,6 +473,20 @@ test('lint names a disabled track\'s assets left outside a marker', (dir) => {
   check('\n```md\ngone-skill\n```\n', 0);
   check('\nThe path docs/gone/ and the word gone-skilled are not assets.\n', 0);
 });
+// Spec 0008. Preproduction sits between the product documents and the stack, and phase 4 waits for
+// every stage, not only the two the lint gate checks.
+test('onboarding runs preproduction before the stack and holds phase 4 for all five stages', (dir) => {
+  const file = join(dir, '.claude/commands/onboard.md');
+  if (!existsSync(file) || !existsSync(join(dir, '.claude/skills/preproduction/SKILL.md'))) return;
+  const onboard = readFileSync(file, 'utf8');
+  const [p3, p3a, p4] = ['## Phase 3 ', '## Phase 3a', '## Phase 4'].map((h) => onboard.indexOf(h));
+  assert.ok(p3 !== -1 && p3 < p3a && p3a < p4, 'Phase 3a sits between Phase 3 and Phase 4');
+  const phase3a = onboard.slice(p3a, p4);
+  const hold = phase3a.slice(phase3a.indexOf('**Do not start phase 4**'));
+  for (const doc of ['concept.md', 'story.md', 'idea-bank.md', 'art-direction.md', 'content.md', 'players: people', 'verdict: fun']) {
+    assert.ok(hold.includes(doc), `the phase 4 hold names ${doc}`);
+  }
+});
 for (const [track, absent, present] of [
   ['infra', ['infra-reviewer', 'infra-change', '`/infra`', 'checkov', 'Never an agent', 'The infra track is unproven'], ['design-reviewer', '## Design']],
   ['design', ['design-reviewer', '`/design`', 'Design tokens drive', 'design tokens from'], ['infra-reviewer', '## Infrastructure']],

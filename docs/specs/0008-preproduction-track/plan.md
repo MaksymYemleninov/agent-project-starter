@@ -29,7 +29,17 @@ points at the greybox as the cheapest fun experiment, `/harden` requires the app
 `test-gates.mjs`: a `content: true` spec fails without an art direction, fails with a draft one,
 fails without a fun playtest, fails with a playtest verdict outside the set, and passes once both are
 approved. `test-regressions.mjs`: disabling `preprod` leaves no mention and keeps the others' text.
-`test-derived.mjs` already disables every optional track; it asserts the preprod text is gone.
+`test-derived.mjs` already disables every optional track; it asserts the preprod text is gone. A
+regression test holds phase 3a between phases 3 and 4 and the phase 4 hold naming all five
+documents. The gate test sets aside a derived project's own preproduction documents, so it also
+passes in a game project.
+
+## Review and first run
+
+A clean-context review found the phase 4 hold checked two stages of five; fixed. The first real game
+run (2026-11-21) added [PROPOSED: feedback from that run]: bots playtests that cannot open production,
+a metrics section, style frames never in `docs/design/`, a local server for frames, real people as
+characters, product-level ADRs allowed in phase 3a, batch approval, and blind mode for content specs.
 
 ## Risks
 

@@ -18,7 +18,10 @@ Newest entry on top.
   a stable playtest with `verdict: fun`; document types `preprod` and `playtest`.
 - Marked text in `/design` (art direction is the interface's brief), `/assess`, `/harden`, `/ship`,
   `AGENTS.md`, the README and `docs/INDEX.md`; spec template gains `content:`. Gate and regression tests added.
-- Not exercised: a real game onboarded through the track.
+- Review and first real run (2026-11-23): `/onboard` holds phase 4 until all five stages are
+  stable; playtests record `players: people | bots` and only people can give `fun`; blind mode
+  covers content specs; playtests are exempt from staleness. Regression test for the phase order.
+- Not exercised: a game taken through the track to its first production spec.
 
 ## 2026-10-15 - Track markers (spec 0007, ADR 0021)
 

@@ -42,12 +42,22 @@ palette, shape language and one distinctive detail. Every idea raised along the 
 idea bank with its status (`in`, `parked`, `cut`) and the reason. Nothing is deleted from it: a cut
 idea is the cheapest source of the next one.
 
+When the characters are real people (a family, a team, friends), do not invent looks or traits for
+them. Use one shared body, tell them apart by colour, one accessory and one phrase, keep all of it in
+an editable config rather than in canon, give nobody worse stats, and make nobody the butt of a
+joke they did not choose. That config is personal data, often about children: keep it out of the
+repository (a gitignored local file with a committed example of placeholder people) unless the
+human decides otherwise, and then record the decision and add the data to the threat model.
+
 **Art direction.** First a moodboard: links to references with a note on what each contributes
 (palette, light, line, proportion). Links, not copied files: third-party images do not go into the
 repository. Then two or three style frames of the same key scene from the story, each a different
 direction within the concept, made as HTML, SVG or images in `preprod/style-frames/`, with the
 palette and shape language written next to each. Check each against the concept's audience and
-"never feel like" before showing it. The human opens them and picks one, possibly with changes; that
+"never feel like" before showing it. Style frames live in `preprod/style-frames/`, never in
+`docs/design/` or `design/`, which belong to the interface's design system. Make them viewable as
+plain files where possible; if they load shared data, give the human the local server command and
+URL. The human opens them and picks one, possibly with changes; that
 pick is the approval, recorded with the date and the frame. The rejected frames stay, with why.
 If an image-generation tool is available and the human agrees to use it, frames may be generated;
 say which tool made which frame.
@@ -62,11 +72,17 @@ menus beyond what starts it. It answers one question, "is the loop fun without t
 - it is throwaway. Production rebuilds the loop on the approved stack; the playtest, not the code,
   is what carries over.
 
-Then the human plays it, and you record a playtest in `docs/playtests/`: who played, how long, what
-they did, where they laughed, got stuck or stopped, the tuning tried, and a verdict: `fun`,
-`not-yet` (change and play again, as a new playtest) or `no` (the loop is wrong; go back to the
-concept). Write what was observed, not what was hoped. The human approves the verdict; only then
-is it `stable`.
+Bots or a simulation may run it first and record `players: bots`: they measure load, idle time,
+crowding and bottlenecks well, and that is worth a playtest record of its own. They cannot say
+whether it is fun, so a bots playtest is never `verdict: fun`; the linter refuses it.
+
+Then people play it, ideally including someone who does not usually play games, and you record a
+playtest with `players: people`: who played (role and age, not names), how long, what they did,
+where they laughed, got stuck or stopped, the tuning tried, the metrics that matter for this loop
+(for couch co-op: idle share per player, collisions per minute, time to first useful action), and a
+verdict: `fun`, `not-yet` (change and play again, as a new playtest) or `no` (the loop is wrong; go
+back to the concept). Write what was observed, not what was hoped. The human approves the verdict;
+only then is it `stable`.
 
 **Content design.** Per level, mission or episode: its goal, which mechanic it teaches or tests,
 where it sits in the story, the location from the visual bible, and the beat that should land.
@@ -78,7 +94,9 @@ new greybox and playtest first.
 A spec that ships production content sets `content: true` in its frontmatter: art, characters,
 story, levels, or gameplay built on the core loop. The linter refuses `approved`, `in-progress` or
 `done` for it while `docs/preprod/art-direction.md` is not `stable`, or while no playtest in
-`docs/playtests/` is `stable` with `verdict: fun`. Engine plumbing that ships no content (input,
+`docs/playtests/` is `stable` with `players: people` and `verdict: fun`. Like every documentation
+gate, it reports and does not block while the project is in `exploration`; it blocks after
+`/harden`. Until then, holding to it is your job. Engine plumbing that ships no content (input,
 saving, a build pipeline) is `content: false`, but it is still built after preproduction.
 
 A content spec names the style frame and the content entry it implements, the way a UI spec names
@@ -111,6 +129,10 @@ When the human wants to play or watch the result without knowing it, record `bli
   quotes from spoiler documents. This holds in summaries, commit messages, pull request
   descriptions and reports too. Spoiler documents carry `spoilers: true` in their frontmatter and a
   first line saying so, so the human knows not to open them.
+- **Production too.** Blind mode does not end with preproduction. A spec with `content: true`
+  carries `spoilers: true`, a neutral title ("Level 3", not what happens in it) and neutral
+  `docs/INDEX.md` and `docs/log.md` lines, and you approve it and answer its open questions in
+  place of the human. Branch names and test names follow the same rule.
 - **Questions that need the human** are asked without the spoiler: "the second act needs a tone
   check: closer to frame A's mood or frame B's?", not the scene itself.
 - The human can end blind mode at any time by saying so; record it in `concept.md`.

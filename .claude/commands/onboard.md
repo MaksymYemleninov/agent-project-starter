@@ -112,7 +112,9 @@ Gaps worth closing, in roughly this order, skipping every one the idea file answ
    If yes, it gets preproduction (phase 3a) before any stack is proposed, and two things are asked
    now: who plays it, with an age range, and whether the human wants to play or watch it blind. In
    blind mode, keep plot and content out of everything you show the human from here on (the
-   `preproduction` skill, section 4).
+   `preproduction` skill, section 4). Record both answers in `agreedButNotWritten` (for example
+   `preprod: audience 6-70, blind: yes`) until phase 3a writes them into `concept.md`, so neither
+   is asked twice or lost with the session.
 
 Stop asking when the remaining unknowns would not change what you build first. Then summarize the
 answers and get an explicit confirmation before moving on.
@@ -148,16 +150,22 @@ follow `.claude/skills/preproduction/SKILL.md`:
    the human who played it;
 5. content design.
 
-**Do not start phase 4** until `docs/preprod/art-direction.md` is `stable` and a playtest in
-`docs/playtests/` is `stable` with `verdict: fun`. A `not-yet` means another greybox iteration; a
-`no` means back to the concept, and possibly to `/assess`. This phase can take several sessions:
-record the stage reached in `.claude/onboarding.json` (`phase: "3a"`, and the stage in
-`agreedButNotWritten` while it is open), and resume from it.
+**Do not start phase 4** until all five stages are approved: `concept.md`, `story.md`,
+`idea-bank.md`, `art-direction.md` and `content.md` in `docs/preprod/` are `stable`, and a playtest
+in `docs/playtests/` is `stable` with `players: people` and `verdict: fun`. List the six with
+their status before moving on; one that is not `stable` means phase 3a is not finished. A
+`not-yet` means another greybox iteration; a `no` means back to the concept, and possibly to
+`/assess`. This phase can take several sessions: keep `phase` at the last finished phase (3)
+until 3a is done, record the open stage in `agreedButNotWritten` (`preprod: stage 3 of 5, style
+frames shown, waiting for the pick`), and when 3a is done append `"3a"` to `completedPhases`.
 
 The greybox is the one piece of code before phase 6, and it is throwaway: self-contained, no
-dependency no ADR covers, outside `sourcePaths`, never imported by production code. In phase 4 the
-stack is chosen for the game the approved documents describe (engine, rendering, input, platform),
-not for the greybox.
+dependency no ADR covers, outside `sourcePaths`, never imported by production code. A product
+decision the greybox has to test, such as the input scheme or the target platform, may be recorded
+as an ADR in this phase, with the human's approval; everything else about the stack waits. In
+phase 4 the stack is chosen for the game the approved documents describe (engine, rendering, and
+input or platform where 3a did not already decide them), not for the greybox; ADRs accepted in 3a
+are taken as given, and changing one is a superseding ADR with the human's approval. In phase 5, do not add `preprod/` to `sourcePaths`.
 
 ## Phase 4 - Propose the stack, as decisions
 

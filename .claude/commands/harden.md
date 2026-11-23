@@ -29,7 +29,7 @@ reached `READY`.
 
 These hold before the stage is set in the steps below: `docs/preprod/concept.md`,
 `art-direction.md` and `content.md` are `stable`; at least one playtest in `docs/playtests/` is
-`stable` with `verdict: fun`, and the latest one played a production build, not only the greybox;
+`stable` with `players: people` and `verdict: fun`, and the latest one played a production build, not only the greybox;
 every spec that ships content has `content: true`; and `preprod/greybox/` is not imported by
 production code. In blind mode, report this as statuses only.
 <!-- /track:preprod -->
